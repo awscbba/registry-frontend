@@ -1,0 +1,89 @@
+Name: Frontend_Deployment_NodeJS
+SchemaVersion: "1.0"
+
+Triggers:
+  - Type: PUSH
+    Branches:
+      - main
+  - Type: PULLREQUEST
+    Branches:
+      - main
+    Events:
+      - OPEN
+      - REVISION
+
+Actions:
+  BuildAndDeploy:
+    Identifier: aws/build@v1
+    Compute:
+      Type: EC2
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Configuration:
+      Steps:
+        - Run: |
+            echo "🚀 Frontend Build & Deploy with Node.js 18"
+            echo "=========================================="
+            
+            # Install Node.js 18 using NodeSource repository
+            echo "📦 Installing Node.js 18..."
+            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+            sudo yum install -y nodejs
+            
+            # Verify Node.js installation
+            echo "✅ Node.js version: $(node --version)"
+            echo "✅ npm version: $(npm --version)"
+            
+            # Install dependencies
+            echo "📦 Installing project dependencies..."
+            npm ci --prefer-offline --no-audit
+            
+            # Build the project
+            echo "🏗️ Building frontend with Astro..."
+            npm run build
+            
+            # Verify build output
+            echo "📊 Build verification:"
+            if [ -d "dist" ]; then
+                echo "✅ dist/ directory exists"
+                echo "📁 Contents: $(find dist -type f | wc -l) files"
+                echo "📏 Total size: $(du -sh dist | cut -f1)"
+                
+                # Show some key files
+                echo "🔍 Key files:"
+                find dist -name "*.html" -o -name "*.js" -o -name "*.css" | head -10
+            else
+                echo "❌ Build failed - no dist directory found"
+                exit 1
+            fi
+            
+            # Deploy to S3
+            echo "🚀 Deploying to S3..."
+            aws s3 sync dist/ s3://people-register-frontend-142728997126-us-east-1/ --delete --region us-east-1
+            
+            # Invalidate CloudFront cache
+            echo "🔄 Invalidating CloudFront cache..."
+            aws cloudfront create-invalidation \
+                --distribution-id EE5UBCBLMKK9R \
+                --paths "/*" \
+                --region us-east-1
+            
+            echo ""
+            echo "🎉 Deployment completed successfully!"
+            echo "🌐 Frontend URL: https://d28z2il3z2vmpc.cloudfront.net"
+            echo "🔧 Admin URL: https://d28z2il3z2vmpc.cloudfront.net/admin"
+            
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
+    Outputs:
+      Artifacts:
+        - Name: frontendBuild
+          Files:
+            - "dist/**/*"

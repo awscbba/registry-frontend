@@ -1,0 +1,47 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProjectSubscriptionForm from '../../components/ProjectSubscriptionForm';
+
+// Generate static paths for all active projects
+export async function getStaticPaths() {
+  try {
+    // Fetch active projects from the API at build time
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+    const response = await fetch(`${API_BASE_URL}/projects`);
+    
+    if (response.ok) {
+      const projects = await response.json();
+      // Generate paths for active projects only
+      const paths = projects
+        .filter((project: any) => project.status === 'active')
+        .map((project: any) => ({
+          params: { projectId: project.id }
+        }));
+      
+      console.log(`Generated ${paths.length} static paths for project subscriptions`);
+      return paths;
+    } else {
+      console.warn('Failed to fetch projects for static generation, using fallback paths');
+    }
+  } catch (error) {
+    console.warn('Error fetching projects for static generation:', error);
+  }
+  
+  // Fallback paths if API is not available at build time
+  return [
+    { params: { projectId: 'aws-workshop-2025' } },
+    { params: { projectId: 'cloud-fundamentals' } },
+    { params: { projectId: 'serverless-bootcamp' } },
+  ];
+}
+
+const { projectId } = Astro.params;
+
+if (!projectId) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Suscripción al Proyecto - AWS User Group Cochabamba">
+	<ProjectSubscriptionForm client:load projectId={projectId} />
+</Layout>

@@ -1,0 +1,23 @@
+{
+  "@types/react": {
+    "current": "19.1.6",
+    "wanted": "19.1.8",
+    "latest": "19.1.8",
+    "dependent": "registry-frontend",
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/@types/react"
+  },
+  "astro": {
+    "current": "5.9.1",
+    "wanted": "5.10.1",
+    "latest": "5.10.1",
+    "dependent": "registry-frontend",
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/astro"
+  },
+  "tailwindcss": {
+    "current": "3.4.17",
+    "wanted": "3.4.17",
+    "latest": "4.1.10",
+    "dependent": "registry-frontend",
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/tailwindcss"
+  }
+}
