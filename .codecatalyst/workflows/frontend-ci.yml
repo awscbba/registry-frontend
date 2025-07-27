@@ -1,19 +1,11 @@
-Name: Frontend_Deployment_Pipeline
+Name: Frontend_CI_Validation
 SchemaVersion: "1.0"
 
 Triggers:
   - Type: PUSH
-    Branches:
-      - main
-  - Type: PULLREQUEST
-    Branches:
-      - main
-    Events:
-      - OPEN
-      - REVISION
 
 Actions:
-  ValidateFrontend:
+  ValidateBuild:
     Identifier: aws/build@v1
     Compute:
       Type: EC2
@@ -28,8 +20,20 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🚀 Frontend Validation with Node.js 18.20.8"
-            echo "============================================"
+            echo "🚀 Feature Branch Build Validation"
+            echo "=================================="
+            echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
+            echo ""
+            
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping CI validation - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with validation"
+            echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -70,12 +74,14 @@ Actions:
         Image: CodeCatalystLinux_x86_64:2024_03
     Outputs:
       Artifacts:
-        - Name: frontendBuild
+        - Name: buildArtifacts
           Files:
             - "dist/**/*"
 
-  FrontendQualityChecks:
+  QualityChecks:
     Identifier: aws/build@v1
+    DependsOn:
+      - ValidateBuild
     Compute:
       Type: EC2
     Environment:
@@ -89,8 +95,19 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🔍 Frontend Quality Checks with Node.js 18.20.8"
-            echo "==============================================="
+            echo "🔍 Feature Branch Quality Checks"
+            echo "==============================="
+            echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo ""
+            
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping quality checks - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with quality checks"
+            echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -132,98 +149,9 @@ Actions:
         Image: CodeCatalystLinux_x86_64:2024_03
     Outputs:
       Artifacts:
-        - Name: frontendQualityReports
+        - Name: qualityReports
           Files:
             - "npm-audit.json"
             - "npm-outdated.json"
             - "bundle-size.txt"
 
-  DeployProduction:
-    Identifier: aws/build@v1
-    DependsOn:
-      - ValidateFrontend
-      - FrontendQualityChecks
-    Environment:
-      Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
-          Name: "142728997126"
-      Name: AWS
-    Inputs:
-      Sources:
-        - WorkflowSource
-    Configuration:
-      Steps:
-        - Run: |
-            echo "🚀 Production Deployment to AWS S3 + CloudFront"
-            echo "==============================================="
-            
-            # Install Node.js 18.20.8 specifically for Astro compatibility
-            echo "📦 Installing Node.js 18.20.8..."
-            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
-            
-            # Verify installation
-            echo "✅ Node.js version: $(node --version)"
-            echo "✅ npm version: $(npm --version)"
-            
-            # Install Just task runner
-            echo "📦 Installing Just task runner..."
-            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-            echo "✅ Just version: $(just --version)"
-            
-            echo "📊 Deployment information:"
-            echo "  Environment: Production"
-            echo "  Target: S3 + CloudFront"
-            echo "  Bucket: people-register-frontend-142728997126-us-east-1"
-            echo "  CloudFront: EE5UBCBLMKK9R"
-            echo ""
-            
-            # Check if this is main branch (for production deployment)
-            if [ "$CODECATALYST_BRANCH_NAME" = "main" ] || [ "$CODECATALYST_BRANCH_NAME" = "" ]; then
-                echo "🎯 Main branch detected - proceeding with production deployment"
-                just ci-deploy s3
-                echo ""
-                echo "🌐 Production URLs:"
-                echo "  Frontend: https://d28z2il3z2vmpc.cloudfront.net"
-                echo "  API: https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod"
-            else
-                echo "Pull request detected - skipping production deployment"
-                echo "Production deployment only occurs on main branch pushes"
-            fi
-            echo ""
-            echo "Production deployment step completed"
-      Container:
-        Registry: CODECATALYST
-        Image: CodeCatalystLinux_x86_64:2024_03
-
-  PRSummary:
-    Identifier: aws/build@v1
-    DependsOn:
-      - ValidateFrontend
-      - FrontendQualityChecks
-    Environment:
-      Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
-          Name: "142728997126"
-      Name: AWS
-    Inputs:
-      Sources:
-        - WorkflowSource
-      Artifacts:
-        - frontendBuild
-        - frontendQualityReports
-    Configuration:
-      Steps:
-        - Run: |
-            echo "Pull Request Summary and Preview"
-            echo "Installing Just task runner..."
-            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-            echo "Just version: $(just --version)"
-            echo ""
-            echo "Running comprehensive PR analysis..."
-            just pr-summary
-            echo ""
-            echo "PR Summary completed successfully"
-      Container:
-        Registry: CODECATALYST
-        Image: CodeCatalystLinux_x86_64:2024_03

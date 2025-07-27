@@ -1,16 +1,30 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
+import { authService } from '../services/authStub';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
+import LoginForm from './LoginForm';
 
 export default function ProjectShowcase() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadActiveProjects();
+    // Check if user is already authenticated
+    setIsAuthenticated(authService.isAuthenticated());
+    if (authService.isAuthenticated()) {
+      loadActiveProjects();
+    } else {
+      setIsLoading(false);
+    }
   }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    loadActiveProjects();
+  };
 
   const loadActiveProjects = async () => {
     setIsLoading(true);
@@ -24,7 +38,14 @@ export default function ProjectShowcase() {
       setProjects(activeProjects);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Error al cargar proyectos: ${err.message}`);
+        // If it's an authentication error, log out the user
+        if (err.status === 401) {
+          await authService.logout();
+          setIsAuthenticated(false);
+          setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        } else {
+          setError(`Error al cargar proyectos: ${err.message}`);
+        }
       } else {
         setError('Error desconocido al cargar proyectos');
       }
@@ -43,6 +64,13 @@ export default function ProjectShowcase() {
     window.location.href = '/admin/index.html';
   };
 
+  const handleLogout = async () => {
+    await authService.logout();
+    setIsAuthenticated(false);
+    setProjects([]);
+    setError(null);
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'No definida';
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -51,6 +79,11 @@ export default function ProjectShowcase() {
       day: 'numeric'
     });
   };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  }
 
   if (isLoading) {
     return (
@@ -169,20 +202,33 @@ export default function ProjectShowcase() {
   return (
     <div className="project-showcase">
       <div className="container">
-        {/* Header with Admin Button */}
+        {/* Header with Admin and Logout Buttons */}
         <div className="header-section">
           <div className="header-content">
             <div className="header-text">
               <h1>Proyectos Activos</h1>
               <p>Descubre y únete a los proyectos de la comunidad AWS User Group Cochabamba</p>
+              {authService.getCurrentUser() && (
+                <p className="user-info">
+                  Bienvenido, {authService.getCurrentUser()?.firstName} {authService.getCurrentUser()?.lastName}
+                </p>
+              )}
             </div>
-            <button onClick={handleAdminClick} className={BUTTON_CLASSES.ADMIN}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Administración
-            </button>
+            <div className="header-actions">
+              <button onClick={handleAdminClick} className={BUTTON_CLASSES.ADMIN}>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Administración
+              </button>
+              <button onClick={handleLogout} className="btn-logout">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </div>
 
@@ -293,6 +339,19 @@ export default function ProjectShowcase() {
           max-width: 600px;
         }
 
+        .user-info {
+          font-size: 1rem !important;
+          color: #FF9900 !important;
+          font-weight: 600;
+          margin-top: 0.5rem;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+        }
+
         .btn-admin {
           display: flex;
           align-items: center;
@@ -312,6 +371,27 @@ export default function ProjectShowcase() {
           background: #1a252f;
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-logout {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #dc2626;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-logout:hover {
+          background: #b91c1c;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
         }
 
         .projects-grid {
@@ -466,6 +546,16 @@ export default function ProjectShowcase() {
 
           .header-text h1 {
             font-size: 2rem;
+          }
+
+          .header-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .header-actions button {
+            width: 100%;
+            justify-content: center;
           }
 
           .projects-grid {

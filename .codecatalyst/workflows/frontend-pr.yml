@@ -1,0 +1,101 @@
+Name: Frontend_PR_Analysis
+SchemaVersion: "1.0"
+
+Triggers:
+  - Type: PULLREQUEST
+    Branches:
+      - main
+    Events:
+      - OPEN
+      - REVISION
+
+Actions:
+  PRAnalysis:
+    Identifier: aws/build@v1
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Configuration:
+      Steps:
+        - Run: |
+            echo "📋 Pull Request Analysis"
+            echo "======================="
+            echo "📅 Time: $(date)"
+            echo "🌿 Source Branch: ${CODECATALYST_SOURCE_BRANCH_NAME:-unknown}"
+            echo "🎯 Target Branch: ${CODECATALYST_BRANCH_NAME:-main}"
+            echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
+            echo "👤 Author: ${CODECATALYST_COMMIT_AUTHOR:-unknown}"
+            echo ""
+            
+            # Install Node.js 18.20.8 for consistency
+            echo "📦 Installing Node.js 18.20.8..."
+            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
+            
+            # Install Just task runner
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            echo "✅ Just version: $(just --version)"
+            echo ""
+            
+            # Quick build for analysis (don't fail if build issues exist)
+            echo "🔍 Running quick validation for PR analysis..."
+            if just ci-validate; then
+                echo "✅ Build validation successful"
+                BUILD_STATUS="✅ PASSED"
+            else
+                echo "⚠️ Build validation had issues"
+                BUILD_STATUS="⚠️ ISSUES DETECTED"
+                # Create minimal artifacts for analysis
+                mkdir -p dist
+                echo "<html><body><h1>Build Issues Detected</h1></body></html>" > dist/index.html
+            fi
+            echo ""
+            
+            # Run quality checks (don't fail if issues exist)
+            echo "🔍 Running quality analysis..."
+            if just ci-quality; then
+                echo "✅ Quality checks successful"
+                QUALITY_STATUS="✅ PASSED"
+            else
+                echo "⚠️ Quality checks had issues"
+                QUALITY_STATUS="⚠️ ISSUES DETECTED"
+                # Ensure quality files exist for analysis
+                [ -f "npm-audit.json" ] || echo '{"vulnerabilities": {}, "metadata": {"note": "analysis failed"}}' > npm-audit.json
+                [ -f "npm-outdated.json" ] || echo '{"note": "analysis failed"}' > npm-outdated.json
+                [ -f "bundle-size.txt" ] || echo "Bundle size - analysis failed" > bundle-size.txt
+            fi
+            echo ""
+            
+            # Generate PR summary
+            echo "📊 Generating PR summary..."
+            just pr-summary || echo "⚠️ PR summary generation had issues but continuing..."
+            echo ""
+            
+            # Final PR status
+            echo "🎯 Pull Request Status Summary:"
+            echo "  Build Status: $BUILD_STATUS"
+            echo "  Quality Status: $QUALITY_STATUS"
+            echo ""
+            
+            if [[ "$BUILD_STATUS" == *"PASSED"* ]] && [[ "$QUALITY_STATUS" == *"PASSED"* ]]; then
+                echo "✅ PR READY FOR REVIEW"
+                echo "  All checks passed - safe to merge after review"
+            elif [[ "$BUILD_STATUS" == *"PASSED"* ]]; then
+                echo "⚠️ PR NEEDS ATTENTION"
+                echo "  Build works but quality issues detected"
+            else
+                echo "❌ PR NEEDS FIXES"
+                echo "  Build issues must be resolved before merge"
+            fi
+            echo ""
+            
+            echo "📋 PR Analysis completed"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03

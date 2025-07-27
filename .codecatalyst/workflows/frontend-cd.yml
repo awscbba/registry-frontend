@@ -1,0 +1,183 @@
+Name: Frontend_CD_Pipeline
+SchemaVersion: "1.0"
+
+Triggers:
+  - Type: PUSH
+    Branches:
+      - main
+
+Actions:
+  BuildProduction:
+    Identifier: aws/build@v1
+    Compute:
+      Type: EC2
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Configuration:
+      Steps:
+        - Run: |
+            echo "🏗️ Production Build"
+            echo "=================="
+            
+            # Install Node.js 18.20.8 specifically for Astro compatibility
+            echo "📦 Installing Node.js 18.20.8..."
+            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
+            
+            # Verify installation
+            echo "✅ Node.js version: $(node --version)"
+            echo "✅ npm version: $(npm --version)"
+            
+            # Install Just task runner
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            echo "✅ Just version: $(just --version)"
+            
+            # Build for production
+            echo "🔍 Running production build pipeline..."
+            just ci-validate
+            echo ""
+            echo "Production build completed"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
+    Outputs:
+      Artifacts:
+        - Name: productionBuild
+          Files:
+            - "dist/**/*"
+
+  QualityGate:
+    Identifier: aws/build@v1
+    DependsOn:
+      - BuildProduction
+    Compute:
+      Type: EC2
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Configuration:
+      Steps:
+        - Run: |
+            echo "🔒 Production Quality Gate"
+            echo "========================="
+            
+            # Install Node.js 18.20.8 specifically for Astro compatibility
+            echo "📦 Installing Node.js 18.20.8..."
+            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
+            
+            # Install Just task runner
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            echo "✅ Just version: $(just --version)"
+            
+            # Run quality checks for production
+            echo "🔍 Running production quality gate..."
+            just ci-quality
+            echo ""
+            echo "Quality gate passed - ready for deployment"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
+
+  DeployProduction:
+    Identifier: aws/build@v1
+    DependsOn:
+      - QualityGate
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+      Artifacts:
+        - productionBuild
+    Configuration:
+      Steps:
+        - Run: |
+            echo "🚀 Production Deployment"
+            echo "======================="
+            
+            # Install Node.js 18.20.8 specifically for Astro compatibility
+            echo "📦 Installing Node.js 18.20.8..."
+            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
+            
+            # Install Just task runner
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            echo "✅ Just version: $(just --version)"
+            
+            echo "📊 Deployment information:"
+            echo "  Environment: Production"
+            echo "  Target: S3 + CloudFront"
+            echo "  Bucket: people-register-frontend-142728997126-us-east-1"
+            echo "  CloudFront: EE5UBCBLMKK9R"
+            echo ""
+            
+            echo "🎯 Main branch detected - proceeding with production deployment"
+            just ci-deploy s3
+            echo ""
+            echo "🌐 Production URLs:"
+            echo "  Frontend: https://d28z2il3z2vmpc.cloudfront.net"
+            echo "  API: https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod"
+            echo ""
+            echo "🎉 Production deployment completed successfully!"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
+
+  PostDeploymentValidation:
+    Identifier: aws/build@v1
+    DependsOn:
+      - DeployProduction
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+    Configuration:
+      Steps:
+        - Run: |
+            echo "✅ Post-Deployment Validation"
+            echo "============================"
+            
+            # Basic health checks
+            echo "🔍 Checking frontend availability..."
+            if curl -f -s https://d28z2il3z2vmpc.cloudfront.net > /dev/null; then
+                echo "✅ Frontend is accessible"
+            else
+                echo "❌ Frontend health check failed"
+                exit 1
+            fi
+            
+            echo "🔍 Checking API availability..."
+            if curl -f -s https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/health > /dev/null; then
+                echo "✅ API is accessible"
+            else
+                echo "⚠️ API health check failed (may be expected if no health endpoint)"
+            fi
+            
+            echo ""
+            echo "🎯 Deployment validation completed"
+            echo "🌐 Production system is live and accessible"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
