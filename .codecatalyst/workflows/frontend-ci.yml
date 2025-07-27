@@ -3,8 +3,6 @@ SchemaVersion: "1.0"
 
 Triggers:
   - Type: PUSH
-    Branches:
-      - "*"
     Filters:
       - Type: EXCLUDE
         Pattern: "main"
