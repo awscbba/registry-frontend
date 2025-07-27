@@ -53,9 +53,37 @@ export default function ProjectShowcase() {
     }
   };
 
-  const handleSubscribeClick = (projectId: string) => {
+  // Helper function to convert project name to URL-friendly slug
+  const nameToSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim();
+  };
+
+  // Mapping function to get consistent slugs for known projects
+  const getProjectSlug = (project: Project): string => {
+    const name = project.name.toLowerCase();
+    
+    // Map known projects to their expected slugs
+    if (name.includes('aws workshop')) {
+      return 'aws-workshop-2025';
+    } else if (name.includes('serverless bootcamp')) {
+      return 'serverless-bootcamp';
+    } else if (name.includes('testproy') || name.includes('test')) {
+      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
+    }
+    
+    // Fallback to generated slug
+    return nameToSlug(project.name);
+  };
+
+  const handleSubscribeClick = (project: Project) => {
+    const slug = getProjectSlug(project);
     // Navigate to project-specific subscription form - use correct CloudFront path
-    window.location.href = `/subscribe/${projectId}/index.html`;
+    window.location.href = `/subscribe/${slug}/index.html`;
   };
 
   const handleAdminClick = () => {
@@ -291,7 +319,7 @@ export default function ProjectShowcase() {
                 
                 <div className="project-actions">
                   <button 
-                    onClick={() => handleSubscribeClick(project.id)}
+                    onClick={() => handleSubscribeClick(project)}
                     className={BUTTON_CLASSES.SUBSCRIBE}
                   >
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">

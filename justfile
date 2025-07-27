@@ -162,112 +162,52 @@ build:
     set -euo pipefail
     echo "🏗️ Building People Register Frontend with Astro..."
     
-    # Source Node.js environment
-    if [ -f ".env.nodejs" ]; then
-        source .env.nodejs
-        echo "Using Node.js from environment: $NODE_CMD"
-        NODE_VERSION=$($NODE_CMD --version 2>/dev/null || echo "unknown")
-        echo "Node.js version: $NODE_VERSION"
-        
-        # Check if we have the right version for Astro
-        if [[ "$NODE_VERSION" == v18.20.* ]] || [[ "$NODE_VERSION" > "v18.20" ]]; then
-            echo "✅ Node.js version meets Astro requirements (>=18.20.8)"
-            ASTRO_COMPATIBLE=true
-        else
-            echo "⚠️ Node.js version below Astro requirements (>=18.20.8)"
-            ASTRO_COMPATIBLE=false
-        fi
-    else
-        NODE_CMD="node"
-        NPM_CMD="npm"
-        NODE_VERSION=$(node --version 2>/dev/null || echo "unknown")
-        echo "Using default Node.js: $NODE_VERSION"
-        ASTRO_COMPATIBLE=false
-    fi
+    # Get Node.js version info
+    NODE_VERSION=$(node --version 2>/dev/null || echo "unknown")
+    NPM_VERSION=$(npm --version 2>/dev/null || echo "unknown")
     
-    # Force PATH to prioritize our detected Node.js
-    if [[ "$NODE_CMD" == "/usr/bin/node" ]]; then
-        export PATH="/usr/bin:$PATH"
-        echo "🔧 Prioritized /usr/bin in PATH for consistent Node.js usage"
-    fi
+    echo "Using Node.js: $NODE_VERSION"
+    echo "Using npm: $NPM_VERSION"
     
-    echo "Building with Node.js $NODE_VERSION..."
-    echo "🔍 Verifying Node.js consistency:"
-    echo "  which node: $(which node)"
-    echo "  node --version: $(node --version)"
-    echo "  which npm: $(which npm)"
-    echo "  npm --version: $(npm --version)"
+    # Check if dependencies are installed
+    if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/astro" ]; then
+        echo "⚠️ Dependencies not found, installing..."
+        npm install
+    fi
     
     # Verify Astro is available
     echo "🔍 Verifying Astro installation..."
-    if [[ "$NODE_CMD" == "/usr/bin/node" ]]; then
-        ASTRO_CHECK=$(/usr/bin/node /usr/bin/npm list astro --depth=0 2>/dev/null | grep astro@ || echo "not found")
-        echo "Astro status: $ASTRO_CHECK"
-        
-        # Try to run astro command
-        if /usr/bin/node ./node_modules/.bin/astro --version >/dev/null 2>&1; then
-            echo "✅ Astro CLI is accessible"
-            ASTRO_AVAILABLE=true
-        else
-            echo "❌ Astro CLI not accessible"
-            ASTRO_AVAILABLE=false
-        fi
+    if npm list astro --depth=0 >/dev/null 2>&1; then
+        echo "✅ Astro is installed"
     else
-        ASTRO_CHECK=$($NPM_CMD list astro --depth=0 2>/dev/null | grep astro@ || echo "not found")
-        echo "Astro status: $ASTRO_CHECK"
-        
-        if npx astro --version >/dev/null 2>&1; then
-            echo "✅ Astro CLI is accessible"
-            ASTRO_AVAILABLE=true
-        else
-            echo "❌ Astro CLI not accessible"
-            ASTRO_AVAILABLE=false
-        fi
+        echo "❌ Astro not found, installing dependencies..."
+        npm install
     fi
     
-    if [ "$ASTRO_COMPATIBLE" = true ] && [ "$ASTRO_AVAILABLE" = true ]; then
-        echo "🚀 Attempting real Astro build with explicit Node.js binary..."
+    # Try to build with npm run build
+    echo "🚀 Running Astro build..."
+    if npm run build; then
+        echo "🎉 Astro build succeeded!"
         
-        # Use explicit Node.js binary for npm run build to ensure consistency
-        if [[ "$NODE_CMD" == "/usr/bin/node" ]]; then
-            echo "🔧 Using explicit Node.js binary: /usr/bin/node ./node_modules/.bin/astro build"
-            if /usr/bin/node ./node_modules/.bin/astro build; then
-                echo "🎉 Real Astro build succeeded with Node.js $NODE_VERSION!"
-                echo ""
-                echo "📊 Build Analysis:"
-                echo "Build size: $(du -sh dist/ 2>/dev/null | cut -f1 || echo 'unknown')"
-                echo "JavaScript files: $(find dist/ -name "*.js" | wc -l)"
-                echo "CSS files: $(find dist/ -name "*.css" | wc -l)"
-                echo "HTML files: $(find dist/ -name "*.html" | wc -l)"
-                echo "Total files: $(find dist/ -type f | wc -l)"
-                echo ""
-                echo "📁 Build contents:"
-                ls -la dist/ 2>/dev/null || echo "Could not list dist contents"
-                echo ""
-                echo "🎯 Build type: REAL ASTRO BUILD"
-                # Build succeeded, continue to summary
-            else
-                echo "❌ Astro build failed even with direct CLI call"
-                ASTRO_AVAILABLE=false
-            fi
-        else
-            if $NPM_CMD run build; then
-                echo "🎉 Real Astro build succeeded with Node.js $NODE_VERSION!"
-                echo "🎯 Build type: REAL ASTRO BUILD"
-                # Build succeeded, continue to summary  
-            else
-                echo "❌ Astro build failed"
-                ASTRO_AVAILABLE=false
-            fi
+        # Show build analysis
+        if [ -d "dist" ]; then
+            echo ""
+            echo "📊 Build Analysis:"
+            echo "Build size: $(du -sh dist/ 2>/dev/null | cut -f1 || echo 'unknown')"
+            echo "JavaScript files: $(find dist/ -name "*.js" | wc -l)"
+            echo "CSS files: $(find dist/ -name "*.css" | wc -l)"
+            echo "HTML files: $(find dist/ -name "*.html" | wc -l)"
+            echo "Total files: $(find dist/ -type f | wc -l)"
+            echo ""
+            echo "📁 Build contents:"
+            ls -la dist/ 2>/dev/null || echo "Could not list dist contents"
+            echo ""
+            echo "🎯 Build type: REAL ASTRO BUILD"
         fi
     else
-        echo "❌ Astro build not possible - creating fallback artifacts..."
-        ASTRO_AVAILABLE=false
-    fi
-    
-    # Check if we have a successful build, otherwise create fallback
-    if [ ! -d "dist" ] || [ ! -f "dist/index.html" ] || [ $(wc -c < dist/index.html) -lt 1000 ] || [ "$ASTRO_AVAILABLE" = false ]; then
-        echo "📁 Creating fallback artifacts..."
+        echo "❌ Astro build failed, creating fallback artifacts..."
+        
+        # Create fallback artifacts
         mkdir -p dist
         
         if [ -d "fallback" ]; then
@@ -283,7 +223,7 @@ build:
             echo "console.log('minimal fallback js');" > dist/app.js
         fi
         
-        echo "🎯 Build type: FALLBACK (Dependencies or Astro CLI issue)"
+        echo "🎯 Build type: FALLBACK (Build failed)"
     fi
     
     # Ensure dist directory always exists for artifact upload
