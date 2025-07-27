@@ -35,6 +35,15 @@ Actions:
             echo "✅ Feature branch detected - proceeding with validation"
             echo ""
             
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping CI validation - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with validation"
+            echo ""
+            
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
             curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
@@ -98,6 +107,15 @@ Actions:
             echo "🔍 Feature Branch Quality Checks"
             echo "==============================="
             echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo ""
+            
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping quality checks - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with quality checks"
             echo ""
             
             # Skip if this is main branch (should use CD workflow instead)
