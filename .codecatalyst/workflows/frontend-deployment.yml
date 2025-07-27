@@ -31,10 +31,10 @@ Actions:
             echo "🚀 Frontend Validation with Node.js 18.20.8"
             echo "============================================"
             
-            # Install Node.js 18.20.8 directly
+            # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
             curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
             
             # Verify installation
             echo "✅ Node.js version: $(node --version)"
@@ -92,10 +92,10 @@ Actions:
             echo "🔍 Frontend Quality Checks with Node.js 18.20.8"
             echo "==============================================="
             
-            # Install Node.js 18.20.8 directly
+            # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
             curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
             
             # Verify installation
             echo "✅ Node.js version: $(node --version)"
@@ -157,10 +157,10 @@ Actions:
             echo "🚀 Production Deployment to AWS S3 + CloudFront"
             echo "==============================================="
             
-            # Install Node.js 18.20.8 directly
+            # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
             curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
             
             # Verify installation
             echo "✅ Node.js version: $(node --version)"

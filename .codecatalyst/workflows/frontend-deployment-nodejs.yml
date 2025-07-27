@@ -31,22 +31,23 @@ Actions:
             echo "🚀 Frontend Build & Deploy with Node.js 18"
             echo "=========================================="
             
-            # Install Node.js 18 using NodeSource repository
-            echo "📦 Installing Node.js 18..."
+            # Install Node.js 18.20.8 specifically for Astro compatibility
+            echo "📦 Installing Node.js 18.20.8..."
             curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs
+            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
             
-            # Verify Node.js installation
+            # Install Just task runner for robust build process
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            
+            # Verify installations
             echo "✅ Node.js version: $(node --version)"
             echo "✅ npm version: $(npm --version)"
+            echo "✅ Just version: $(just --version)"
             
-            # Install dependencies
-            echo "📦 Installing project dependencies..."
-            npm ci --prefer-offline --no-audit
-            
-            # Build the project
-            echo "🏗️ Building frontend with Astro..."
-            npm run build
+            # Use justfile for robust Node.js setup and build
+            echo "🔧 Running Node.js setup and build with justfile..."
+            just ci-validate
             
             # Verify build output
             echo "📊 Build verification:"
