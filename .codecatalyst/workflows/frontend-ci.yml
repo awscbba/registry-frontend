@@ -3,16 +3,10 @@ SchemaVersion: "1.0"
 
 Triggers:
   - Type: PUSH
-    Branches:
-      - "*"
 
 Actions:
   ValidateBuild:
     Identifier: aws/build@v1
-    Condition:
-      StringNotEquals:
-        - "${WorkflowSource.BranchName}"
-        - "main"
     Compute:
       Type: EC2
     Environment:
@@ -30,6 +24,15 @@ Actions:
             echo "=================================="
             echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
             echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
+            echo ""
+            
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping CI validation - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with validation"
             echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
@@ -79,10 +82,6 @@ Actions:
     Identifier: aws/build@v1
     DependsOn:
       - ValidateBuild
-    Condition:
-      StringNotEquals:
-        - "${WorkflowSource.BranchName}"
-        - "main"
     Compute:
       Type: EC2
     Environment:
@@ -99,6 +98,15 @@ Actions:
             echo "🔍 Feature Branch Quality Checks"
             echo "==============================="
             echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo ""
+            
+            # Skip if this is main branch (should use CD workflow instead)
+            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
+                echo "ℹ️ Skipping quality checks - main branch uses CD workflow"
+                echo "This workflow is for feature branch validation only"
+                exit 0
+            fi
+            echo "✅ Feature branch detected - proceeding with quality checks"
             echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
