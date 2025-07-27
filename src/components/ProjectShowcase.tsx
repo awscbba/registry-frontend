@@ -10,20 +10,23 @@ export default function ProjectShowcase() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
     setIsAuthenticated(authService.isAuthenticated());
-    if (authService.isAuthenticated()) {
-      loadActiveProjects();
-    } else {
-      setIsLoading(false);
-    }
+    // Always load projects first, authentication is optional for viewing
+    loadActiveProjects();
   }, []);
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
+    setShowLoginForm(false);
     loadActiveProjects();
+  };
+
+  const handleLoginClick = () => {
+    setShowLoginForm(true);
   };
 
   const loadActiveProjects = async () => {
@@ -38,14 +41,10 @@ export default function ProjectShowcase() {
       setProjects(activeProjects);
     } catch (err) {
       if (err instanceof ApiError) {
-        // If it's an authentication error, log out the user
-        if (err.status === 401) {
-          await authService.logout();
-          setIsAuthenticated(false);
-          setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
-        } else {
-          setError(`Error al cargar proyectos: ${err.message}`);
-        }
+        // For now, don't require authentication for viewing projects
+        // Just log the error and show a generic message
+        console.warn('API Error:', err.message);
+        setError(`Error al cargar proyectos: ${err.message}`);
       } else {
         setError('Error desconocido al cargar proyectos');
       }
@@ -80,8 +79,8 @@ export default function ProjectShowcase() {
     });
   };
 
-  // Show login form if not authenticated
-  if (!isAuthenticated) {
+  // Show login form if user clicked login button or there's an auth error
+  if (showLoginForm || (!isAuthenticated && error?.includes('401'))) {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 
@@ -202,32 +201,43 @@ export default function ProjectShowcase() {
   return (
     <div className="project-showcase">
       <div className="container">
-        {/* Header with Admin and Logout Buttons */}
+        {/* Header with conditional Admin and Login/Logout Buttons */}
         <div className="header-section">
           <div className="header-content">
             <div className="header-text">
               <h1>Proyectos Activos</h1>
               <p>Descubre y únete a los proyectos de la comunidad AWS User Group Cochabamba</p>
-              {authService.getCurrentUser() && (
+              {isAuthenticated && authService.getCurrentUser() && (
                 <p className="user-info">
                   Bienvenido, {authService.getCurrentUser()?.firstName} {authService.getCurrentUser()?.lastName}
                 </p>
               )}
             </div>
             <div className="header-actions">
-              <button onClick={handleAdminClick} className={BUTTON_CLASSES.ADMIN}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Administración
-              </button>
-              <button onClick={handleLogout} className="btn-logout">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Cerrar Sesión
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button onClick={handleAdminClick} className={BUTTON_CLASSES.ADMIN}>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Administración
+                  </button>
+                  <button onClick={handleLogout} className="btn-logout">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <button onClick={handleLoginClick} className="btn-login">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  Iniciar Sesión
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -392,6 +402,27 @@ export default function ProjectShowcase() {
           background: #b91c1c;
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-login {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #FF9900;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-login:hover {
+          background: #E88B00;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(255, 153, 0, 0.3);
         }
 
         .projects-grid {

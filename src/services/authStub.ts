@@ -40,25 +40,26 @@ export const authService = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Login failed');
+        const errorMessage = errorData.error || errorData.message || 'Login failed';
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       
       // Store authentication data
-      authToken = data.access_token;
+      authToken = data.access_token || data.accessToken;
       currentUser = {
-        id: data.user.id,
-        email: data.user.email,
-        firstName: data.user.firstName,
-        lastName: data.user.lastName
+        id: data.user?.id || 'unknown',
+        email: data.user?.email || email,
+        firstName: data.user?.firstName || data.user?.first_name || 'User',
+        lastName: data.user?.lastName || data.user?.last_name || ''
       };
 
       return {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        tokenType: data.token_type,
-        expiresIn: data.expires_in,
+        accessToken: authToken,
+        refreshToken: data.refresh_token || data.refreshToken || '',
+        tokenType: data.token_type || 'Bearer',
+        expiresIn: data.expires_in || 3600,
         user: currentUser
       };
     } catch (error) {

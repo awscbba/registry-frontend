@@ -18,7 +18,17 @@ export const projectApi = {
   // Project Management
   async getAllProjects(): Promise<Project[]> {
     const response = await fetch(`${API_BASE_URL}/projects`);
-    return handleApiResponse(response);
+    const data = await handleApiResponse(response);
+    
+    // Handle both old array format and new object format
+    if (Array.isArray(data)) {
+      return data; // Old format (backward compatibility)
+    } else if (data && data.projects && Array.isArray(data.projects)) {
+      return data.projects; // New format
+    } else {
+      console.error('Unexpected API response format:', data);
+      return []; // Fallback to empty array
+    }
   },
 
   async getProject(id: string): Promise<Project> {
