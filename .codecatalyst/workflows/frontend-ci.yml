@@ -1,13 +1,13 @@
-Name: Frontend_CI_Pipeline
+Name: Frontend_CI_Validation
 SchemaVersion: "1.0"
 
 Triggers:
-  - Type: PULLREQUEST
+  - Type: PUSH
     Branches:
-      - main
-    Events:
-      - OPEN
-      - REVISION
+      - "*"
+    Filters:
+      - Type: EXCLUDE
+        Pattern: "main"
 
 Actions:
   ValidateBuild:
@@ -25,8 +25,11 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🚀 Frontend Build Validation"
-            echo "============================"
+            echo "🚀 Feature Branch Build Validation"
+            echo "=================================="
+            echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
+            echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -88,8 +91,10 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🔍 Frontend Quality Checks"
-            echo "========================="
+            echo "🔍 Feature Branch Quality Checks"
+            echo "==============================="
+            echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
+            echo ""
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -137,34 +142,3 @@ Actions:
             - "npm-outdated.json"
             - "bundle-size.txt"
 
-  PRAnalysis:
-    Identifier: aws/build@v1
-    DependsOn:
-      - QualityChecks
-    Environment:
-      Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
-          Name: "142728997126"
-      Name: AWS
-    Inputs:
-      Sources:
-        - WorkflowSource
-      Artifacts:
-        - buildArtifacts
-        - qualityReports
-    Configuration:
-      Steps:
-        - Run: |
-            echo "📋 Pull Request Analysis"
-            echo "======================="
-            echo "Installing Just task runner..."
-            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-            echo "Just version: $(just --version)"
-            echo ""
-            echo "Running comprehensive PR analysis..."
-            just pr-summary
-            echo ""
-            echo "PR Analysis completed successfully"
-      Container:
-        Registry: CODECATALYST
-        Image: CodeCatalystLinux_x86_64:2024_03
