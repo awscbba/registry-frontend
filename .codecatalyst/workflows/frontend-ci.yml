@@ -1,20 +1,16 @@
-Name: Frontend_Deployment_Pipeline
+Name: Frontend_CI_Pipeline
 SchemaVersion: "1.0"
 
-# Triggers disabled - replaced by separate CI/CD workflows
-# Triggers:
-#   - Type: PUSH
-#     Branches:
-#       - main
-#   - Type: PULLREQUEST
-#     Branches:
-#       - main
-#     Events:
-#       - OPEN
-#       - REVISION
+Triggers:
+  - Type: PULLREQUEST
+    Branches:
+      - main
+    Events:
+      - OPEN
+      - REVISION
 
 Actions:
-  ValidateFrontend:
+  ValidateBuild:
     Identifier: aws/build@v1
     Compute:
       Type: EC2
@@ -29,8 +25,8 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🚀 Frontend Validation with Node.js 18.20.8"
-            echo "============================================"
+            echo "🚀 Frontend Build Validation"
+            echo "============================"
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -71,14 +67,14 @@ Actions:
         Image: CodeCatalystLinux_x86_64:2024_03
     Outputs:
       Artifacts:
-        - Name: frontendBuild
+        - Name: buildArtifacts
           Files:
             - "dist/**/*"
 
-  FrontendQualityChecks:
+  QualityChecks:
     Identifier: aws/build@v1
     DependsOn:
-      - ValidateFrontend
+      - ValidateBuild
     Compute:
       Type: EC2
     Environment:
@@ -92,8 +88,8 @@ Actions:
     Configuration:
       Steps:
         - Run: |
-            echo "🔍 Frontend Quality Checks with Node.js 18.20.8"
-            echo "==============================================="
+            echo "🔍 Frontend Quality Checks"
+            echo "========================="
             
             # Install Node.js 18.20.8 specifically for Astro compatibility
             echo "📦 Installing Node.js 18.20.8..."
@@ -135,86 +131,16 @@ Actions:
         Image: CodeCatalystLinux_x86_64:2024_03
     Outputs:
       Artifacts:
-        - Name: frontendQualityReports
+        - Name: qualityReports
           Files:
             - "npm-audit.json"
             - "npm-outdated.json"
             - "bundle-size.txt"
 
-  DeployProduction:
+  PRAnalysis:
     Identifier: aws/build@v1
     DependsOn:
-      - FrontendQualityChecks
-    Condition:
-      StringEquals:
-        - "${WorkflowSource.BranchName}"
-        - "main"
-    Environment:
-      Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
-          Name: "142728997126"
-      Name: AWS
-    Inputs:
-      Sources:
-        - WorkflowSource
-    Configuration:
-      Steps:
-        - Run: |
-            echo "🚀 Production Deployment to AWS S3 + CloudFront"
-            echo "==============================================="
-            
-            # Install Node.js 18.20.8 specifically for Astro compatibility
-            echo "📦 Installing Node.js 18.20.8..."
-            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs-18.20.8 || sudo yum install -y nodejs
-            
-            # Verify installation
-            echo "✅ Node.js version: $(node --version)"
-            echo "✅ npm version: $(npm --version)"
-            
-            # Install Just task runner
-            echo "📦 Installing Just task runner..."
-            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-            echo "✅ Just version: $(just --version)"
-            
-            echo "📊 Deployment information:"
-            echo "  Environment: Production"
-            echo "  Target: S3 + CloudFront"
-            echo "  Bucket: people-register-frontend-142728997126-us-east-1"
-            echo "  CloudFront: EE5UBCBLMKK9R"
-            echo ""
-            
-            # Only deploy on main branch pushes (not PRs)
-            if [ "$CODECATALYST_TRIGGER_TYPE" = "PUSH" ] && [ "$CODECATALYST_BRANCH_NAME" = "main" ]; then
-                echo "🎯 Main branch push detected - proceeding with production deployment"
-                just ci-deploy s3
-                echo ""
-                echo "🌐 Production URLs:"
-                echo "  Frontend: https://d28z2il3z2vmpc.cloudfront.net"
-                echo "  API: https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod"
-                echo ""
-                echo "🎉 Production deployment completed successfully!"
-            else
-                echo "ℹ️ Skipping deployment - only runs on main branch pushes"
-                echo "Current trigger: $CODECATALYST_TRIGGER_TYPE"
-                echo "Current branch: $CODECATALYST_BRANCH_NAME"
-                echo ""
-                echo "Deployment will occur when changes are merged to main"
-            fi
-            echo ""
-            echo "Production deployment step completed"
-      Container:
-        Registry: CODECATALYST
-        Image: CodeCatalystLinux_x86_64:2024_03
-
-  PRSummary:
-    Identifier: aws/build@v1
-    DependsOn:
-      - FrontendQualityChecks
-    Condition:
-      StringEquals:
-        - "${WorkflowSource.TriggerType}"
-        - "PULLREQUEST"
+      - QualityChecks
     Environment:
       Connections:
         - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
@@ -224,12 +150,13 @@ Actions:
       Sources:
         - WorkflowSource
       Artifacts:
-        - frontendBuild
-        - frontendQualityReports
+        - buildArtifacts
+        - qualityReports
     Configuration:
       Steps:
         - Run: |
-            echo "Pull Request Summary and Preview"
+            echo "📋 Pull Request Analysis"
+            echo "======================="
             echo "Installing Just task runner..."
             curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
             echo "Just version: $(just --version)"
@@ -237,7 +164,7 @@ Actions:
             echo "Running comprehensive PR analysis..."
             just pr-summary
             echo ""
-            echo "PR Summary completed successfully"
+            echo "PR Analysis completed successfully"
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinux_x86_64:2024_03
