@@ -3,13 +3,16 @@ SchemaVersion: "1.0"
 
 Triggers:
   - Type: PUSH
-    Filters:
-      - Type: EXCLUDE
-        Pattern: "main"
+    Branches:
+      - "*"
 
 Actions:
   ValidateBuild:
     Identifier: aws/build@v1
+    Condition:
+      StringNotEquals:
+        - "${WorkflowSource.BranchName}"
+        - "main"
     Compute:
       Type: EC2
     Environment:
@@ -76,6 +79,10 @@ Actions:
     Identifier: aws/build@v1
     DependsOn:
       - ValidateBuild
+    Condition:
+      StringNotEquals:
+        - "${WorkflowSource.BranchName}"
+        - "main"
     Compute:
       Type: EC2
     Environment:
