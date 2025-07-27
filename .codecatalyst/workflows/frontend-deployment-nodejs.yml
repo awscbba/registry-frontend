@@ -1,16 +1,17 @@
 Name: Frontend_Deployment_NodeJS
 SchemaVersion: "1.0"
 
-Triggers:
-  - Type: PUSH
-    Branches:
-      - main
-  - Type: PULLREQUEST
-    Branches:
-      - main
-    Events:
-      - OPEN
-      - REVISION
+# Triggers disabled - using Frontend_Deployment_Pipeline instead
+# Triggers:
+#   - Type: PUSH
+#     Branches:
+#       - main
+#   - Type: PULLREQUEST
+#     Branches:
+#       - main
+#     Events:
+#       - OPEN
+#       - REVISION
 
 Actions:
   BuildAndDeploy:
