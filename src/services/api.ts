@@ -1,5 +1,6 @@
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
+import { addAuthHeaders } from './authStub';
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
 
@@ -7,32 +8,68 @@ export { ApiError };
 
 export const peopleApi = {
   async getAllPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/people`);
-    return handleApiResponse(response);
+    const response = await fetch(`${API_BASE_URL}/people`, {
+      headers: addAuthHeaders()
+    });
+    const data = await handleApiResponse(response);
+    
+    // Handle both old array format and new object format
+    if (Array.isArray(data)) {
+      return data; // Old format (backward compatibility)
+    } else if (data && data.people && Array.isArray(data.people)) {
+      return data.people; // New format
+    } else {
+      console.error('Unexpected API response format:', data);
+      return []; // Fallback to empty array
+    }
   },
 
   async getPerson(id: string): Promise<Person> {
-    const response = await fetch(`${API_BASE_URL}/people/${id}`);
+    const response = await fetch(`${API_BASE_URL}/people/${id}`, {
+      headers: addAuthHeaders()
+    });
     return handleApiResponse(response);
   },
 
   async createPerson(person: PersonCreate): Promise<Person> {
     const response = await fetch(`${API_BASE_URL}/people`, {
       method: 'POST',
-      headers: {
+      headers: addAuthHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(person),
     });
-    return handleApiResponse(response);
+    
+    // Handle both 200 and 201 status codes
+    if (!response.ok) {
+      let errorMessage: string;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || response.statusText;
+      } catch {
+        errorMessage = response.statusText;
+      }
+      throw new ApiError(response.status, errorMessage);
+    }
+    
+    const data = await response.json();
+    
+    // If API returns a generic message instead of person data, handle gracefully
+    if (data && !data.id && data.message) {
+      console.warn('API returned message instead of person data:', data.message);
+      // For now, return a placeholder - this needs proper API fix
+      throw new ApiError(500, 'API did not return created person data');
+    }
+    
+    return data;
   },
 
   async updatePerson(id: string, person: PersonUpdate): Promise<Person> {
     const response = await fetch(`${API_BASE_URL}/people/${id}`, {
       method: 'PUT',
-      headers: {
+      headers: addAuthHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(person),
     });
     return handleApiResponse(response);

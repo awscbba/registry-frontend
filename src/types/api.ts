@@ -20,6 +20,13 @@ export async function handleApiResponse(response: Response): Promise<any> {
     } catch {
       errorMessage = response.statusText;
     }
+    
+    // Handle authentication errors specifically
+    if (response.status === 401) {
+      console.warn('Authentication required - API now requires JWT tokens');
+      errorMessage = 'Authentication required. Please implement login system.';
+    }
+    
     throw new ApiError(response.status, errorMessage);
   }
 
