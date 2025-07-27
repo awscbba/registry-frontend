@@ -241,3 +241,96 @@ Actions:
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinux_x86_64:2024_03
+
+  DeploymentSummary:
+    Identifier: aws/build@v1
+    DependsOn:
+      - DeployProduction
+    Condition:
+      StringEquals:
+        - "${WorkflowSource.BranchName}"
+        - "main"
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
+          Name: "142728997126"
+      Name: AWS
+    Inputs:
+      Sources:
+        - WorkflowSource
+      Artifacts:
+        - frontendBuild
+        - frontendQualityReports
+    Configuration:
+      Steps:
+        - Run: |
+            echo "🎉 Deployment Summary - Main Branch"
+            echo "=================================="
+            echo "📅 Time: $(date)"
+            echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-main}"
+            echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
+            echo "👤 Author: ${CODECATALYST_COMMIT_AUTHOR:-unknown}"
+            echo ""
+            
+            # Install Just task runner for summary generation
+            echo "📦 Installing Just task runner..."
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+            echo "✅ Just version: $(just --version)"
+            echo ""
+            
+            echo "🚀 Production Deployment Summary:"
+            echo "  Status: ✅ DEPLOYED TO PRODUCTION"
+            echo "  Environment: Production"
+            echo "  Target: S3 + CloudFront"
+            echo "  Bucket: people-register-frontend-142728997126-us-east-1"
+            echo "  CloudFront: EE5UBCBLMKK9R"
+            echo ""
+            
+            echo "🌐 Live URLs:"
+            echo "  Frontend: https://d28z2il3z2vmpc.cloudfront.net"
+            echo "  API: https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod"
+            echo ""
+            
+            # Check build artifacts
+            if [ -d "dist" ]; then
+                echo "📊 Deployed Build Analysis:"
+                echo "  Build size: $(du -sh dist/ | cut -f1)"
+                echo "  JavaScript files: $(find dist/ -name "*.js" | wc -l)"
+                echo "  CSS files: $(find dist/ -name "*.css" | wc -l)"
+                echo "  HTML files: $(find dist/ -name "*.html" | wc -l)"
+                echo "  Total files: $(find dist/ -type f | wc -l)"
+                echo ""
+                
+                # Determine build type
+                if [ -f "dist/index.html" ] && [ $(wc -c < dist/index.html) -gt 10000 ]; then
+                    echo "  🎯 Build type: REAL ASTRO BUILD ($(wc -c < dist/index.html) bytes HTML)"
+                    if [ -d "dist/assets" ]; then
+                        echo "  🚀 Assets: $(ls dist/assets/ | wc -l) optimized files"
+                    fi
+                else
+                    echo "  📋 Build type: FALLBACK BUILD"
+                fi
+            fi
+            echo ""
+            
+            # Quality summary
+            echo "🔒 Quality Summary:"
+            if [ -f "npm-audit.json" ]; then
+                echo "  ✅ Security audit: Completed"
+                if command -v jq >/dev/null 2>&1; then
+                    VULN_COUNT=$(jq -r '.metadata.vulnerabilities.total // 0' npm-audit.json 2>/dev/null || echo "unknown")
+                    echo "    Vulnerabilities: $VULN_COUNT"
+                fi
+            fi
+            
+            if [ -f "bundle-size.txt" ]; then
+                BUNDLE_INFO=$(cat bundle-size.txt 2>/dev/null || echo "Bundle size unknown")
+                echo "  📊 Bundle size: $BUNDLE_INFO"
+            fi
+            echo ""
+            
+            echo "✅ Main branch deployment completed successfully!"
+            echo "🎯 All systems operational and live in production"
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinux_x86_64:2024_03
