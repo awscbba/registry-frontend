@@ -76,6 +76,8 @@ Actions:
 
   FrontendQualityChecks:
     Identifier: aws/build@v1
+    DependsOn:
+      - ValidateFrontend
     Compute:
       Type: EC2
     Environment:
@@ -141,7 +143,6 @@ Actions:
   DeployProduction:
     Identifier: aws/build@v1
     DependsOn:
-      - ValidateFrontend
       - FrontendQualityChecks
     Environment:
       Connections:
@@ -199,8 +200,7 @@ Actions:
   PRSummary:
     Identifier: aws/build@v1
     DependsOn:
-      - ValidateFrontend
-      - FrontendQualityChecks
+      - DeployProduction
     Environment:
       Connections:
         - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
