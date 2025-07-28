@@ -120,29 +120,42 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     setSuccess(null);
 
     try {
-      // First, create the person
-      const personData: PersonCreate = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
-        address: formData.address
-      };
-
-      const createdPerson = await peopleApi.createPerson(personData);
-
-      // Then, create the subscription using the actual project UUID
-      const subscriptionData: SubscriptionCreate = {
+      // Use the new combined endpoint that creates both person and subscription
+      const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+      
+      const subscriptionData = {
+        person: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          dateOfBirth: formData.dateOfBirth,
+          address: formData.address
+        },
         projectId: project!.id, // Use the actual UUID from the loaded project
-        personId: createdPerson.id,
-        status: 'pending',
         notes: formData.notes || undefined
       };
 
-      await projectApi.createSubscription(subscriptionData);
+      const response = await fetch(`${API_BASE_URL}/public/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(subscriptionData),
+      });
 
-      setSuccess('¡Suscripción exitosa! Te has registrado correctamente al proyecto.');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al procesar suscripción');
+      }
+
+      const result = await response.json();
+      
+      if (result.person_created) {
+        setSuccess('¡Suscripción exitosa! Te has registrado correctamente al proyecto y tu cuenta ha sido creada.');
+      } else {
+        setSuccess('¡Suscripción exitosa! Te has registrado correctamente al proyecto usando tu cuenta existente.');
+      }
       
       // Reset form
       setFormData({
@@ -162,7 +175,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       });
 
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof Error) {
         setError(`Error al procesar suscripción: ${err.message}`);
       } else {
         setError('Error desconocido al procesar la suscripción');
