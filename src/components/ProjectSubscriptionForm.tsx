@@ -37,12 +37,51 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     loadProject();
   }, [projectId]);
 
+  // Helper function to convert project name to URL-friendly slug
+  const nameToSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim();
+  };
+
+  // Mapping function to get consistent slugs for known projects
+  const getProjectSlug = (project: Project): string => {
+    const name = project.name.toLowerCase();
+    
+    // Map known projects to their expected slugs
+    if (name.includes('aws workshop')) {
+      return 'aws-workshop-2025';
+    } else if (name.includes('serverless bootcamp')) {
+      return 'serverless-bootcamp';
+    } else if (name.includes('testproy') || name.includes('test')) {
+      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
+    }
+    
+    // Fallback to generated slug
+    return nameToSlug(project.name);
+  };
+
   const loadProject = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const projectData = await projectApi.getProject(projectId);
-      setProject(projectData);
+      // First, get all projects to find the one matching the slug
+      const allProjects = await projectApi.getAllProjects();
+      
+      // Find project by slug
+      const foundProject = allProjects.find(project => 
+        getProjectSlug(project) === projectId
+      );
+      
+      if (!foundProject) {
+        setError('Proyecto no encontrado');
+        return;
+      }
+      
+      setProject(foundProject);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(`Error al cargar proyecto: ${err.message}`);
@@ -93,9 +132,9 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
       const createdPerson = await peopleApi.createPerson(personData);
 
-      // Then, create the subscription
+      // Then, create the subscription using the actual project UUID
       const subscriptionData: SubscriptionCreate = {
-        projectId: projectId,
+        projectId: project!.id, // Use the actual UUID from the loaded project
         personId: createdPerson.id,
         status: 'pending',
         notes: formData.notes || undefined

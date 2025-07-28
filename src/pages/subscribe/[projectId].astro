@@ -3,34 +3,35 @@ import Layout from '../../layouts/Layout.astro';
 import ProjectSubscriptionForm from '../../components/ProjectSubscriptionForm';
 
 // Generate static paths for all active projects
-// Helper function to convert project name to URL-friendly slug
-function nameToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .trim();
-}
-
-// Mapping function to get consistent slugs for known projects
-function getProjectSlug(project: any): string {
-  const name = project.name.toLowerCase();
-  
-  // Map known projects to their expected slugs
-  if (name.includes('aws workshop')) {
-    return 'aws-workshop-2025';
-  } else if (name.includes('serverless bootcamp')) {
-    return 'serverless-bootcamp';
-  } else if (name.includes('testproy') || name.includes('test')) {
-    return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
-  }
-  
-  // Fallback to generated slug
-  return nameToSlug(project.name);
-}
 
 export async function getStaticPaths() {
+  // Helper function to convert project name to URL-friendly slug
+  function nameToSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim();
+  }
+
+  // Mapping function to get consistent slugs for known projects
+  function getProjectSlug(project: any): string {
+    const name = project.name.toLowerCase();
+    
+    // Map known projects to their expected slugs
+    if (name.includes('aws workshop')) {
+      return 'aws-workshop-2025';
+    } else if (name.includes('serverless bootcamp')) {
+      return 'serverless-bootcamp';
+    } else if (name.includes('testproy') || name.includes('test')) {
+      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
+    }
+    
+    // Fallback to generated slug
+    return nameToSlug(project.name);
+  }
+
   try {
     // Fetch active projects from the API at build time
     const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
