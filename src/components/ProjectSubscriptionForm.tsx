@@ -16,20 +16,11 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Form data
+  // Form data - simplified for new workflow
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
-    dateOfBirth: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: 'Bolivia'
-    },
     notes: ''
   });
 
@@ -95,22 +86,10 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        address: {
-          ...prev.address,
-          [addressField]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,20 +102,57 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       // Use the new combined endpoint that creates both person and subscription
       const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
       
+      // First, check if person already exists and if they're already subscribed
+      const personCheckResponse = await fetch(`${API_BASE_URL}/v2/people/check-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      if (personCheckResponse.ok) {
+        const personCheck = await personCheckResponse.json();
+        
+        if (personCheck.exists) {
+          // Person exists - check if already subscribed
+          const subscriptionCheckResponse = await fetch(`${API_BASE_URL}/v2/subscriptions/check`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              email: formData.email, 
+              projectId: project!.id 
+            }),
+          });
+
+          if (subscriptionCheckResponse.ok) {
+            const subscriptionCheck = await subscriptionCheckResponse.json();
+            
+            if (subscriptionCheck.subscribed) {
+              setError('Ya tienes una suscripción a este proyecto. Por favor inicia sesión para ver el estado de tu suscripción.');
+              return;
+            }
+          }
+
+          // Person exists but not subscribed - require login
+          setError('Ya tienes una cuenta registrada con este email. Por favor inicia sesión para suscribirte al proyecto.');
+          return;
+        }
+      }
+
+      // Person doesn't exist - create subscription with simplified data format
       const subscriptionData = {
         person: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          dateOfBirth: formData.dateOfBirth,
-          address: formData.address
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email
         },
-        projectId: project!.id, // Use the actual UUID from the loaded project
+        projectId: project!.id,
         notes: formData.notes || undefined
       };
 
-      const response = await fetch(`${API_BASE_URL}/public/subscribe`, {
+      const response = await fetch(`${API_BASE_URL}/v2/public/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,9 +168,9 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       const result = await response.json();
       
       if (result.person_created) {
-        setSuccess('¡Suscripción exitosa! Te has registrado correctamente al proyecto y tu cuenta ha sido creada.');
+        setSuccess('¡Suscripción enviada exitosamente! Tu cuenta ha sido creada y tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
       } else {
-        setSuccess('¡Suscripción exitosa! Te has registrado correctamente al proyecto usando tu cuenta existente.');
+        setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
       }
       
       // Reset form
@@ -162,15 +178,6 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
-        dateOfBirth: '',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: 'Bolivia'
-        },
         notes: ''
       });
 
@@ -319,9 +326,14 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
         {/* Subscription Form */}
         <div className="form-container">
+          <div className="form-intro">
+            <h2>Solicitar Suscripción</h2>
+            <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
+          </div>
+
           <form onSubmit={handleSubmit} className="subscription-form-content">
             <div className="form-section">
-              <h3>Información Personal</h3>
+              <h3>Información Básica</h3>
               
               <div className="form-row">
                 <div className="form-group">
@@ -334,6 +346,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
+                    placeholder="Tu nombre"
                   />
                 </div>
                 
@@ -347,117 +360,26 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="email">Email *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="phone">Teléfono *</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
+                    placeholder="Tu apellido"
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label htmlFor="dateOfBirth">Fecha de Nacimiento *</label>
+                <label htmlFor="email">Email *</label>
                 <input
-                  type="date"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting}
+                  placeholder="tu@email.com"
                 />
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h3>Dirección</h3>
-              
-              <div className="form-group">
-                <label htmlFor="address.street">Calle y Número</label>
-                <input
-                  type="text"
-                  id="address.street"
-                  name="address.street"
-                  value={formData.address.street}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="address.city">Ciudad</label>
-                  <input
-                    type="text"
-                    id="address.city"
-                    name="address.city"
-                    value={formData.address.city}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="address.state">Departamento</label>
-                  <input
-                    type="text"
-                    id="address.state"
-                    name="address.state"
-                    value={formData.address.state}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="address.postalCode">Código Postal</label>
-                  <input
-                    type="text"
-                    id="address.postalCode"
-                    name="address.postalCode"
-                    value={formData.address.postalCode}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="address.country">País</label>
-                  <input
-                    type="text"
-                    id="address.country"
-                    name="address.country"
-                    value={formData.address.country}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                  />
-                </div>
+                <small className="form-help">
+                  Usaremos este email para notificarte sobre el estado de tu solicitud
+                </small>
               </div>
             </div>
 
@@ -465,14 +387,14 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
               <h3>Información Adicional</h3>
               
               <div className="form-group">
-                <label htmlFor="notes">Notas o comentarios (opcional)</label>
+                <label htmlFor="notes">¿Por qué te interesa este proyecto? (opcional)</label>
                 <textarea
                   id="notes"
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
                   rows={4}
-                  placeholder="¿Por qué te interesa este proyecto? ¿Tienes alguna experiencia relevante?"
+                  placeholder="Cuéntanos sobre tu interés en el proyecto, experiencia relevante, o cualquier información que consideres importante..."
                   disabled={isSubmitting}
                 />
               </div>
