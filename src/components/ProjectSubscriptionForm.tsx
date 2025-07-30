@@ -536,6 +536,25 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
+        .form-intro {
+          text-align: center;
+          margin-bottom: 2rem;
+          padding-bottom: 2rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .form-intro h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin-bottom: 0.5rem;
+        }
+
+        .form-intro p {
+          color: #6b7280;
+          line-height: 1.6;
+        }
+
         .form-section {
           margin-bottom: 2rem;
         }
@@ -591,6 +610,13 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         .form-group textarea:disabled {
           background: #f9fafb;
           cursor: not-allowed;
+        }
+
+        .form-help {
+          display: block;
+          margin-top: 0.25rem;
+          font-size: 0.875rem;
+          color: #6b7280;
         }
 
         .form-actions {
