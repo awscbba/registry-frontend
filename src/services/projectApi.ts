@@ -17,14 +17,16 @@ export { ApiError };
 export const projectApi = {
   // Project Management
   async getAllProjects(): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/projects`);
+    const response = await fetch(`${API_BASE_URL}/v2/projects`);
     const data = await handleApiResponse(response);
     
-    // Handle both old array format and new object format
-    if (Array.isArray(data)) {
-      return data; // Old format (backward compatibility)
+    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data; // v2 format
+    } else if (Array.isArray(data)) {
+      return data; // Legacy array format (backward compatibility)
     } else if (data && data.projects && Array.isArray(data.projects)) {
-      return data.projects; // New format
+      return data.projects; // Legacy object format (backward compatibility)
     } else {
       console.error('Unexpected API response format:', data);
       return []; // Fallback to empty array
@@ -94,8 +96,18 @@ export const projectApi = {
   },
 
   async getAllSubscriptions(): Promise<Subscription[]> {
-    const response = await fetch(`${API_BASE_URL}/subscriptions`);
-    return handleApiResponse(response);
+    const response = await fetch(`${API_BASE_URL}/v2/subscriptions`);
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data; // v2 format
+    } else if (Array.isArray(data)) {
+      return data; // Legacy format (backward compatibility)
+    } else {
+      console.error('Unexpected subscriptions API response format:', data);
+      return []; // Fallback to empty array
+    }
   },
 
   async createSubscription(subscription: SubscriptionCreate): Promise<Subscription> {
