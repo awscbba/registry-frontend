@@ -82,13 +82,13 @@ export default function ProjectShowcase() {
 
   const handleSubscribeClick = (project: Project) => {
     const slug = getProjectSlug(project);
-    // Navigate to project-specific subscription form - use correct CloudFront path
-    window.location.href = `/subscribe/${slug}/index.html`;
+    // Navigate to project-specific subscription form - use Astro dynamic route
+    window.location.href = `/subscribe/${slug}`;
   };
 
   const handleAdminClick = () => {
-    // Navigate to admin dashboard - use correct CloudFront path
-    window.location.href = '/admin/index.html';
+    // Navigate to admin dashboard - use Astro route
+    window.location.href = '/admin';
   };
 
   const handleLogout = async () => {
