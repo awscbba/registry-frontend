@@ -9,6 +9,7 @@ import type {
 } from '../types/project';
 import type { Person } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
+import { addAuthHeaders } from './authStub';
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
 
@@ -132,7 +133,9 @@ export const projectApi = {
 
   // Admin Dashboard
   async getAdminDashboard(): Promise<AdminDashboard> {
-    const response = await fetch(`${API_BASE_URL}/admin/dashboard`);
+    const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+      headers: addAuthHeaders()
+    });
     return handleApiResponse(response);
   },
 
