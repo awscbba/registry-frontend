@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
+import { authService } from '../services/authStub';
 import PersonList from './PersonList';
 import ProjectCreateForm from './ProjectCreateForm';
 import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../types/project';
@@ -21,6 +22,13 @@ export default function AdminDashboard() {
   const [isPeopleLoading, setIsPeopleLoading] = useState(false);
 
   useEffect(() => {
+    // Check authentication first
+    if (!authService.isAuthenticated()) {
+      setError('Acceso denegado. Por favor, inicia sesión.');
+      setIsLoading(false);
+      return;
+    }
+    
     loadDashboard();
   }, []);
 
@@ -28,10 +36,20 @@ export default function AdminDashboard() {
     setIsLoading(true);
     setError(null);
     try {
+      // Try to load dashboard data, but handle gracefully if endpoint doesn't exist
       const data = await projectApi.getAdminDashboard();
       setDashboard(data);
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof ApiError && err.status === 404) {
+        // Dashboard endpoint doesn't exist, create a basic dashboard
+        console.warn('Admin dashboard endpoint not found, using basic dashboard');
+        setDashboard({
+          totalProjects: 0,
+          totalPeople: 0,
+          totalSubscriptions: 0,
+          recentActivity: []
+        });
+      } else if (err instanceof ApiError) {
         setError(`Error al cargar dashboard: ${err.message}`);
       } else {
         setError('Error desconocido al cargar dashboard');
@@ -162,16 +180,24 @@ export default function AdminDashboard() {
   }
 
   if (error) {
+    const isAuthError = error.includes('Acceso denegado');
+    
     return (
       <div className="admin-dashboard">
         <div className="container">
           <div className="error-state">
             <div className="error-icon">⚠️</div>
-            <h3>Error al cargar dashboard</h3>
+            <h3>{isAuthError ? 'Acceso Denegado' : 'Error al cargar dashboard'}</h3>
             <p>{error}</p>
-            <button onClick={loadDashboard} className="btn btn-primary">
-              Reintentar
-            </button>
+            {isAuthError ? (
+              <button onClick={() => window.location.href = '/'} className="btn btn-primary">
+                Volver al Inicio
+              </button>
+            ) : (
+              <button onClick={loadDashboard} className="btn btn-primary">
+                Reintentar
+              </button>
+            )}
           </div>
         </div>
 
