@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authStub';
 import PersonList from './PersonList';
-import PersonEditForm from './PersonEditForm';
+import PersonForm from './PersonForm';
 import ProjectCreateForm from './ProjectCreateForm';
 import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../types/project';
 import type { Person } from '../types/person';
@@ -348,11 +348,11 @@ export default function AdminDashboard() {
         {currentView === 'edit-person' && editingPerson ? (
           // Edit Person View
           <div className="edit-person-view">
-            <PersonEditForm
+            <PersonForm
               person={editingPerson}
-              onSave={handleSavePerson}
+              onSubmit={handleSavePerson}
               onCancel={handleCancelEdit}
-              isSubmitting={isSubmitting}
+              isLoading={isSubmitting}
             />
           </div>
         ) : currentView === 'people' ? (

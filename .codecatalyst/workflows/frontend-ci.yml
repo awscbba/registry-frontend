@@ -78,9 +78,7 @@ Actions:
                 echo "console.log('minimal js');" > dist/app.js
             fi
             echo ""
-            echo "Final artifact check:"
-            ls -la dist/
-            echo "Frontend validation completed successfully"
+      , I w successfully"
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinux_x86_64:2024_03
