@@ -46,11 +46,24 @@ export default function AdminDashboard() {
     console.log('AdminDashboard: Starting to load dashboard data...');
     
     try {
-      // Try to load dashboard data, but handle gracefully if endpoint doesn't exist
-      console.log('AdminDashboard: Calling projectApi.getAdminDashboard()...');
-      const data = await projectApi.getAdminDashboard();
-      console.log('AdminDashboard: Dashboard data received:', data);
-      setDashboard(data);
+      // Load dashboard data and people count in parallel
+      console.log('AdminDashboard: Loading dashboard and people data...');
+      const [dashboardData, peopleData] = await Promise.all([
+        projectApi.getAdminDashboard(),
+        projectApi.getAllPeople()
+      ]);
+      
+      console.log('AdminDashboard: Dashboard data received:', dashboardData);
+      console.log('AdminDashboard: People count:', peopleData.length);
+      
+      // Combine dashboard data with people count
+      const completeData = {
+        ...dashboardData,
+        totalPeople: peopleData.length,
+        timestamp: dashboardData.timestamp || new Date().toISOString()
+      };
+      
+      setDashboard(completeData);
     } catch (err) {
       console.error('AdminDashboard: Error loading dashboard:', err);
       
@@ -126,7 +139,7 @@ export default function AdminDashboard() {
 
   const handleEditPerson = (person: Person) => {
     // For now, just show an alert - you can implement edit functionality later
-    alert(`Editar persona: ${person.firstName} ${person.lastName}`);
+    alert(`Editar Persona:\n\nNombre: ${person.firstName} ${person.lastName}\nEmail: ${person.email}\nTeléfono: ${person.phone || "No especificado"}\n\nNota: La funcionalidad de edición completa estará disponible próximamente.`);
   };
 
   const handleDeletePerson = async (id: string) => {
