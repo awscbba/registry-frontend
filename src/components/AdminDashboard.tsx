@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authStub';
 import PersonList from './PersonList';
+import PersonEditForm from './PersonEditForm';
 import ProjectCreateForm from './ProjectCreateForm';
 import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../types/project';
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
 
-type AdminView = 'dashboard' | 'people' | 'create-project';
+type AdminView = 'dashboard' | 'people' | 'create-project' | 'edit-person';
 
 export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardType | null>(null);
@@ -20,6 +21,7 @@ export default function AdminDashboard() {
   // People management state
   const [people, setPeople] = useState<Person[]>([]);
   const [isPeopleLoading, setIsPeopleLoading] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
   useEffect(() => {
     console.log('AdminDashboard: useEffect triggered');
@@ -138,8 +140,44 @@ export default function AdminDashboard() {
   };
 
   const handleEditPerson = (person: Person) => {
-    // For now, just show an alert - you can implement edit functionality later
-    alert(`Editar Persona:\n\nNombre: ${person.firstName} ${person.lastName}\nEmail: ${person.email}\nTeléfono: ${person.phone || "No especificado"}\n\nNota: La funcionalidad de edición completa estará disponible próximamente.`);
+    setEditingPerson(person);
+    setCurrentView('edit-person');
+  };
+
+  const handleSavePerson = async (updatedPerson: Person) => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      // TODO: Implement API call to update person
+      // await projectApi.updatePerson(updatedPerson.id, updatedPerson);
+      
+      // For now, just update the local state
+      setPeople(prevPeople => 
+        prevPeople.map(person => 
+          person.id === updatedPerson.id ? updatedPerson : person
+        )
+      );
+      
+      setSuccessMessage(`Persona ${updatedPerson.firstName} ${updatedPerson.lastName} actualizada exitosamente`);
+      setEditingPerson(null);
+      setCurrentView('people');
+      await loadDashboard(); // Refresh dashboard data
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al actualizar persona: ${err.message}`);
+      } else {
+        setError('Error desconocido al actualizar persona');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPerson(null);
+    setCurrentView('people');
+    setError(null);
   };
 
   const handleDeletePerson = async (id: string) => {
@@ -307,7 +345,17 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {currentView === 'people' ? (
+        {currentView === 'edit-person' && editingPerson ? (
+          // Edit Person View
+          <div className="edit-person-view">
+            <PersonEditForm
+              person={editingPerson}
+              onSave={handleSavePerson}
+              onCancel={handleCancelEdit}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        ) : currentView === 'people' ? (
           // People List View
           <div className="people-view">
             <div className="view-header">
