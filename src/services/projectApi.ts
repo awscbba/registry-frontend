@@ -165,13 +165,17 @@ export const projectApi = {
   },
 
   async getPerson(id: string): Promise<Person> {
-    // Since there's no individual person endpoint, get from the people list
-    const people = await this.getAllPeople();
-    const person = people.find(p => p.id === id);
-    if (!person) {
-      throw new ApiError(404, 'Person not found');
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
+      headers: addAuthHeaders()
+    });
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format
+    if (data && data.data) {
+      return data.data; // v2 format
+    } else {
+      return data; // Legacy format (backward compatibility)
     }
-    return person;
   },
 
   async createPerson(person: any): Promise<Person> {
@@ -180,17 +184,31 @@ export const projectApi = {
   },
 
   async updatePerson(id: string, person: Partial<Person>): Promise<Person> {
-    // Individual person update is not available in the current API version
-    throw new ApiError(501, 'La actualización de personas no está disponible en la versión actual de la API.');
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...addAuthHeaders()
+      },
+      body: JSON.stringify(person),
+    });
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format
+    if (data && data.data) {
+      return data.data; // v2 format
+    } else {
+      return data; // Legacy format (backward compatibility)
+    }
   },
 
-  async initiateDeletion(id: string, reason: string = 'Admin deletion'): Promise<{ confirmationToken: string }> {
-    // Person deletion is not available in the current API version
-    throw new ApiError(501, 'La eliminación de personas no está disponible en la versión actual de la API.');
-  },
-
-  async deletePerson(id: string, confirmationToken?: string, reason: string = 'Admin deletion'): Promise<void> {
-    // Person deletion is not available in the current API version
-    throw new ApiError(501, 'La eliminación de personas no está disponible en la versión actual de la API.');
+  async deletePerson(id: string): Promise<void> {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
+      method: 'DELETE',
+      headers: addAuthHeaders()
+    });
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Error al eliminar persona');
+    }
   },
 };

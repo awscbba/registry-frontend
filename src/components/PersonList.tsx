@@ -77,7 +77,7 @@ export default function PersonList({ people, onEdit, onDelete, isLoading = false
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onEdit(person)}
-                  title="Editar persona (funcionalidad limitada en la versión actual)"
+                  title="Editar información de la persona"
                   className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@ export default function PersonList({ people, onEdit, onDelete, isLoading = false
                 </button>
                 <button
                   onClick={() => onDelete(person.id)}
-                  title="Eliminar persona (funcionalidad no disponible en la versión actual)"
+                  title="Eliminar persona permanentemente"
                   className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
