@@ -1,5 +1,5 @@
 Name: Frontend_PR_Analysis
-SchemaVersion: "1.0"
+SchemaVersion: '1.0'
 
 Triggers: []
   # - Type: PULLREQUEST
@@ -15,7 +15,7 @@ Actions:
     Environment:
       Connections:
         - Role: CodeCatalystWorkflowDevelopmentRole-AWSCocha
-          Name: "142728997126"
+          Name: '142728997126'
       Name: AWS
     Inputs:
       Sources:
@@ -31,7 +31,7 @@ Actions:
             echo "🏷️ Commit: ${CODECATALYST_COMMIT_ID:-unknown}"
             echo "👤 Author: ${CODECATALYST_COMMIT_AUTHOR:-unknown}"
             echo ""
-            
+
             # Install Node.js 20 using NVM for better compatibility
             echo "📦 Installing Node.js 20 via NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -39,17 +39,17 @@ Actions:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm install 20
             nvm use 20
-            
+
             # Verify installation
             echo "✅ Node.js version: $(node --version)"
             echo "✅ npm version: $(npm --version)"
-            
+
             # Install Just task runner
             echo "📦 Installing Just task runner..."
             curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
             echo "✅ Just version: $(just --version)"
             echo ""
-            
+
             # Quick build for analysis (don't fail if build issues exist)
             echo "🔍 Running quick validation for PR analysis..."
             if just ci-validate; then
@@ -63,7 +63,7 @@ Actions:
                 echo "<html><body><h1>Build Issues Detected</h1></body></html>" > dist/index.html
             fi
             echo ""
-            
+
             # Run quality checks (don't fail if issues exist)
             echo "🔍 Running quality analysis..."
             if just ci-quality; then
@@ -78,18 +78,18 @@ Actions:
                 [ -f "bundle-size.txt" ] || echo "Bundle size - analysis failed" > bundle-size.txt
             fi
             echo ""
-            
+
             # Generate PR summary
             echo "📊 Generating PR summary..."
             just pr-summary || echo "⚠️ PR summary generation had issues but continuing..."
             echo ""
-            
+
             # Final PR status
             echo "🎯 Pull Request Status Summary:"
             echo "  Build Status: $BUILD_STATUS"
             echo "  Quality Status: $QUALITY_STATUS"
             echo ""
-            
+
             if [[ "$BUILD_STATUS" == *"PASSED"* ]] && [[ "$QUALITY_STATUS" == *"PASSED"* ]]; then
                 echo "✅ PR READY FOR REVIEW"
                 echo "  All checks passed - safe to merge after review"
@@ -101,7 +101,7 @@ Actions:
                 echo "  Build issues must be resolved before merge"
             fi
             echo ""
-            
+
             echo "📋 PR Analysis completed"
       Container:
         Registry: CODECATALYST

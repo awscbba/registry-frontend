@@ -22,13 +22,21 @@ export default function AdminDashboard() {
   const [isPeopleLoading, setIsPeopleLoading] = useState(false);
 
   useEffect(() => {
+    console.log('AdminDashboard: useEffect triggered');
+    console.log('AdminDashboard: Checking authentication...');
+    console.log('AdminDashboard: authService.isAuthenticated():', authService.isAuthenticated());
+    console.log('AdminDashboard: authService.getAuthToken():', authService.getAuthToken());
+    console.log('AdminDashboard: authService.getCurrentUser():', authService.getCurrentUser());
+    
     // Check authentication first
     if (!authService.isAuthenticated()) {
+      console.log('AdminDashboard: Authentication failed, showing access denied');
       setError('Acceso denegado. Por favor, inicia sesión.');
       setIsLoading(false);
       return;
     }
     
+    console.log('AdminDashboard: Authentication successful, loading dashboard');
     loadDashboard();
   }, []);
 
@@ -198,9 +206,24 @@ export default function AdminDashboard() {
             <h3>{isAuthError ? 'Acceso Denegado' : 'Error al cargar dashboard'}</h3>
             <p>{error}</p>
             {isAuthError ? (
-              <button onClick={() => window.location.href = '/'} className="btn btn-primary">
-                Volver al Inicio
-              </button>
+              <div>
+                <button onClick={() => window.location.href = '/'} className="btn btn-primary">
+                  Volver al Inicio
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('AdminDashboard: Simulating authentication for testing');
+                    (authService as any).simulateAuth();
+                    setError(null);
+                    setIsLoading(true);
+                    loadDashboard();
+                  }} 
+                  className="btn btn-secondary"
+                  style={{marginLeft: '10px'}}
+                >
+                  Test Login (Debug)
+                </button>
+              </div>
             ) : (
               <button onClick={loadDashboard} className="btn btn-primary">
                 Reintentar

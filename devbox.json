@@ -4,7 +4,8 @@
     "just@latest",
     "awscli2@latest",
     "git@latest",
-    "nodejs@latest"
+    "nodejs@latest",
+    "lynx@latest"
   ],
   "shell": {
     "init_hook": [

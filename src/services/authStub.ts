@@ -137,6 +137,22 @@ export const authService = {
   isAdmin(): boolean {
     const user = getStoredUser();
     return user !== null && this.isAuthenticated();
+  },
+
+  // Temporary method for testing - simulate authentication
+  simulateAuth(): void {
+    console.log('authStub: Simulating authentication for testing');
+    const testUser = {
+      id: 'test-admin',
+      email: 'admin@test.com',
+      firstName: 'Test',
+      lastName: 'Admin'
+    };
+    const testToken = 'test-token-123';
+    
+    setStoredToken(testToken);
+    setStoredUser(testUser);
+    console.log('authStub: Test authentication set up');
   }
 };
 

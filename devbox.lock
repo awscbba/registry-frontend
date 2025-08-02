@@ -225,6 +225,54 @@
         }
       }
     },
+    "lynx@latest": {
+      "last_modified": "2025-07-13T22:45:35Z",
+      "resolved": "github:NixOS/nixpkgs/a421ac6595024edcfbb1ef950a3712b89161c359#lynx",
+      "source": "devbox-search",
+      "version": "2.9.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/gcdmsp39i3zsms4q60gxfp0k59g5apjz-lynx-2.9.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/gcdmsp39i3zsms4q60gxfp0k59g5apjz-lynx-2.9.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z4bbipgfkhrk6krp913ln8wmm9dnx08b-lynx-2.9.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/z4bbipgfkhrk6krp913ln8wmm9dnx08b-lynx-2.9.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3zqccsxj3cfk5l1pv5gbr05h7vgvavq9-lynx-2.9.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3zqccsxj3cfk5l1pv5gbr05h7vgvavq9-lynx-2.9.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jq21kiz222m79ay3akyzg55w1qzvyzfw-lynx-2.9.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/jq21kiz222m79ay3akyzg55w1qzvyzfw-lynx-2.9.2"
+        }
+      }
+    },
     "nodejs@latest": {
       "last_modified": "2025-06-22T15:15:55Z",
       "plugin_version": "0.0.2",

@@ -13,9 +13,13 @@ export default function ProjectShowcase() {
   const [showLoginForm, setShowLoginForm] = useState(false);
 
   useEffect(() => {
+    console.log('ProjectShowcase: useEffect triggered');
     // Check if user is already authenticated
+    console.log('ProjectShowcase: Checking authentication...');
     setIsAuthenticated(authService.isAuthenticated());
+    console.log('ProjectShowcase: Authentication status:', authService.isAuthenticated());
     // Always load projects first, authentication is optional for viewing
+    console.log('ProjectShowcase: Loading active projects...');
     loadActiveProjects();
   }, []);
 
@@ -30,25 +34,37 @@ export default function ProjectShowcase() {
   };
 
   const loadActiveProjects = async () => {
+    console.log('ProjectShowcase: Starting to load active projects...');
     setIsLoading(true);
     setError(null);
     try {
+      console.log('ProjectShowcase: Calling projectApi.getAllProjects()...');
       const allProjects = await projectApi.getAllProjects();
+      console.log('ProjectShowcase: Raw API response:', allProjects);
+      console.log('ProjectShowcase: Projects array length:', allProjects?.length);
+      
       // Filter only active and enabled projects for public display
       const activeProjects = allProjects.filter(project => 
         project.status === 'active' && project.isEnabled !== false
       );
+      console.log('ProjectShowcase: Filtered active projects:', activeProjects);
+      console.log('ProjectShowcase: Active projects count:', activeProjects.length);
+      
       setProjects(activeProjects);
+      console.log('ProjectShowcase: Projects state updated successfully');
     } catch (err) {
+      console.error('ProjectShowcase: Error loading projects:', err);
       if (err instanceof ApiError) {
         // For now, don't require authentication for viewing projects
         // Just log the error and show a generic message
-        console.warn('API Error:', err.message);
+        console.warn('ProjectShowcase: API Error details:', err.status, err.message);
         setError(`Error al cargar proyectos: ${err.message}`);
       } else {
+        console.error('ProjectShowcase: Unknown error:', err);
         setError('Error desconocido al cargar proyectos');
       }
     } finally {
+      console.log('ProjectShowcase: Loading finished, setting isLoading to false');
       setIsLoading(false);
     }
   };
