@@ -4,3 +4,10 @@ node_modules/
 .devbox/
 .git/
 .vscode
+
+# Development logs
+dev.log
+*.log
+
+# Astro build artifacts
+.astro/
