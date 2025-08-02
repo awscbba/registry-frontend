@@ -8,16 +8,18 @@ export { ApiError };
 
 export const peopleApi = {
   async getAllPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/people`, {
+    const response = await fetch(`${API_BASE_URL}/v2/admin/people`, {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
     
-    // Handle both old array format and new object format
-    if (Array.isArray(data)) {
+    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data; // v2 format
+    } else if (Array.isArray(data)) {
       return data; // Old format (backward compatibility)
     } else if (data && data.people && Array.isArray(data.people)) {
-      return data.people; // New format
+      return data.people; // Legacy format
     } else {
       console.error('Unexpected API response format:', data);
       return []; // Fallback to empty array

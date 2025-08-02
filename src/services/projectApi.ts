@@ -112,14 +112,21 @@ export const projectApi = {
   },
 
   async createSubscription(subscription: SubscriptionCreate): Promise<Subscription> {
-    const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+    const response = await fetch(`${API_BASE_URL}/v2/public/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(subscription),
     });
-    return handleApiResponse(response);
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format
+    if (data && data.subscription) {
+      return data.subscription; // v2 format
+    } else {
+      return data; // Legacy format (backward compatibility)
+    }
   },
 
   async deleteSubscription(id: string): Promise<void> {
@@ -133,16 +140,35 @@ export const projectApi = {
 
   // Admin Dashboard
   async getAdminDashboard(): Promise<AdminDashboard> {
-    const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+    const response = await fetch(`${API_BASE_URL}/v2/admin/dashboard`, {
       headers: addAuthHeaders()
     });
-    return handleApiResponse(response);
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
+    if (data && data.data) {
+      return data.data; // v2 format
+    } else {
+      return data; // Legacy format (backward compatibility)
+    }
   },
 
   // People Management
   async getAllPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/people`);
-    return handleApiResponse(response);
+    const response = await fetch(`${API_BASE_URL}/v2/admin/people`, {
+      headers: addAuthHeaders()
+    });
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data; // v2 format
+    } else if (Array.isArray(data)) {
+      return data; // Legacy format (backward compatibility)
+    } else {
+      console.error('Unexpected people API response format:', data);
+      return []; // Fallback to empty array
+    }
   },
 
   async getPerson(id: string): Promise<Person> {
