@@ -24,15 +24,8 @@ export default function AdminDashboard() {
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
   useEffect(() => {
-    console.log('AdminDashboard: useEffect triggered');
-    console.log('AdminDashboard: Checking authentication...');
-    console.log('AdminDashboard: authService.isAuthenticated():', authService.isAuthenticated());
-    console.log('AdminDashboard: authService.getAuthToken():', authService.getAuthToken());
-    console.log('AdminDashboard: authService.getCurrentUser():', authService.getCurrentUser());
-    
     // Check authentication first
     if (!authService.isAuthenticated()) {
-      console.log('AdminDashboard: Authentication failed, showing access denied');
       setError('Acceso denegado. Por favor, inicia sesión.');
       setIsLoading(false);
       return;
@@ -45,7 +38,6 @@ export default function AdminDashboard() {
   const loadDashboard = async () => {
     setIsLoading(true);
     setError(null);
-    console.log('AdminDashboard: Starting to load dashboard data...');
     
     try {
       // Load dashboard data and people count in parallel
@@ -67,11 +59,8 @@ export default function AdminDashboard() {
       
       setDashboard(completeData);
     } catch (err) {
-      console.error('AdminDashboard: Error loading dashboard:', err);
-      
       if (err instanceof ApiError && err.status === 404) {
         // Dashboard endpoint doesn't exist, create a basic dashboard
-        console.warn('Admin dashboard endpoint not found, using basic dashboard');
         setDashboard({
           totalProjects: 0,
           totalPeople: 0,
@@ -79,7 +68,6 @@ export default function AdminDashboard() {
           recentActivity: []
         });
       } else if (err instanceof ApiError) {
-        console.error('AdminDashboard: API Error:', err.status, err.message);
         setError(`Error al cargar dashboard: ${err.message}`);
       } else {
         console.error('AdminDashboard: Unknown error:', err);
@@ -263,7 +251,6 @@ export default function AdminDashboard() {
                 </button>
                 <button 
                   onClick={() => {
-                    console.log('AdminDashboard: Simulating authentication for testing');
                     (authService as any).simulateAuth();
                     setError(null);
                     setIsLoading(true);

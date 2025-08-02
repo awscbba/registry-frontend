@@ -10,15 +10,14 @@ import type {
 import type { Person } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders } from './authStub';
-
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+import { API_CONFIG, getApiUrl } from '../config/api';
 
 export { ApiError };
 
 export const projectApi = {
   // Project Management
   async getAllProjects(): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/v2/projects`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECTS), {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
@@ -63,14 +62,14 @@ export const projectApi = {
 
   // Subscription Management
   async getProjectSubscribers(projectId: string): Promise<ProjectSubscriber[]> {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/subscribers`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId)), {
       headers: addAuthHeaders()
     });
     return handleApiResponse(response);
   },
 
   async subscribePersonToProject(projectId: string, personId: string, data: { subscribedBy?: string; notes?: string } = {}): Promise<Subscription> {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/subscribe/${personId}`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBE(projectId, personId)), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +81,7 @@ export const projectApi = {
   },
 
   async unsubscribePersonFromProject(projectId: string, personId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/unsubscribe/${personId}`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_UNSUBSCRIBE(projectId, personId)), {
       method: 'DELETE',
       headers: addAuthHeaders()
     });
@@ -92,7 +91,7 @@ export const projectApi = {
   },
 
   async getAllSubscriptions(): Promise<Subscription[]> {
-    const response = await fetch(`${API_BASE_URL}/v2/subscriptions`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTIONS), {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
@@ -109,7 +108,7 @@ export const projectApi = {
   },
 
   async createSubscription(subscription: SubscriptionCreate): Promise<Subscription> {
-    const response = await fetch(`${API_BASE_URL}/v2/public/subscribe`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PUBLIC_SUBSCRIBE), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,33 +132,23 @@ export const projectApi = {
 
   // Admin Dashboard
   async getAdminDashboard(): Promise<AdminDashboard> {
-    console.log('projectApi: Fetching admin dashboard from:', `${API_BASE_URL}/v2/admin/dashboard`);
-    const headers = addAuthHeaders();
-    console.log('projectApi: Request headers:', headers);
-    
-    const response = await fetch(`${API_BASE_URL}/v2/admin/dashboard`, {
-      headers: headers
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD), {
+      headers: addAuthHeaders()
     });
     
-    console.log('projectApi: Response status:', response.status);
-    console.log('projectApi: Response ok:', response.ok);
-    
     const data = await handleApiResponse(response);
-    console.log('projectApi: Raw response data:', data);
     
     // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
     if (data && data.data) {
-      console.log('projectApi: Using v2 format, returning data.data:', data.data);
       return data.data; // v2 format
     } else {
-      console.log('projectApi: Using legacy format, returning data:', data);
       return data; // Legacy format (backward compatibility)
     }
   },
 
   // People Management
   async getAllPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/v2/admin/people`, {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_PEOPLE), {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);

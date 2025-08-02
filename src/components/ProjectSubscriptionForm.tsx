@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { peopleApi } from '../services/api';
 import type { Project, SubscriptionCreate } from '../types/project';
-import type { PersonCreate } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
 
 interface ProjectSubscriptionFormProps {
@@ -58,30 +56,15 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const loadProject = async () => {
     setIsLoading(true);
     setError(null);
-    console.log('Loading project for subscription form:', { projectId });
     
     try {
       // First, get all projects to find the one matching the slug
       const allProjects = await projectApi.getAllProjects();
-      console.log('All projects loaded:', allProjects.length);
       
       // Find project by slug
       const foundProject = allProjects.find(project => 
         getProjectSlug(project) === projectId
       );
-      
-      console.log('Project search result:', {
-        searchingFor: projectId,
-        foundProject: foundProject ? {
-          name: foundProject.name,
-          id: foundProject.id,
-          slug: getProjectSlug(foundProject)
-        } : null,
-        availableSlugs: allProjects.map(p => ({
-          name: p.name,
-          slug: getProjectSlug(p)
-        }))
-      });
       
       if (!foundProject) {
         setError('Proyecto no encontrado');
@@ -115,51 +98,8 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     setSuccess(null);
 
     try {
-      // Use the new combined endpoint that creates both person and subscription
-      const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-      
-      // First, check if person already exists and if they're already subscribed
-      const personCheckResponse = await fetch(`${API_BASE_URL}/v2/people/check-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: formData.email }),
-      });
-
-      if (personCheckResponse.ok) {
-        const personCheck = await personCheckResponse.json();
-        
-        if (personCheck.exists) {
-          // Person exists - check if already subscribed
-          const subscriptionCheckResponse = await fetch(`${API_BASE_URL}/v2/subscriptions/check`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              email: formData.email, 
-              projectId: project!.id 
-            }),
-          });
-
-          if (subscriptionCheckResponse.ok) {
-            const subscriptionCheck = await subscriptionCheckResponse.json();
-            
-            if (subscriptionCheck.subscribed) {
-              setError('Ya tienes una suscripción a este proyecto. Por favor inicia sesión para ver el estado de tu suscripción.');
-              return;
-            }
-          }
-
-          // Person exists but not subscribed - require login
-          setError('Ya tienes una cuenta registrada con este email. Por favor inicia sesión para suscribirte al proyecto.');
-          return;
-        }
-      }
-
-      // Person doesn't exist - create subscription with simplified data format
-      const subscriptionData = {
+      // Use the service layer for consistent API calls and error handling
+      const subscriptionData: SubscriptionCreate = {
         person: {
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email
@@ -168,23 +108,15 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         notes: formData.notes || undefined
       };
 
-      const response = await fetch(`${API_BASE_URL}/v2/public/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(subscriptionData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al procesar suscripción');
-      }
-
-      const result = await response.json();
+      const result = await projectApi.createSubscription(subscriptionData);
       
-      if (result.person_created) {
-        setSuccess('¡Suscripción enviada exitosamente! Tu cuenta ha sido creada y tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
+      // Handle success based on API response
+      if (result && typeof result === 'object' && 'person_created' in result) {
+        if (result.person_created) {
+          setSuccess('¡Suscripción enviada exitosamente! Tu cuenta ha sido creada y tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
+        } else {
+          setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
+        }
       } else {
         setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador. Te notificaremos por email cuando sea aprobada.');
       }
@@ -198,7 +130,16 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       });
 
     } catch (err) {
-      if (err instanceof Error) {
+      if (err instanceof ApiError) {
+        // Handle specific API errors with user-friendly messages
+        if (err.message.includes('already subscribed') || err.message.includes('ya suscrito')) {
+          setError('Ya tienes una suscripción a este proyecto. Por favor inicia sesión para ver el estado de tu suscripción.');
+        } else if (err.message.includes('account exists') || err.message.includes('cuenta existe')) {
+          setError('Ya tienes una cuenta registrada con este email. Por favor inicia sesión para suscribirte al proyecto.');
+        } else {
+          setError(`Error al procesar suscripción: ${err.message}`);
+        }
+      } else if (err instanceof Error) {
         setError(`Error al procesar suscripción: ${err.message}`);
       } else {
         setError('Error desconocido al procesar la suscripción');

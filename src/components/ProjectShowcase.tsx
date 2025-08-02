@@ -13,13 +13,9 @@ export default function ProjectShowcase() {
   const [showLoginForm, setShowLoginForm] = useState(false);
 
   useEffect(() => {
-    console.log('ProjectShowcase: useEffect triggered');
     // Check if user is already authenticated
-    console.log('ProjectShowcase: Checking authentication...');
     setIsAuthenticated(authService.isAuthenticated());
-    console.log('ProjectShowcase: Authentication status:', authService.isAuthenticated());
     // Always load projects first, authentication is optional for viewing
-    console.log('ProjectShowcase: Loading active projects...');
     loadActiveProjects();
   }, []);
 
@@ -34,7 +30,6 @@ export default function ProjectShowcase() {
   };
 
   const loadActiveProjects = async () => {
-    console.log('ProjectShowcase: Starting to load active projects...');
     setIsLoading(true);
     setError(null);
     try {
@@ -53,7 +48,6 @@ export default function ProjectShowcase() {
       setProjects(activeProjects);
       console.log('ProjectShowcase: Projects state updated successfully');
     } catch (err) {
-      console.error('ProjectShowcase: Error loading projects:', err);
       if (err instanceof ApiError) {
         // For now, don't require authentication for viewing projects
         // Just log the error and show a generic message
@@ -64,7 +58,6 @@ export default function ProjectShowcase() {
         setError('Error desconocido al cargar proyectos');
       }
     } finally {
-      console.log('ProjectShowcase: Loading finished, setting isLoading to false');
       setIsLoading(false);
     }
   };

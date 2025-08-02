@@ -67,13 +67,13 @@ function setStoredUser(user: User | null): void {
   }
 }
 
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+import { API_CONFIG, getApiUrl } from '../config/api';
 
 export const authService = {
   // Real login implementation
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH_LOGIN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
