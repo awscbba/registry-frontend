@@ -1,11 +1,11 @@
-import type { 
-  Project, 
-  ProjectCreate, 
-  ProjectUpdate, 
-  Subscription, 
-  SubscriptionCreate, 
+import type {
+  Project,
+  ProjectCreate,
+  ProjectUpdate,
+  Subscription,
+  SubscriptionCreate,
   ProjectSubscriber,
-  AdminDashboard 
+  AdminDashboard
 } from '../types/project';
 import type { Person } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
@@ -21,7 +21,7 @@ export const projectApi = {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
       return data.data; // v2 format
@@ -95,7 +95,7 @@ export const projectApi = {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
       return data.data; // v2 format
@@ -116,7 +116,7 @@ export const projectApi = {
       body: JSON.stringify(subscription),
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format
     if (data && data.subscription) {
       return data.subscription; // v2 format
@@ -135,9 +135,9 @@ export const projectApi = {
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD), {
       headers: addAuthHeaders()
     });
-    
+
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
     if (data && data.data) {
       return data.data; // v2 format
@@ -152,7 +152,7 @@ export const projectApi = {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
       return data.data; // v2 format
@@ -169,7 +169,7 @@ export const projectApi = {
       headers: addAuthHeaders()
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format
     if (data && data.data) {
       return data.data; // v2 format
@@ -193,7 +193,7 @@ export const projectApi = {
       body: JSON.stringify(person),
     });
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 API response format
     if (data && data.data) {
       return data.data; // v2 format
