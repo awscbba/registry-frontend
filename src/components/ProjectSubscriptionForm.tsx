@@ -58,14 +58,30 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const loadProject = async () => {
     setIsLoading(true);
     setError(null);
+    console.log('Loading project for subscription form:', { projectId });
+    
     try {
       // First, get all projects to find the one matching the slug
       const allProjects = await projectApi.getAllProjects();
+      console.log('All projects loaded:', allProjects.length);
       
       // Find project by slug
       const foundProject = allProjects.find(project => 
         getProjectSlug(project) === projectId
       );
+      
+      console.log('Project search result:', {
+        searchingFor: projectId,
+        foundProject: foundProject ? {
+          name: foundProject.name,
+          id: foundProject.id,
+          slug: getProjectSlug(foundProject)
+        } : null,
+        availableSlugs: allProjects.map(p => ({
+          name: p.name,
+          slug: getProjectSlug(p)
+        }))
+      });
       
       if (!foundProject) {
         setError('Proyecto no encontrado');

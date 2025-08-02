@@ -82,6 +82,12 @@ export default function ProjectShowcase() {
 
   const handleSubscribeClick = (project: Project) => {
     const slug = getProjectSlug(project);
+    console.log('Navigating to subscription page:', {
+      projectName: project.name,
+      projectId: project.id,
+      generatedSlug: slug,
+      targetUrl: `/subscribe/${slug}`
+    });
     // Navigate to project-specific subscription form - use Astro dynamic route
     window.location.href = `/subscribe/${slug}`;
   };
