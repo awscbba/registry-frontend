@@ -136,17 +136,26 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
     setError(null);
     try {
-      // TODO: Implement API call to update person
-      // await projectApi.updatePerson(updatedPerson.id, updatedPerson);
+      // Try to update via API, but handle the "not available" error gracefully
+      try {
+        await projectApi.updatePerson(updatedPerson.id, updatedPerson);
+        // If API call succeeded, update local state and show success
+        setPeople(prevPeople => 
+          prevPeople.map(person => 
+            person.id === updatedPerson.id ? updatedPerson : person
+          )
+        );
+        setSuccessMessage(`Persona ${updatedPerson.firstName} ${updatedPerson.lastName} actualizada exitosamente`);
+      } catch (apiErr) {
+        if (apiErr instanceof ApiError && apiErr.status === 501) {
+          // API not available - show clear message and don't update local state
+          setError('La edición de personas no está disponible en la versión actual de la API. Los cambios no se han guardado.');
+        } else {
+          // Other API errors - rethrow to be handled below
+          throw apiErr;
+        }
+      }
       
-      // For now, just update the local state
-      setPeople(prevPeople => 
-        prevPeople.map(person => 
-          person.id === updatedPerson.id ? updatedPerson : person
-        )
-      );
-      
-      setSuccessMessage(`Persona ${updatedPerson.firstName} ${updatedPerson.lastName} actualizada exitosamente`);
       setEditingPerson(null);
       setCurrentView('people');
       await loadDashboard(); // Refresh dashboard data
@@ -156,7 +165,6 @@ export default function AdminDashboard() {
       } else {
         setError('Error desconocido al actualizar persona');
       }
-      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -179,7 +187,10 @@ export default function AdminDashboard() {
       await loadPeople(); // Reload the list
       await loadDashboard(); // Update dashboard counts
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof ApiError && err.status === 501) {
+        // API not available - show user-friendly message without breaking the dashboard
+        setError('La eliminación de personas no está disponible en la versión actual de la API. Esta funcionalidad será habilitada en una futura actualización.');
+      } else if (err instanceof ApiError) {
         setError(`Error al eliminar persona: ${err.message}`);
       } else {
         setError('Error desconocido al eliminar persona');
@@ -234,7 +245,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
+  if (error && error.includes('Error al cargar dashboard')) {
     const isAuthError = error.includes('Acceso denegado');
     
     return (
