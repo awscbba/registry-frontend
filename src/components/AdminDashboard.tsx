@@ -3,7 +3,7 @@ import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authStub';
 import PersonList from './PersonList';
 import PersonForm from './PersonForm';
-import ProjectCreateForm from './ProjectCreateForm';
+import ProjectForm from './ProjectForm';
 import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../types/project';
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
@@ -392,10 +392,10 @@ export default function AdminDashboard() {
                 Volver al Dashboard
               </button>
             </div>
-            <ProjectCreateForm 
+            <ProjectForm 
               onSubmit={handleCreateProject}
               onCancel={handleCancelCreate}
-              isSubmitting={isSubmitting}
+              isLoading={isSubmitting}
             />
           </div>
         ) : (
