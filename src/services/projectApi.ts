@@ -140,15 +140,26 @@ export const projectApi = {
 
   // Admin Dashboard
   async getAdminDashboard(): Promise<AdminDashboard> {
+    console.log('projectApi: Fetching admin dashboard from:', `${API_BASE_URL}/v2/admin/dashboard`);
+    const headers = addAuthHeaders();
+    console.log('projectApi: Request headers:', headers);
+    
     const response = await fetch(`${API_BASE_URL}/v2/admin/dashboard`, {
-      headers: addAuthHeaders()
+      headers: headers
     });
+    
+    console.log('projectApi: Response status:', response.status);
+    console.log('projectApi: Response ok:', response.ok);
+    
     const data = await handleApiResponse(response);
+    console.log('projectApi: Raw response data:', data);
     
     // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
     if (data && data.data) {
+      console.log('projectApi: Using v2 format, returning data.data:', data.data);
       return data.data; // v2 format
     } else {
+      console.log('projectApi: Using legacy format, returning data:', data);
       return data; // Legacy format (backward compatibility)
     }
   },

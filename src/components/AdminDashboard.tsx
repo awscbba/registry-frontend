@@ -35,11 +35,17 @@ export default function AdminDashboard() {
   const loadDashboard = async () => {
     setIsLoading(true);
     setError(null);
+    console.log('AdminDashboard: Starting to load dashboard data...');
+    
     try {
       // Try to load dashboard data, but handle gracefully if endpoint doesn't exist
+      console.log('AdminDashboard: Calling projectApi.getAdminDashboard()...');
       const data = await projectApi.getAdminDashboard();
+      console.log('AdminDashboard: Dashboard data received:', data);
       setDashboard(data);
     } catch (err) {
+      console.error('AdminDashboard: Error loading dashboard:', err);
+      
       if (err instanceof ApiError && err.status === 404) {
         // Dashboard endpoint doesn't exist, create a basic dashboard
         console.warn('Admin dashboard endpoint not found, using basic dashboard');
@@ -50,8 +56,10 @@ export default function AdminDashboard() {
           recentActivity: []
         });
       } else if (err instanceof ApiError) {
+        console.error('AdminDashboard: API Error:', err.status, err.message);
         setError(`Error al cargar dashboard: ${err.message}`);
       } else {
+        console.error('AdminDashboard: Unknown error:', err);
         setError('Error desconocido al cargar dashboard');
       }
     } finally {
