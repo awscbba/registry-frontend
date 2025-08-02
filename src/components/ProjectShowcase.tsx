@@ -102,15 +102,17 @@ export default function ProjectShowcase() {
       projectName: project.name,
       projectId: project.id,
       generatedSlug: slug,
-      targetUrl: `/subscribe/${slug}`
+      targetUrl: `/subscribe/${slug}/`
     });
     // Navigate to project-specific subscription form - use Astro dynamic route
-    window.location.href = `/subscribe/${slug}`;
+    // Add trailing slash to ensure proper static site routing
+    window.location.href = `/subscribe/${slug}/`;
   };
 
   const handleAdminClick = () => {
     // Navigate to admin dashboard - use Astro route
-    window.location.href = '/admin';
+    // Add trailing slash to ensure proper static site routing
+    window.location.href = '/admin/';
   };
 
   const handleLogout = async () => {
