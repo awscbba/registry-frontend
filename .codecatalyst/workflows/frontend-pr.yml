@@ -1,13 +1,13 @@
 Name: Frontend_PR_Analysis
 SchemaVersion: "1.0"
 
-Triggers:
-  - Type: PULLREQUEST
-    Branches:
-      - main
-    Events:
-      - OPEN
-      - REVISION
+Triggers: []
+  # - Type: PULLREQUEST
+  #   Branches:
+  #     - main
+  #   Events:
+  #     - OPEN
+  #     - REVISION
 
 Actions:
   PRAnalysis:
