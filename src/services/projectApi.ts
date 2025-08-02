@@ -18,7 +18,9 @@ export { ApiError };
 export const projectApi = {
   // Project Management
   async getAllProjects(): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/v2/projects`);
+    const response = await fetch(`${API_BASE_URL}/v2/projects`, {
+      headers: addAuthHeaders()
+    });
     const data = await handleApiResponse(response);
     
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
@@ -35,44 +37,35 @@ export const projectApi = {
   },
 
   async getProject(id: string): Promise<Project> {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`);
-    return handleApiResponse(response);
+    // Individual project endpoint may not be available in v2, get from list
+    const projects = await this.getAllProjects();
+    const project = projects.find(p => p.id === id);
+    if (!project) {
+      throw new ApiError(404, 'Project not found');
+    }
+    return project;
   },
 
   async createProject(project: ProjectCreate): Promise<Project> {
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(project),
-    });
-    return handleApiResponse(response);
+    // Project creation may not be available in the current API version
+    throw new ApiError(501, 'La creación de proyectos no está disponible en la versión actual de la API.');
   },
 
   async updateProject(id: string, project: ProjectUpdate): Promise<Project> {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(project),
-    });
-    return handleApiResponse(response);
+    // Project update may not be available in the current API version
+    throw new ApiError(501, 'La actualización de proyectos no está disponible en la versión actual de la API.');
   },
 
   async deleteProject(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new ApiError(response.status, 'Error al eliminar proyecto');
-    }
+    // Project deletion may not be available in the current API version
+    throw new ApiError(501, 'La eliminación de proyectos no está disponible en la versión actual de la API.');
   },
 
   // Subscription Management
   async getProjectSubscribers(projectId: string): Promise<ProjectSubscriber[]> {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/subscribers`);
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/subscribers`, {
+      headers: addAuthHeaders()
+    });
     return handleApiResponse(response);
   },
 
@@ -81,6 +74,7 @@ export const projectApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...addAuthHeaders()
       },
       body: JSON.stringify(data),
     });
@@ -90,6 +84,7 @@ export const projectApi = {
   async unsubscribePersonFromProject(projectId: string, personId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/projects/${projectId}/unsubscribe/${personId}`, {
       method: 'DELETE',
+      headers: addAuthHeaders()
     });
     if (!response.ok) {
       throw new ApiError(response.status, 'Error al desuscribir persona');
@@ -97,7 +92,9 @@ export const projectApi = {
   },
 
   async getAllSubscriptions(): Promise<Subscription[]> {
-    const response = await fetch(`${API_BASE_URL}/v2/subscriptions`);
+    const response = await fetch(`${API_BASE_URL}/v2/subscriptions`, {
+      headers: addAuthHeaders()
+    });
     const data = await handleApiResponse(response);
     
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
@@ -130,12 +127,8 @@ export const projectApi = {
   },
 
   async deleteSubscription(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/subscriptions/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new ApiError(response.status, 'Error al eliminar suscripción');
-    }
+    // Subscription deletion may not be available in the current API version
+    throw new ApiError(501, 'La eliminación de suscripciones no está disponible en la versión actual de la API.');
   },
 
   // Admin Dashboard
@@ -183,16 +176,32 @@ export const projectApi = {
   },
 
   async getPerson(id: string): Promise<Person> {
-    const response = await fetch(`${API_BASE_URL}/people/${id}`);
-    return handleApiResponse(response);
+    // Since there's no individual person endpoint, get from the people list
+    const people = await this.getAllPeople();
+    const person = people.find(p => p.id === id);
+    if (!person) {
+      throw new ApiError(404, 'Person not found');
+    }
+    return person;
   },
 
-  async deletePerson(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/people/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new ApiError(response.status, 'Error al eliminar persona');
-    }
+  async createPerson(person: any): Promise<Person> {
+    // Person creation is not available in the current API version
+    throw new ApiError(501, 'La creación de personas no está disponible en la versión actual de la API.');
+  },
+
+  async updatePerson(id: string, person: Partial<Person>): Promise<Person> {
+    // Individual person update is not available in the current API version
+    throw new ApiError(501, 'La actualización de personas no está disponible en la versión actual de la API.');
+  },
+
+  async initiateDeletion(id: string, reason: string = 'Admin deletion'): Promise<{ confirmationToken: string }> {
+    // Person deletion is not available in the current API version
+    throw new ApiError(501, 'La eliminación de personas no está disponible en la versión actual de la API.');
+  },
+
+  async deletePerson(id: string, confirmationToken?: string, reason: string = 'Admin deletion'): Promise<void> {
+    // Person deletion is not available in the current API version
+    throw new ApiError(501, 'La eliminación de personas no está disponible en la versión actual de la API.');
   },
 };

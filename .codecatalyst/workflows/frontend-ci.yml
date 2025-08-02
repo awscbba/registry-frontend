@@ -35,15 +35,6 @@ Actions:
             echo "✅ Feature branch detected - proceeding with validation"
             echo ""
             
-            # Skip if this is main branch (should use CD workflow instead)
-            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
-                echo "ℹ️ Skipping CI validation - main branch uses CD workflow"
-                echo "This workflow is for feature branch validation only"
-                exit 0
-            fi
-            echo "✅ Feature branch detected - proceeding with validation"
-            echo ""
-            
             # Install Node.js 20 using NVM for better compatibility
             echo "📦 Installing Node.js 20 via NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -78,7 +69,7 @@ Actions:
                 echo "console.log('minimal js');" > dist/app.js
             fi
             echo ""
-      , I w successfully"
+            echo "✅ Build validation completed successfully"
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinux_x86_64:2024_03
@@ -108,15 +99,6 @@ Actions:
             echo "🔍 Feature Branch Quality Checks"
             echo "==============================="
             echo "🌿 Branch: ${CODECATALYST_BRANCH_NAME:-unknown}"
-            echo ""
-            
-            # Skip if this is main branch (should use CD workflow instead)
-            if [ "${CODECATALYST_BRANCH_NAME}" = "main" ]; then
-                echo "ℹ️ Skipping quality checks - main branch uses CD workflow"
-                echo "This workflow is for feature branch validation only"
-                exit 0
-            fi
-            echo "✅ Feature branch detected - proceeding with quality checks"
             echo ""
             
             # Skip if this is main branch (should use CD workflow instead)
@@ -165,7 +147,7 @@ Actions:
             echo ""
             echo "Final quality artifacts check:"
             ls -la npm-audit.json npm-outdated.json bundle-size.txt
-            echo "Frontend quality checks completed successfully"
+            echo "✅ Frontend quality checks completed successfully"
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinux_x86_64:2024_03
