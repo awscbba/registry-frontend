@@ -132,20 +132,27 @@ export default function AdminDashboard() {
     setCurrentView('edit-person');
   };
 
-  const handleSavePerson = async (updatedPerson: Person) => {
+  const handleSavePerson = async (updatedPersonData: any) => {
     setIsSubmitting(true);
     setError(null);
     try {
-      await projectApi.updatePerson(updatedPerson.id, updatedPerson);
+      if (!editingPerson?.id) {
+        throw new Error('No se puede actualizar: ID de persona no encontrado');
+      }
+
+      await projectApi.updatePerson(editingPerson.id, updatedPersonData);
+      
+      // Create the complete updated person object
+      const updatedPerson = { ...editingPerson, ...updatedPersonData };
       
       // Update local state and show success
       setPeople(prevPeople => 
         prevPeople.map(person => 
-          person.id === updatedPerson.id ? updatedPerson : person
+          person.id === editingPerson.id ? updatedPerson : person
         )
       );
       
-      setSuccessMessage(`Persona ${updatedPerson.firstName} ${updatedPerson.lastName} actualizada exitosamente`);
+      setSuccessMessage(`Persona ${updatedPersonData.firstName} ${updatedPersonData.lastName} actualizada exitosamente`);
       setEditingPerson(null);
       setCurrentView('people');
       await loadDashboard(); // Refresh dashboard data

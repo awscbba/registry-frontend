@@ -3,7 +3,7 @@ import type { Person, PersonCreate, PersonUpdate } from '../types/person';
 
 interface PersonFormProps {
   person?: Person;
-  onSubmit: (data: PersonCreate | PersonUpdate) => Promise<void>;
+  onSubmit: (data: PersonCreate | PersonUpdate | any) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
