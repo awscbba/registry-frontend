@@ -61,33 +61,18 @@ export const projectApi = {
   },
 
   // Subscription Management
+  // TODO: Implement v2 subscription management endpoints
+  // The legacy v1 endpoints below don't exist in the current API
   async getProjectSubscribers(projectId: string): Promise<ProjectSubscriber[]> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId)), {
-      headers: addAuthHeaders()
-    });
-    return handleApiResponse(response);
+    throw new ApiError(501, 'La gestión de suscripciones por proyecto no está disponible. Usar /v2/admin/subscriptions para ver todas las suscripciones.');
   },
 
   async subscribePersonToProject(projectId: string, personId: string, data: { subscribedBy?: string; notes?: string } = {}): Promise<Subscription> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBE(projectId, personId)), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...addAuthHeaders()
-      },
-      body: JSON.stringify(data),
-    });
-    return handleApiResponse(response);
+    throw new ApiError(501, 'La suscripción directa a proyectos no está disponible. Usar /v2/public/subscribe para suscripciones públicas.');
   },
 
   async unsubscribePersonFromProject(projectId: string, personId: string): Promise<void> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_UNSUBSCRIBE(projectId, personId)), {
-      method: 'DELETE',
-      headers: addAuthHeaders()
-    });
-    if (!response.ok) {
-      throw new ApiError(response.status, 'Error al desuscribir persona');
-    }
+    throw new ApiError(501, 'La desuscripción directa no está disponible. Contactar al administrador.');
   },
 
   async getAllSubscriptions(): Promise<Subscription[]> {
