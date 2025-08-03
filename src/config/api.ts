@@ -1,6 +1,9 @@
 /**
  * Centralized API configuration
  * This file contains all API-related constants and configuration
+ * 
+ * POLICY: Always use v2 endpoints when available for better reliability and features.
+ * Legacy v1 endpoints should only be used when no v2 equivalent exists.
  */
 
 export const API_CONFIG = {
@@ -29,7 +32,8 @@ export const API_CONFIG = {
     // Dashboard (v2)
     ADMIN_DASHBOARD: '/v2/admin/dashboard',
     
-    // Legacy endpoints (still in use)
+    // Legacy endpoints (still in use - no v2 equivalents available yet)
+    // TODO: Migrate to v2 when individual subscription management endpoints are available
     PROJECT_SUBSCRIBERS: (projectId: string) => `/projects/${projectId}/subscribers`,
     PROJECT_SUBSCRIBE: (projectId: string, personId: string) => `/projects/${projectId}/subscribe/${personId}`,
     PROJECT_UNSUBSCRIBE: (projectId: string, personId: string) => `/projects/${projectId}/unsubscribe/${personId}`,
