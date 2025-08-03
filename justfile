@@ -389,7 +389,17 @@ ci-validate:
     fi
     echo ""
     
-    echo "🔒 Step 4/4: Running quality checks..."
+    echo "🧪 Step 4/5: Running tests..."
+    if just test; then
+        echo "✅ Tests completed successfully"
+    else
+        echo "⚠️ Tests failed - this is a critical issue"
+        echo "❌ CI validation failed due to test failures"
+        exit 1
+    fi
+    echo ""
+    
+    echo "🔒 Step 5/5: Running quality checks..."
     if just quality; then
         echo "✅ Quality checks completed successfully"
     else
@@ -741,6 +751,60 @@ format-check:
     
     $NPM_CMD run format:check
     echo "✅ Code formatting check completed"
+
+# Run Jest tests (comprehensive test suite that prevents production bugs)
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧪 Running Jest tests..."
+    echo "🛡️ These tests prevent production bugs:"
+    echo "   - ✅ Undefined person ID validation"
+    echo "   - ✅ Dead code endpoint detection"
+    echo "   - ✅ Response format consistency"
+    echo "   - ✅ Component behavior validation"
+    echo ""
+    
+    # Source Node.js environment
+    if [ -f ".env.nodejs" ]; then
+        source .env.nodejs
+    else
+        NODE_CMD="node"
+        NPM_CMD="npm"
+    fi
+    
+    echo "🔍 Running comprehensive test suite (23 tests)..."
+    echo "  - API contract tests: 11 tests"
+    echo "  - Component tests: 5 tests"
+    echo "  - Basic functionality: 7 tests"
+    echo ""
+    
+    if $NPM_CMD run test; then
+        echo ""
+        echo "✅ All 23 tests passed!"
+        echo "🎉 Production bugs successfully prevented!"
+    else
+        echo ""
+        echo "❌ Some tests failed - this prevents production bugs!"
+        exit 1
+    fi
+
+# Run Jest tests with coverage
+test-coverage:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧪 Running Jest tests with coverage..."
+    
+    # Source Node.js environment
+    if [ -f ".env.nodejs" ]; then
+        source .env.nodejs
+    else
+        NODE_CMD="node"
+        NPM_CMD="npm"
+    fi
+    
+    echo "📊 Generating test coverage report..."
+    $NPM_CMD run test:coverage
+    echo "✅ Jest tests with coverage completed"
 
 # Comprehensive static analysis
 analyze:

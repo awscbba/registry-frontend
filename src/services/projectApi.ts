@@ -62,19 +62,33 @@ export const projectApi = {
 
   // Subscription Management (v2)
   async getProjectSubscribers(projectId: string): Promise<ProjectSubscriber[]> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId)), {
-      headers: addAuthHeaders()
-    });
-    const data = await handleApiResponse(response);
+    try {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId)), {
+        headers: addAuthHeaders()
+      });
+      
+      // If endpoint doesn't exist (404), throw 501 to indicate not implemented
+      if (response.status === 404) {
+        throw new ApiError(501, 'La gestión de suscriptores de proyecto no está disponible en la versión actual de la API.');
+      }
+      
+      const data = await handleApiResponse(response);
 
-    // Handle v2 API response format
-    if (data && data.data && data.data.subscribers) {
-      return data.data.subscribers; // v2 format
-    } else if (Array.isArray(data)) {
-      return data; // Fallback
-    } else {
-      console.error('Unexpected project subscribers API response format:', data);
-      return [];
+      // Handle v2 API response format
+      if (data && data.data && data.data.subscribers) {
+        return data.data.subscribers; // v2 format
+      } else if (Array.isArray(data)) {
+        return data; // Fallback
+      } else {
+        console.error('Unexpected project subscribers API response format:', data);
+        return [];
+      }
+    } catch (error) {
+      // Re-throw ApiErrors as-is, wrap others
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(501, 'La gestión de suscriptores de proyecto no está disponible en la versión actual de la API.');
     }
   },
 
@@ -226,6 +240,11 @@ export const projectApi = {
   },
 
   async updatePerson(id: string, person: Partial<Person>): Promise<Person> {
+    // Validate that ID is provided
+    if (!id || id === 'undefined') {
+      throw new ApiError(400, 'Person ID is required for update');
+    }
+
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
       method: 'PUT',
       headers: {
