@@ -55,14 +55,19 @@ export interface SubscriptionCreate {
 }
 
 export interface ProjectSubscriber {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  subscriptionId: string;
-  subscriptionStatus: string;
+  id: string; // subscription ID
+  personId: string;
+  projectId: string;
+  status: 'active' | 'inactive' | 'pending';
   subscribedAt: string;
+  subscribedBy?: string;
+  notes?: string;
+  person: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface AdminDashboard {

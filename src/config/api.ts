@@ -32,12 +32,11 @@ export const API_CONFIG = {
     // Dashboard (v2)
     ADMIN_DASHBOARD: '/v2/admin/dashboard',
     
-    // Legacy endpoints (DEAD CODE - these endpoints don't exist in the current API)
-    // TODO: Remove these and implement proper v2 subscription management endpoints
-    // See: registry-documentation/api/V2_SUBSCRIPTION_ENDPOINTS_PROPOSAL.md
-    PROJECT_SUBSCRIBERS: (projectId: string) => `/projects/${projectId}/subscribers`,
-    PROJECT_SUBSCRIBE: (projectId: string, personId: string) => `/projects/${projectId}/subscribe/${personId}`,
-    PROJECT_UNSUBSCRIBE: (projectId: string, personId: string) => `/projects/${projectId}/unsubscribe/${personId}`,
+    // Project Subscription Management (v2)
+    PROJECT_SUBSCRIBERS: (projectId: string) => `/v2/projects/${projectId}/subscribers`,
+    PROJECT_SUBSCRIBE: (projectId: string) => `/v2/projects/${projectId}/subscribers`,
+    PROJECT_SUBSCRIPTION_UPDATE: (projectId: string, subscriptionId: string) => `/v2/projects/${projectId}/subscribers/${subscriptionId}`,
+    PROJECT_UNSUBSCRIBE: (projectId: string, subscriptionId: string) => `/v2/projects/${projectId}/subscribers/${subscriptionId}`,
   },
   
   // Default headers
