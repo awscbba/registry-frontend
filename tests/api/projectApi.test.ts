@@ -180,6 +180,235 @@ describe('ProjectAPI Critical Tests', () => {
     });
   });
 
+  describe('Project CRUD Operations', () => {
+    it('should get a single project by ID', async () => {
+      const mockProject = {
+        id: 'test-project-id',
+        name: 'Test Project',
+        description: 'A test project',
+        maxParticipants: 50,
+        status: 'active'
+      };
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: mockProject,
+          version: 'v2'
+        })
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await projectApi.getProject('test-project-id');
+
+      expect(result).toEqual(mockProject);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v2/projects/test-project-id'),
+        expect.objectContaining({
+          method: 'GET'
+        })
+      );
+    });
+
+    it('should create a new project', async () => {
+      const newProject = {
+        name: 'New Project',
+        description: 'A new test project',
+        maxParticipants: 25
+      };
+
+      const createdProject = {
+        id: 'new-project-id',
+        ...newProject,
+        status: 'active',
+        createdAt: '2025-01-01T00:00:00Z'
+      };
+
+      const mockResponse = {
+        ok: true,
+        status: 201,
+        json: async () => ({
+          success: true,
+          data: createdProject,
+          version: 'v2'
+        })
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await projectApi.createProject(newProject);
+
+      expect(result).toEqual(createdProject);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v2/projects'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(newProject)
+        })
+      );
+    });
+
+    it('should update an existing project', async () => {
+      const updateData = {
+        name: 'Updated Project Name',
+        description: 'Updated description'
+      };
+
+      const updatedProject = {
+        id: 'test-project-id',
+        name: 'Updated Project Name',
+        description: 'Updated description',
+        maxParticipants: 50,
+        status: 'active'
+      };
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: updatedProject,
+          version: 'v2'
+        })
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await projectApi.updateProject('test-project-id', updateData);
+
+      expect(result).toEqual(updatedProject);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v2/projects/test-project-id'),
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify(updateData)
+        })
+      );
+    });
+
+    it('should delete a project', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          data: { deleted: true, project_id: 'test-project-id' },
+          version: 'v2'
+        })
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      await projectApi.deleteProject('test-project-id');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v2/projects/test-project-id'),
+        expect.objectContaining({
+          method: 'DELETE'
+        })
+      );
+    });
+
+    it('should handle project not found errors', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: 'Project not found' })
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      try {
+        await projectApi.getProject('non-existent-id');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error: any) {
+        expect(error.status).toBe(404);
+      }
+    });
+
+    it('should handle legacy response format for backward compatibility', async () => {
+      const mockProject = {
+        id: 'test-project-id',
+        name: 'Test Project',
+        description: 'A test project'
+      };
+
+      // Mock legacy format response (no v2 wrapper)
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: async () => mockProject
+      };
+
+      mockFetch.mockResolvedValue(mockResponse as any);
+
+      const result = await projectApi.getProject('test-project-id');
+
+      expect(result).toEqual(mockProject);
+    });
+
+    it('should test complete project CRUD workflow', async () => {
+      // Step 1: Create project
+      const createData = {
+        name: 'CRUD Test Project',
+        description: 'Testing complete CRUD workflow'
+      };
+
+      const createdProject = {
+        id: 'crud-test-id',
+        ...createData,
+        status: 'active'
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ success: true, data: createdProject, version: 'v2' })
+      } as any);
+
+      const created = await projectApi.createProject(createData);
+      expect(created.name).toBe('CRUD Test Project');
+
+      // Step 2: Read project
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: createdProject, version: 'v2' })
+      } as any);
+
+      const read = await projectApi.getProject('crud-test-id');
+      expect(read.id).toBe('crud-test-id');
+
+      // Step 3: Update project
+      const updateData = { name: 'Updated CRUD Test Project' };
+      const updatedProject = { ...createdProject, name: 'Updated CRUD Test Project' };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: updatedProject, version: 'v2' })
+      } as any);
+
+      const updated = await projectApi.updateProject('crud-test-id', updateData);
+      expect(updated.name).toBe('Updated CRUD Test Project');
+
+      // Step 4: Delete project
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: { deleted: true }, version: 'v2' })
+      } as any);
+
+      await projectApi.deleteProject('crud-test-id');
+
+      // Verify all operations were called
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+    });
+  });
+
   describe('Subscription Management CRUD', () => {
     it('should implement complete subscription management workflow', async () => {
       const projectId = 'test-project';

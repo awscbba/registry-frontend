@@ -36,28 +36,81 @@ export const projectApi = {
   },
 
   async getProject(id: string): Promise<Project> {
-    // Individual project endpoint may not be available in v2, get from list
-    const projects = await this.getAllProjects();
-    const project = projects.find(p => p.id === id);
-    if (!project) {
+    const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
+      method: 'GET',
+      headers: addAuthHeaders()
+    });
+    
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 response format
+    if (data && data.success && data.data) {
+      return data.data;
+    } else if (data && typeof data === 'object' && data.id) {
+      return data; // Legacy format fallback
+    } else {
       throw new ApiError(404, 'Project not found');
     }
-    return project;
   },
 
   async createProject(project: ProjectCreate): Promise<Project> {
-    // Project creation may not be available in the current API version
-    throw new ApiError(501, 'La creación de proyectos no está disponible en la versión actual de la API.');
+    const response = await fetch(getApiUrl('/v2/projects'), {
+      method: 'POST',
+      headers: {
+        ...addAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(project)
+    });
+    
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 response format
+    if (data && data.success && data.data) {
+      return data.data;
+    } else if (data && typeof data === 'object' && data.id) {
+      return data; // Legacy format fallback
+    } else {
+      throw new ApiError(500, 'Failed to create project');
+    }
   },
 
   async updateProject(id: string, project: ProjectUpdate): Promise<Project> {
-    // Project update may not be available in the current API version
-    throw new ApiError(501, 'La actualización de proyectos no está disponible en la versión actual de la API.');
+    const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...addAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(project)
+    });
+    
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 response format
+    if (data && data.success && data.data) {
+      return data.data;
+    } else if (data && typeof data === 'object' && data.id) {
+      return data; // Legacy format fallback
+    } else {
+      throw new ApiError(500, 'Failed to update project');
+    }
   },
 
   async deleteProject(id: string): Promise<void> {
-    // Project deletion may not be available in the current API version
-    throw new ApiError(501, 'La eliminación de proyectos no está disponible en la versión actual de la API.');
+    const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
+      method: 'DELETE',
+      headers: addAuthHeaders()
+    });
+    
+    const data = await handleApiResponse(response);
+    
+    // Handle v2 response format - should return success confirmation
+    if (data && data.success && data.data && data.data.deleted) {
+      return; // Successfully deleted
+    } else {
+      throw new ApiError(500, 'Failed to delete project');
+    }
   },
 
   // Subscription Management (v2)
