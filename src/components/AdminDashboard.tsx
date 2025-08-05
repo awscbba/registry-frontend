@@ -299,6 +299,62 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAcceptSubscriber = async (subscriber: ProjectSubscriber) => {
+    if (!editingProject) return;
+    
+    try {
+      await projectApi.updateProjectSubscription(
+        editingProject.id, 
+        subscriber.id, 
+        { status: 'active' }
+      );
+      
+      setSuccessMessage(`Suscriptor ${subscriber.person.firstName} ${subscriber.person.lastName} aceptado exitosamente`);
+      
+      // Reload subscribers list
+      await handleViewSubscribers(editingProject);
+      
+      // Reload dashboard to update counts
+      await loadDashboard();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al aceptar suscriptor: ${err.message}`);
+      } else {
+        setError('Error desconocido al aceptar suscriptor');
+      }
+    }
+  };
+
+  const handleDeclineSubscriber = async (subscriber: ProjectSubscriber) => {
+    if (!editingProject) return;
+    
+    if (!confirm(`¿Está seguro de que desea rechazar la suscripción de ${subscriber.person.firstName} ${subscriber.person.lastName}?`)) {
+      return;
+    }
+    
+    try {
+      await projectApi.updateProjectSubscription(
+        editingProject.id, 
+        subscriber.id, 
+        { status: 'inactive' }
+      );
+      
+      setSuccessMessage(`Suscriptor ${subscriber.person.firstName} ${subscriber.person.lastName} rechazado`);
+      
+      // Reload subscribers list (declined users will be filtered out)
+      await handleViewSubscribers(editingProject);
+      
+      // Reload dashboard to update counts
+      await loadDashboard();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al rechazar suscriptor: ${err.message}`);
+      } else {
+        setError('Error desconocido al rechazar suscriptor');
+      }
+    }
+  };
+
   const handleSaveProject = async (projectData: any) => {
     if (!editingProject) return;
     
@@ -648,7 +704,15 @@ export default function AdminDashboard() {
                 <div className="header-info">
                   <h2>Suscriptores del Proyecto</h2>
                   <p>Proyecto: {editingProject.name}</p>
-                  <p>Total suscriptores: {currentProjectSubscribers.length}</p>
+                  <p>Total suscriptores: {currentProjectSubscribers.filter(s => s.status !== 'inactive').length}</p>
+                  <div className="subscriber-stats">
+                    <span className="stat-item">
+                      ✅ Activos: {currentProjectSubscribers.filter(s => s.status === 'active').length}
+                    </span>
+                    <span className="stat-item">
+                      ⏳ Pendientes: {currentProjectSubscribers.filter(s => s.status === 'pending').length}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -670,7 +734,9 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="subscribers-list">
-                {currentProjectSubscribers.map((subscriber) => (
+                {currentProjectSubscribers
+                  .filter(subscriber => subscriber.status !== 'inactive') // Hide declined subscribers
+                  .map((subscriber) => (
                   <div key={subscriber.id} className="subscriber-card">
                     <div className="subscriber-info">
                       <h4>{subscriber.person.firstName} {subscriber.person.lastName}</h4>
@@ -688,6 +754,37 @@ export default function AdminDashboard() {
                       {subscriber.notes && (
                         <p className="subscriber-notes">Notas: {subscriber.notes}</p>
                       )}
+                      
+                      {/* Action buttons based on status */}
+                      <div className="subscriber-actions">
+                        {subscriber.status === 'pending' && (
+                          <>
+                            <button 
+                              onClick={() => handleAcceptSubscriber(subscriber)}
+                              className="action-button accept-button"
+                              title="Aceptar suscripción"
+                            >
+                              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Aceptar
+                            </button>
+                            <button 
+                              onClick={() => handleDeclineSubscriber(subscriber)}
+                              className="action-button decline-button"
+                              title="Rechazar suscripción"
+                            >
+                              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Rechazar
+                            </button>
+                          </>
+                        )}
+                        {subscriber.status === 'active' && (
+                          <span className="status-text">✅ Aprobado</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1233,6 +1330,62 @@ export default function AdminDashboard() {
         .status-inactive {
           background-color: #f3f4f6;
           color: #6b7280;
+        }
+
+        .subscriber-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          align-items: center;
+        }
+
+        .action-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.5rem 0.75rem;
+          border: none;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .accept-button {
+          background-color: #10b981;
+          color: white;
+        }
+
+        .accept-button:hover {
+          background-color: #059669;
+        }
+
+        .decline-button {
+          background-color: #ef4444;
+          color: white;
+        }
+
+        .decline-button:hover {
+          background-color: #dc2626;
+        }
+
+        .status-text {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #10b981;
+        }
+
+        .subscriber-stats {
+          display: flex;
+          gap: 1rem;
+          margin-top: 0.5rem;
+        }
+
+        .stat-item {
+          font-size: 0.875rem;
+          color: #6b7280;
+          font-weight: 500;
         }
 
         .empty-state {
