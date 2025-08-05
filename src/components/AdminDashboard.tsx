@@ -3,12 +3,13 @@ import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authStub';
 import PersonList from './PersonList';
 import PersonForm from './PersonForm';
+import ProjectList from './ProjectList';
 import ProjectForm from './ProjectForm';
-import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../types/project';
+import type { AdminDashboard as AdminDashboardType, ProjectCreate, Project } from '../types/project';
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
 
-type AdminView = 'dashboard' | 'people' | 'create-project' | 'edit-person' | 'create-person';
+type AdminView = 'dashboard' | 'people' | 'projects' | 'create-project' | 'edit-person' | 'create-person';
 
 export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardType | null>(null);
@@ -22,6 +23,10 @@ export default function AdminDashboard() {
   const [people, setPeople] = useState<Person[]>([]);
   const [isPeopleLoading, setIsPeopleLoading] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  
+  // Projects management state
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
 
   useEffect(() => {
     // Check authentication first
@@ -127,6 +132,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadProjects = async () => {
+    setIsProjectsLoading(true);
+    setError(null);
+    try {
+      const projectsData = await projectApi.getAllProjects();
+      setProjects(projectsData);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al cargar proyectos: ${err.message}`);
+      } else {
+        setError('Error desconocido al cargar proyectos');
+      }
+    } finally {
+      setIsProjectsLoading(false);
+    }
+  };
+
   const handleEditPerson = (person: Person) => {
     setEditingPerson(person);
     setCurrentView('edit-person');
@@ -223,9 +245,49 @@ export default function AdminDashboard() {
     }
   };
 
+  // Project management handlers
+  const handleEditProject = (project: Project) => {
+    // TODO: Implement project editing
+    console.log('Edit project:', project);
+    setError('Edición de proyectos no implementada aún');
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (!confirm('¿Está seguro de que desea eliminar este proyecto?')) {
+      return;
+    }
+
+    try {
+      await projectApi.deleteProject(id);
+      setSuccessMessage('Proyecto eliminado exitosamente');
+      
+      // Remove from local state
+      setProjects(prevProjects => prevProjects.filter(project => project.id !== id));
+      
+      await loadDashboard(); // Update dashboard counts
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al eliminar proyecto: ${err.message}`);
+      } else {
+        setError('Error desconocido al eliminar proyecto');
+      }
+    }
+  };
+
+  const handleViewSubscribers = (project: Project) => {
+    // TODO: Implement view subscribers
+    console.log('View subscribers for project:', project);
+    setError('Vista de suscriptores no implementada aún');
+  };
+
   const handleViewPeople = () => {
     setCurrentView('people');
     loadPeople(); // Load people when switching to people view
+  };
+
+  const handleViewProjects = () => {
+    setCurrentView('projects');
+    loadProjects(); // Load projects when switching to projects view
   };
 
   if (isLoading) {
@@ -436,6 +498,43 @@ export default function AdminDashboard() {
               isLoading={isPeopleLoading}
             />
           </div>
+        ) : currentView === 'projects' ? (
+          // Projects List View
+          <div className="projects-view">
+            <div className="view-header">
+              <button 
+                onClick={() => setCurrentView('dashboard')}
+                className="back-button"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver al Dashboard
+              </button>
+              <div className="header-content">
+                <div className="header-info">
+                  <h2>Lista de Proyectos</h2>
+                  <p>Total: {dashboard?.totalProjects || 0} proyectos</p>
+                </div>
+                <button 
+                  onClick={() => setCurrentView('create-project')}
+                  className={BUTTON_CLASSES.CREATE}
+                >
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Crear Proyecto
+                </button>
+              </div>
+            </div>
+            <ProjectList 
+              projects={projects}
+              onEdit={handleEditProject}
+              onDelete={handleDeleteProject}
+              onViewSubscribers={handleViewSubscribers}
+              isLoading={isProjectsLoading}
+            />
+          </div>
         ) : currentView === 'create-project' ? (
           // Create Project View
           <div className="create-project-view">
@@ -513,7 +612,17 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="stat-card projects">
+          <div 
+            className="stat-card projects clickable"
+            onClick={handleViewProjects}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleViewProjects();
+              }
+            }}
+          >
             <div className="stat-icon">
               <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
