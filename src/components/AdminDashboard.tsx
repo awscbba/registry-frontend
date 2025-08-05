@@ -395,6 +395,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateProjectStatus = async (project: Project, newStatus: string) => {
+    const statusMessages = {
+      'pending': 'pendiente',
+      'active': 'activo',
+      'ongoing': 'en curso',
+      'completed': 'completado',
+      'cancelled': 'cancelado'
+    };
+
+    const currentStatusText = statusMessages[project.status as keyof typeof statusMessages] || project.status;
+    const newStatusText = statusMessages[newStatus as keyof typeof statusMessages] || newStatus;
+
+    if (!confirm(`¿Está seguro de que desea cambiar el estado del proyecto "${project.name}" de "${currentStatusText}" a "${newStatusText}"?`)) {
+      return;
+    }
+
+    try {
+      await projectApi.updateProject(project.id, { status: newStatus });
+      
+      setSuccessMessage(`Estado del proyecto "${project.name}" actualizado a "${newStatusText}"`);
+      
+      // Reload dashboard to reflect changes
+      await loadDashboard();
+      
+      // If we're viewing this project's subscribers, reload that too
+      if (editingProject && editingProject.id === project.id) {
+        setEditingProject({ ...editingProject, status: newStatus });
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al actualizar estado del proyecto: ${err.message}`);
+      } else {
+        setError('Error desconocido al actualizar estado del proyecto');
+      }
+    }
+  };
+
   const handleSaveProject = async (projectData: any) => {
     if (!editingProject) return;
     
@@ -679,6 +716,7 @@ export default function AdminDashboard() {
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
               onViewSubscribers={handleViewSubscribers}
+              onUpdateStatus={handleUpdateProjectStatus}
               isLoading={isProjectsLoading}
             />
           </div>
