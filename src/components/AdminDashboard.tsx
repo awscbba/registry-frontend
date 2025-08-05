@@ -5,11 +5,11 @@ import PersonList from './PersonList';
 import PersonForm from './PersonForm';
 import ProjectList from './ProjectList';
 import ProjectForm from './ProjectForm';
-import type { AdminDashboard as AdminDashboardType, ProjectCreate, Project } from '../types/project';
+import type { AdminDashboard as AdminDashboardType, ProjectCreate, Project, ProjectSubscriber } from '../types/project';
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
 
-type AdminView = 'dashboard' | 'people' | 'projects' | 'create-project' | 'edit-person' | 'create-person';
+type AdminView = 'dashboard' | 'people' | 'projects' | 'create-project' | 'edit-project' | 'project-subscribers' | 'edit-person' | 'create-person';
 
 export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardType | null>(null);
@@ -27,6 +27,9 @@ export default function AdminDashboard() {
   // Projects management state
   const [projects, setProjects] = useState<Project[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [currentProjectSubscribers, setCurrentProjectSubscribers] = useState<ProjectSubscriber[]>([]);
+  const [isSubscribersLoading, setIsSubscribersLoading] = useState(false);
 
   useEffect(() => {
     // Check authentication first
@@ -247,9 +250,9 @@ export default function AdminDashboard() {
 
   // Project management handlers
   const handleEditProject = (project: Project) => {
-    // TODO: Implement project editing
-    console.log('Edit project:', project);
-    setError('Edición de proyectos no implementada aún');
+    setEditingProject(project);
+    setCurrentView('edit-project');
+    setError(null);
   };
 
   const handleDeleteProject = async (id: string) => {
@@ -274,10 +277,58 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleViewSubscribers = (project: Project) => {
-    // TODO: Implement view subscribers
-    console.log('View subscribers for project:', project);
-    setError('Vista de suscriptores no implementada aún');
+  const handleViewSubscribers = async (project: Project) => {
+    setEditingProject(project); // Store the project for context
+    setCurrentView('project-subscribers');
+    setError(null);
+    
+    // Load subscribers for this project
+    setIsSubscribersLoading(true);
+    try {
+      const subscribers = await projectApi.getProjectSubscribers(project.id);
+      setCurrentProjectSubscribers(subscribers);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al cargar suscriptores: ${err.message}`);
+      } else {
+        setError('Error desconocido al cargar suscriptores');
+      }
+      setCurrentProjectSubscribers([]);
+    } finally {
+      setIsSubscribersLoading(false);
+    }
+  };
+
+  const handleSaveProject = async (projectData: any) => {
+    if (!editingProject) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await projectApi.updateProject(editingProject.id, projectData);
+      setSuccessMessage('Proyecto actualizado exitosamente');
+      setCurrentView('projects');
+      setEditingProject(null);
+      
+      // Reload projects list and dashboard
+      await loadProjects();
+      await loadDashboard();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al actualizar proyecto: ${err.message}`);
+      } else {
+        setError('Error desconocido al actualizar proyecto');
+      }
+      throw err; // Re-throw to let form handle it
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelEditProject = () => {
+    setCurrentView('projects');
+    setEditingProject(null);
+    setError(null);
   };
 
   const handleViewPeople = () => {
@@ -554,6 +605,94 @@ export default function AdminDashboard() {
               onCancel={handleCancelCreate}
               isLoading={isSubmitting}
             />
+          </div>
+        ) : currentView === 'edit-project' && editingProject ? (
+          // Edit Project View
+          <div className="edit-project-view">
+            <div className="view-header">
+              <button 
+                onClick={handleCancelEditProject}
+                className="back-button"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver a Proyectos
+              </button>
+              <div className="header-content">
+                <h2>Editar Proyecto</h2>
+                <p>Modificar información del proyecto: {editingProject.name}</p>
+              </div>
+            </div>
+            <ProjectForm 
+              project={editingProject}
+              onSubmit={handleSaveProject}
+              onCancel={handleCancelEditProject}
+              isLoading={isSubmitting}
+            />
+          </div>
+        ) : currentView === 'project-subscribers' && editingProject ? (
+          // Project Subscribers View
+          <div className="project-subscribers-view">
+            <div className="view-header">
+              <button 
+                onClick={() => setCurrentView('projects')}
+                className="back-button"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver a Proyectos
+              </button>
+              <div className="header-content">
+                <div className="header-info">
+                  <h2>Suscriptores del Proyecto</h2>
+                  <p>Proyecto: {editingProject.name}</p>
+                  <p>Total suscriptores: {currentProjectSubscribers.length}</p>
+                </div>
+              </div>
+            </div>
+            
+            {isSubscribersLoading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p>Cargando suscriptores...</p>
+              </div>
+            ) : currentProjectSubscribers.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                </div>
+                <h3>No hay suscriptores</h3>
+                <p>Este proyecto aún no tiene personas registradas.</p>
+              </div>
+            ) : (
+              <div className="subscribers-list">
+                {currentProjectSubscribers.map((subscriber) => (
+                  <div key={subscriber.id} className="subscriber-card">
+                    <div className="subscriber-info">
+                      <h4>{subscriber.person.firstName} {subscriber.person.lastName}</h4>
+                      <p>{subscriber.person.email}</p>
+                      {subscriber.person.phone && <p>📞 {subscriber.person.phone}</p>}
+                      <span className={`status-badge status-${subscriber.status}`}>
+                        {subscriber.status === 'active' ? 'Activo' : 
+                         subscriber.status === 'pending' ? 'Pendiente' : 'Inactivo'}
+                      </span>
+                    </div>
+                    <div className="subscriber-meta">
+                      <span className="subscription-date">
+                        Registrado: {new Date(subscriber.subscribedAt).toLocaleDateString()}
+                      </span>
+                      {subscriber.notes && (
+                        <p className="subscriber-notes">Notas: {subscriber.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           // Dashboard View
@@ -1013,6 +1152,124 @@ export default function AdminDashboard() {
 
         .stat-card.people.clickable .stat-icon {
           color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Project Subscribers View Styles */
+        .project-subscribers-view {
+          background: white;
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .subscribers-list {
+          display: grid;
+          gap: 1rem;
+          margin-top: 2rem;
+        }
+
+        .subscriber-card {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: #f9fafb;
+          transition: all 0.2s ease;
+        }
+
+        .subscriber-card:hover {
+          border-color: #3b82f6;
+          background: #eff6ff;
+        }
+
+        .subscriber-info h4 {
+          margin: 0 0 0.5rem 0;
+          color: #1f2937;
+          font-weight: 600;
+        }
+
+        .subscriber-info p {
+          margin: 0.25rem 0;
+          color: #6b7280;
+          font-size: 0.9rem;
+        }
+
+        .subscriber-meta {
+          text-align: right;
+        }
+
+        .subscription-date {
+          font-size: 0.8rem;
+          color: #9ca3af;
+        }
+
+        .subscriber-notes {
+          font-size: 0.8rem;
+          color: #6b7280;
+          margin-top: 0.5rem;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          margin-top: 0.5rem;
+        }
+
+        .status-active {
+          background-color: #dcfce7;
+          color: #166534;
+        }
+
+        .status-pending {
+          background-color: #fef3c7;
+          color: #92400e;
+        }
+
+        .status-inactive {
+          background-color: #f3f4f6;
+          color: #6b7280;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 4rem 2rem;
+          color: #6b7280;
+        }
+
+        .empty-icon {
+          margin-bottom: 1rem;
+          color: #d1d5db;
+        }
+
+        .empty-state h3 {
+          margin: 1rem 0 0.5rem 0;
+          color: #374151;
+        }
+
+        .loading-state {
+          text-align: center;
+          padding: 4rem 2rem;
+          color: #6b7280;
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f4f6;
+          border-top: 4px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>
