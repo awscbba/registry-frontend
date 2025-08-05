@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
+import ProjectSubscriptionManager from './ProjectSubscriptionManager';
+import { projectApi } from '../services/projectApi';
 
 interface PersonFormProps {
   person?: Person;
-  onSubmit: (data: PersonCreate | PersonUpdate | any) => Promise<void>;
+  onSubmit: (data: PersonCreate | PersonUpdate | any, subscriptionData?: { projectIds: string[] }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -25,6 +27,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
   // Global countries list (major countries)
   const countries = [
@@ -100,9 +103,12 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     if (!validateForm()) return;
 
     try {
-      await onSubmit(formData);
+      // Pass both person data and subscription data to parent
+      await onSubmit(formData, { projectIds: selectedProjectIds });
+      
     } catch (error) {
       // Error handling is managed by parent component
+      throw error;
     }
   };
 
@@ -331,6 +337,13 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
             </div>
           </div>
         </div>
+
+        {/* Project Subscriptions Section */}
+        <ProjectSubscriptionManager
+          personId={person?.id}
+          isEditing={true}
+          onSubscriptionsChange={setSelectedProjectIds}
+        />
 
         {/* Form Actions */}
         <div className="form-actions">

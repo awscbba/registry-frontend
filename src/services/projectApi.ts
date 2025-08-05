@@ -334,4 +334,47 @@ export const projectApi = {
       throw new ApiError(response.status, 'Error al eliminar persona');
     }
   },
+
+  // Person Subscription Management
+  async getPersonSubscriptions(personId: string): Promise<Subscription[]> {
+    // Since there's no direct endpoint, we'll get all subscriptions and filter
+    const allSubscriptions = await this.getAllSubscriptions();
+    return allSubscriptions.filter(sub => sub.personId === personId);
+  },
+
+  async updatePersonSubscriptions(personId: string, projectIds: string[]): Promise<void> {
+    // Get current subscriptions for the person
+    const currentSubscriptions = await this.getPersonSubscriptions(personId);
+    const currentProjectIds = currentSubscriptions.map(sub => sub.projectId);
+    
+    // Find projects to subscribe to (new ones)
+    const toSubscribe = projectIds.filter(projectId => !currentProjectIds.includes(projectId));
+    
+    // Find projects to unsubscribe from (removed ones)
+    const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.projectId));
+    
+    // Subscribe to new projects
+    for (const projectId of toSubscribe) {
+      try {
+        await this.subscribePersonToProject(projectId, personId, {
+          status: 'active',
+          subscribedBy: 'admin',
+          notes: 'Subscribed via admin panel'
+        });
+      } catch (error) {
+        console.error(`Failed to subscribe person ${personId} to project ${projectId}:`, error);
+        // Continue with other subscriptions even if one fails
+      }
+    }
+    
+    // Unsubscribe from removed projects
+    for (const subscription of toUnsubscribe) {
+      try {
+        await this.unsubscribePersonFromProject(subscription.projectId, subscription.id);
+      } catch (error) {
+        console.error(`Failed to unsubscribe person ${personId} from project ${subscription.projectId}:`, error);
+        // Continue with other unsubscriptions even if one fails
+      }
+    }
+  },
 };

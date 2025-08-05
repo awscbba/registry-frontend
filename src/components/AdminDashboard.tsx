@@ -157,7 +157,7 @@ export default function AdminDashboard() {
     setCurrentView('edit-person');
   };
 
-  const handleSavePerson = async (updatedPersonData: any) => {
+  const handleSavePerson = async (updatedPersonData: any, subscriptionData?: { projectIds: string[] }) => {
     setIsSubmitting(true);
     setError(null);
     try {
@@ -166,6 +166,11 @@ export default function AdminDashboard() {
       }
 
       await projectApi.updatePerson(editingPerson.id, updatedPersonData);
+      
+      // Update subscriptions if provided
+      if (subscriptionData?.projectIds) {
+        await projectApi.updatePersonSubscriptions(editingPerson.id, subscriptionData.projectIds);
+      }
       
       // Create the complete updated person object
       const updatedPerson = { ...editingPerson, ...updatedPersonData };
@@ -198,11 +203,16 @@ export default function AdminDashboard() {
     setError(null);
   };
 
-  const handleCreatePerson = async (personData: any) => {
+  const handleCreatePerson = async (personData: any, subscriptionData?: { projectIds: string[] }) => {
     setIsSubmitting(true);
     setError(null);
     try {
       const createdPerson = await projectApi.createPerson(personData);
+      
+      // Handle initial subscriptions if provided
+      if (subscriptionData?.projectIds && subscriptionData.projectIds.length > 0) {
+        await projectApi.updatePersonSubscriptions(createdPerson.id, subscriptionData.projectIds);
+      }
       
       // Add to local state
       setPeople(prevPeople => [...prevPeople, createdPerson]);
