@@ -196,7 +196,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCancelCreate = () => {
+  const handleCancelCreatePerson = () => {
     setCurrentView('people');
     setError(null);
   };
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
             </div>
             <PersonForm
               onSubmit={handleCreatePerson}
-              onCancel={handleCancelCreate}
+              onCancel={handleCancelCreatePerson}
               isLoading={isSubmitting}
             />
           </div>
