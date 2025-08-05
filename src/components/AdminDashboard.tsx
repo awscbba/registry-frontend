@@ -346,7 +346,7 @@ export default function AdminDashboard() {
       await projectApi.updateProjectSubscription(
         editingProject.id, 
         subscriber.id, 
-        { status: 'inactive' }
+        { status: 'cancelled' }
       );
       
       setSuccessMessage(`Suscriptor ${subscriber.person.firstName} ${subscriber.person.lastName} rechazado`);
@@ -361,6 +361,36 @@ export default function AdminDashboard() {
         setError(`Error al rechazar suscriptor: ${err.message}`);
       } else {
         setError('Error desconocido al rechazar suscriptor');
+      }
+    }
+  };
+
+  const handleDeactivateSubscriber = async (subscriber: ProjectSubscriber) => {
+    if (!editingProject) return;
+    
+    if (!confirm(`¿Está seguro de que desea desactivar a ${subscriber.person.firstName} ${subscriber.person.lastName}? Esta persona dejará de estar activa en el proyecto.`)) {
+      return;
+    }
+    
+    try {
+      await projectApi.updateProjectSubscription(
+        editingProject.id, 
+        subscriber.id, 
+        { status: 'cancelled' }
+      );
+      
+      setSuccessMessage(`${subscriber.person.firstName} ${subscriber.person.lastName} ha sido desactivado del proyecto`);
+      
+      // Reload subscribers list (deactivated users will be filtered out)
+      await handleViewSubscribers(editingProject);
+      
+      // Reload dashboard to update counts
+      await loadDashboard();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al desactivar suscriptor: ${err.message}`);
+      } else {
+        setError('Error desconocido al desactivar suscriptor');
       }
     }
   };
@@ -745,7 +775,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="subscribers-list">
                 {currentProjectSubscribers
-                  .filter(subscriber => subscriber.status !== 'inactive') // Hide declined subscribers
+                  .filter(subscriber => subscriber.status !== 'inactive' && subscriber.status !== 'cancelled') // Hide declined and deactivated subscribers
                   .map((subscriber) => (
                   <div key={subscriber.id} className="subscriber-card">
                     <div className="subscriber-info">
@@ -754,7 +784,8 @@ export default function AdminDashboard() {
                       {subscriber.person.phone && <p>📞 {subscriber.person.phone}</p>}
                       <span className={`status-badge status-${subscriber.status}`}>
                         {subscriber.status === 'active' ? 'Activo' : 
-                         subscriber.status === 'pending' ? 'Pendiente' : 'Inactivo'}
+                         subscriber.status === 'pending' ? 'Pendiente' : 
+                         subscriber.status === 'cancelled' ? 'Cancelado' : 'Inactivo'}
                       </span>
                     </div>
                     <div className="subscriber-meta">
@@ -792,7 +823,19 @@ export default function AdminDashboard() {
                           </>
                         )}
                         {subscriber.status === 'active' && (
-                          <span className="status-text">✅ Aprobado</span>
+                          <>
+                            <span className="status-text">✅ Aprobado</span>
+                            <button 
+                              onClick={() => handleDeactivateSubscriber(subscriber)}
+                              className="action-button deactivate-button"
+                              title="Desactivar usuario del proyecto"
+                            >
+                              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 12M6 12l12.728 6.364" />
+                              </svg>
+                              Desactivar
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1342,6 +1385,11 @@ export default function AdminDashboard() {
           color: #6b7280;
         }
 
+        .status-cancelled {
+          background-color: #fef2f2;
+          color: #dc2626;
+        }
+
         .subscriber-actions {
           display: flex;
           gap: 0.5rem;
@@ -1380,10 +1428,20 @@ export default function AdminDashboard() {
           background-color: #dc2626;
         }
 
+        .deactivate-button {
+          background-color: #f59e0b;
+          color: white;
+        }
+
+        .deactivate-button:hover {
+          background-color: #d97706;
+        }
+
         .status-text {
           font-size: 0.875rem;
           font-weight: 500;
           color: #10b981;
+          margin-right: 0.5rem;
         }
 
         .subscriber-stats {
