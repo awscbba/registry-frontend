@@ -8,7 +8,7 @@ import type { AdminDashboard as AdminDashboardType, ProjectCreate } from '../typ
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
 
-type AdminView = 'dashboard' | 'people' | 'create-project' | 'edit-person';
+type AdminView = 'dashboard' | 'people' | 'create-project' | 'edit-person' | 'create-person';
 
 export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState<AdminDashboardType | null>(null);
@@ -169,6 +169,34 @@ export default function AdminDashboard() {
 
   const handleCancelEdit = () => {
     setEditingPerson(null);
+    setCurrentView('people');
+    setError(null);
+  };
+
+  const handleCreatePerson = async (personData: any) => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const createdPerson = await projectApi.createPerson(personData);
+      
+      // Add to local state
+      setPeople(prevPeople => [...prevPeople, createdPerson]);
+      
+      setSuccessMessage(`Persona ${personData.firstName} ${personData.lastName} creada exitosamente`);
+      setCurrentView('people');
+      await loadDashboard(); // Refresh dashboard data
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al crear persona: ${err.message}`);
+      } else {
+        setError('Error desconocido al crear persona');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelCreate = () => {
     setCurrentView('people');
     setError(null);
   };
@@ -350,6 +378,27 @@ export default function AdminDashboard() {
               isLoading={isSubmitting}
             />
           </div>
+        ) : currentView === 'create-person' ? (
+          // Create Person View
+          <div className="create-person-view">
+            <div className="view-header">
+              <button 
+                onClick={() => setCurrentView('people')}
+                className="back-button"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver a la Lista
+              </button>
+              <h2>Crear Nueva Persona</h2>
+            </div>
+            <PersonForm
+              onSubmit={handleCreatePerson}
+              onCancel={handleCancelCreate}
+              isLoading={isSubmitting}
+            />
+          </div>
         ) : currentView === 'people' ? (
           // People List View
           <div className="people-view">
@@ -363,8 +412,22 @@ export default function AdminDashboard() {
                 </svg>
                 Volver al Dashboard
               </button>
-              <h2>Lista de Personas Registradas</h2>
-              <p>Total: {dashboard?.totalPeople || 0} personas</p>
+              <div className="header-content">
+                <div className="header-info">
+                  <h2>Lista de Personas Registradas</h2>
+                  <p>Total: {dashboard?.totalPeople || 0} personas</p>
+                </div>
+                <button 
+                  onClick={() => setCurrentView('create-person')}
+                  className={BUTTON_CLASSES.CREATE}
+                  title="Crear nueva persona"
+                >
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Agregar Persona
+                </button>
+              </div>
             </div>
             <PersonList 
               people={people}
@@ -753,6 +816,17 @@ export default function AdminDashboard() {
           margin-bottom: 2rem;
           padding-bottom: 1rem;
           border-bottom: 2px solid #f3f4f6;
+        }
+
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 1rem;
+        }
+
+        .header-info {
+          flex: 1;
         }
 
         .back-button {

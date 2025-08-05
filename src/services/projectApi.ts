@@ -288,8 +288,17 @@ export const projectApi = {
   },
 
   async createPerson(person: any): Promise<Person> {
-    // Person creation is not available in the current API version
-    throw new ApiError(501, 'La creación de personas no está disponible en la versión actual de la API.');
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PEOPLE), {
+      method: 'POST',
+      headers: {
+        ...addAuthHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(person),
+    });
+    
+    const data = await handleApiResponse(response);
+    return data.data; // v2 responses have data wrapped in a data field
   },
 
   async updatePerson(id: string, person: Partial<Person>): Promise<Person> {

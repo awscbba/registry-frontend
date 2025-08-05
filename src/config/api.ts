@@ -19,6 +19,7 @@ export const API_CONFIG = {
     ADMIN_PROJECTS: '/v2/admin/projects',
     
     // People (v2)
+    PEOPLE: '/v2/people',
     ADMIN_PEOPLE: '/v2/admin/people',
     PEOPLE_CHECK_EMAIL: '/v2/people/check-email',
     PERSON_BY_ID: (personId: string) => `/v2/people/${personId}`,
