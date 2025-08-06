@@ -14,8 +14,11 @@ export default function ProjectShowcase() {
 
   useEffect(() => {
     // Check if user is already authenticated
-    setIsAuthenticated(authService.isAuthenticated());
-    // Always load projects first, authentication is optional for viewing
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+    
+    // Load projects - this should work for both authenticated and non-authenticated users
+    // If there's an auth error, it will be handled gracefully in the error handler
     loadActiveProjects();
   }, []);
 
@@ -51,10 +54,19 @@ export default function ProjectShowcase() {
       console.log('ProjectShowcase: Projects state updated successfully');
     } catch (err) {
       if (err instanceof ApiError) {
-        // For now, don't require authentication for viewing projects
-        // Just log the error and show a generic message
-        console.warn('ProjectShowcase: API Error details:', err.status, err.message);
-        setError(`Error al cargar proyectos: ${err.message}`);
+        // Handle authentication errors gracefully
+        if (err.status === 401) {
+          // Authentication error - user session expired or invalid
+          console.log('ProjectShowcase: Authentication error, clearing session');
+          setIsAuthenticated(false);
+          setError(null); // Don't show error message for auth issues
+          // Clear any stored auth data
+          authService.logout();
+        } else {
+          // Other API errors
+          console.warn('ProjectShowcase: API Error details:', err.status, err.message);
+          setError(`Error al cargar proyectos: ${err.message}`);
+        }
       } else {
         console.error('ProjectShowcase: Unknown error:', err);
         setError('Error desconocido al cargar proyectos');
@@ -111,10 +123,19 @@ export default function ProjectShowcase() {
   };
 
   const handleLogout = async () => {
-    await authService.logout();
-    setIsAuthenticated(false);
-    setProjects([]);
-    setError(null);
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+      setProjects([]);
+      setError(null);
+      
+      // Redirect to clean main page to avoid showing error messages
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails to ensure clean state
+      window.location.href = '/';
+    }
   };
 
   const formatDate = (dateString?: string) => {
