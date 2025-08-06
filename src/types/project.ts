@@ -11,6 +11,10 @@ export interface Project {
   isEnabled: boolean;
   createdAt: string;
   updatedAt: string;
+  // New subscription count fields from backend
+  subscriptionCount?: number; // Active + pending subscriptions only
+  totalSubscriptionsEverCreated?: number; // Historical count including inactive
+  availableSlots?: number; // Calculated based on active subscriptions only
 }
 
 export interface ProjectCreate {
@@ -73,6 +77,7 @@ export interface ProjectSubscriber {
 export interface AdminDashboard {
   totalPeople: number;
   totalProjects: number;
-  totalSubscriptions: number;
+  totalSubscriptions: number; // Now excludes inactive subscriptions (active + pending only)
+  totalSubscriptionsEverCreated?: number; // Historical count including inactive
   timestamp: string;
 }

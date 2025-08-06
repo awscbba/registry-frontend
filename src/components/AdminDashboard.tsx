@@ -74,6 +74,8 @@ export default function AdminDashboard() {
           totalProjects: 0,
           totalPeople: 0,
           totalSubscriptions: 0,
+          totalSubscriptionsEverCreated: 0,
+          timestamp: new Date().toISOString(),
           recentActivity: []
         });
       } else if (err instanceof ApiError) {
@@ -267,13 +269,45 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm('¿Está seguro de que desea eliminar este proyecto?')) {
-      return;
-    }
-
     try {
+      // First, check if project has active subscriptions
+      const projectSubscribers = await projectApi.getProjectSubscribers(id);
+      const activeSubscriptions = projectSubscribers.filter(sub => sub.status === 'active');
+      const pendingSubscriptions = projectSubscribers.filter(sub => sub.status === 'pending');
+      const totalSubscriptions = activeSubscriptions.length + pendingSubscriptions.length;
+      
+      let confirmMessage = '¿Está seguro de que desea eliminar este proyecto?';
+      
+      if (totalSubscriptions > 0) {
+        const activeText = activeSubscriptions.length > 0 ? 
+          `${activeSubscriptions.length} suscripción(es) activa(s)` : '';
+        const pendingText = pendingSubscriptions.length > 0 ? 
+          `${pendingSubscriptions.length} suscripción(es) pendiente(s)` : '';
+        
+        const subscriptionText = [activeText, pendingText].filter(Boolean).join(' y ');
+        
+        confirmMessage = `⚠️ ATENCIÓN: Este proyecto tiene ${subscriptionText}.
+
+Al eliminar este proyecto:
+• Se eliminarán TODAS las suscripciones asociadas (${totalSubscriptions} en total)
+• Los usuarios suscritos perderán acceso al proyecto
+• Se enviará notificación por email a los usuarios afectados
+• Esta acción NO se puede deshacer
+
+¿Está seguro de que desea continuar con la eliminación?`;
+      }
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
       await projectApi.deleteProject(id);
-      setSuccessMessage('Proyecto eliminado exitosamente');
+      
+      if (totalSubscriptions > 0) {
+        setSuccessMessage(`Proyecto eliminado exitosamente. Se eliminaron ${totalSubscriptions} suscripción(es) asociada(s).`);
+      } else {
+        setSuccessMessage('Proyecto eliminado exitosamente');
+      }
       
       // Remove from local state
       setProjects(prevProjects => prevProjects.filter(project => project.id !== id));
@@ -1041,7 +1075,14 @@ La funcionalidad será restaurada en la próxima actualización.`);
             <div className="stat-content">
               <h3>Suscripciones Activas</h3>
               <div className="stat-number">{dashboard?.totalSubscriptions || 0}</div>
-              <p>Personas suscritas a proyectos</p>
+              <p>Suscripciones activas y pendientes</p>
+              {dashboard?.totalSubscriptionsEverCreated && 
+               dashboard.totalSubscriptionsEverCreated > (dashboard.totalSubscriptions || 0) && (
+                <div className="stat-historical">
+                  <span className="historical-label">Total histórico:</span>
+                  <span className="historical-value">{dashboard.totalSubscriptionsEverCreated}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1250,6 +1291,27 @@ La funcionalidad será restaurada en la próxima actualización.`);
           font-weight: 700;
           color: var(--primary-color);
           margin-bottom: 5px;
+        }
+
+        .stat-historical {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+          padding: 4px 8px;
+          background: #f3f4f6;
+          border-radius: 4px;
+          font-size: 0.85rem;
+        }
+
+        .historical-label {
+          color: #6b7280;
+          font-weight: 500;
+        }
+
+        .historical-value {
+          color: #374151;
+          font-weight: 600;
         }
 
         .stat-content p {

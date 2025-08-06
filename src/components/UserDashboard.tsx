@@ -32,10 +32,44 @@ export default function UserDashboard({
   const loadUserSubscriptions = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const userSubs = await userAuthService.getUserSubscriptions();
-      setSubscriptions(userSubs);
+      
+      // Filter out subscriptions to projects that no longer exist
+      // and separate them for user notification
+      const validSubscriptions: UserSubscription[] = [];
+      const orphanedSubscriptions: UserSubscription[] = [];
+      
+      for (const subscription of userSubs) {
+        // Check if the project name indicates it might be missing/deleted
+        if (!subscription.projectName || subscription.projectName.includes('[DELETED]') || subscription.projectName.includes('[ELIMINADO]')) {
+          orphanedSubscriptions.push(subscription);
+        } else {
+          validSubscriptions.push(subscription);
+        }
+      }
+      
+      setSubscriptions(validSubscriptions);
+      
+      // Show warning if there are orphaned subscriptions
+      if (orphanedSubscriptions.length > 0) {
+        const orphanedNames = orphanedSubscriptions.map(sub => sub.projectName || 'Proyecto desconocido').join(', ');
+        setError(`⚠️ Algunas de tus suscripciones son a proyectos que ya no existen: ${orphanedNames}. Estas suscripciones han sido removidas automáticamente.`);
+      }
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load subscriptions');
+      if (err instanceof Error) {
+        // Handle specific error cases
+        if (err.message.includes('404') || err.message.includes('not found')) {
+          setError('No se pudieron cargar las suscripciones. Es posible que algunos proyectos hayan sido eliminados.');
+        } else if (err.message.includes('403') || err.message.includes('unauthorized')) {
+          setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        } else {
+          setError(`Error al cargar suscripciones: ${err.message}`);
+        }
+      } else {
+        setError('Error desconocido al cargar suscripciones');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +228,14 @@ export default function UserDashboard({
                 {subscriptions.map((subscription) => (
                   <div key={subscription.id} className="subscription-card">
                     <div className="subscription-info">
-                      <h4>{subscription.projectName}</h4>
+                      <h4>
+                        {subscription.projectName || 'Proyecto no disponible'}
+                        {(!subscription.projectName || subscription.projectName.includes('[DELETED]')) && (
+                          <span className="project-warning" title="Este proyecto ya no existe">
+                            ⚠️
+                          </span>
+                        )}
+                      </h4>
                       <p className="subscription-meta">
                         Estado: {getStatusBadge(subscription.status)}
                         <span className="subscription-date">
@@ -205,6 +246,12 @@ export default function UserDashboard({
                         <p className="subscription-notes">
                           <strong>Notas:</strong> {subscription.notes}
                         </p>
+                      )}
+                      {(!subscription.projectName || subscription.projectName.includes('[DELETED]')) && (
+                        <div className="project-deleted-notice">
+                          <span className="notice-icon">ℹ️</span>
+                          <span>Este proyecto ha sido eliminado. Tu suscripción será removida automáticamente.</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -517,6 +564,32 @@ export default function UserDashboard({
               align-items: flex-start;
               gap: 8px;
             }
+          }
+
+          /* New styles for project deletion warnings */
+          .project-warning {
+            margin-left: 8px;
+            font-size: 16px;
+            color: #f59e0b;
+          }
+
+          .project-deleted-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 12px;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #92400e;
+            line-height: 1.4;
+          }
+
+          .notice-icon {
+            flex-shrink: 0;
+            font-size: 16px;
           }
         `}</style>
       </div>

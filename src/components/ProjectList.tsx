@@ -160,6 +160,34 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
                 <span className="detail-label">Participantes máx:</span>
                 <span className="detail-value">{project.maxParticipants || 'Sin límite'}</span>
               </div>
+              {/* Show subscription counts and available slots */}
+              {typeof project.subscriptionCount === 'number' && (
+                <div className="detail-item">
+                  <span className="detail-label">Suscripciones activas:</span>
+                  <span className="detail-value">{project.subscriptionCount}</span>
+                </div>
+              )}
+              {project.maxParticipants && typeof project.availableSlots === 'number' && (
+                <div className="detail-item">
+                  <span className="detail-label">Cupos disponibles:</span>
+                  <span className="detail-value" style={{ 
+                    color: project.availableSlots === 0 ? '#dc2626' : 
+                           project.availableSlots <= 5 ? '#f59e0b' : '#10b981' 
+                  }}>
+                    {project.availableSlots}
+                  </span>
+                </div>
+              )}
+              {/* Show historical count if different from current */}
+              {typeof project.totalSubscriptionsEverCreated === 'number' && 
+               project.totalSubscriptionsEverCreated > (project.subscriptionCount || 0) && (
+                <div className="detail-item">
+                  <span className="detail-label">Total histórico:</span>
+                  <span className="detail-value" style={{ color: '#6b7280', fontSize: '0.9em' }}>
+                    {project.totalSubscriptionsEverCreated}
+                  </span>
+                </div>
+              )}
               <div className="detail-item">
                 <span className="detail-label">Fecha inicio:</span>
                 <span className="detail-value">{formatDate(project.startDate)}</span>
