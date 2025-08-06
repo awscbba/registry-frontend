@@ -37,11 +37,13 @@ export default function ProjectShowcase() {
       const allProjects = await projectApi.getPublicProjects();
       console.log('ProjectShowcase: Raw API response:', allProjects);
       console.log('ProjectShowcase: Projects array length:', allProjects?.length);
+      console.log('ProjectShowcase: Projects array:', JSON.stringify(allProjects, null, 2));
       
-      // Filter only active and enabled projects for public display
-      const activeProjects = allProjects.filter(project => 
-        project.status === 'active' && project.isEnabled !== false
-      );
+      // Filter only active projects for public display (simplified)
+      const activeProjects = allProjects.filter(project => {
+        console.log(`ProjectShowcase: Checking project ${project.name}: status=${project.status}, isEnabled=${project.isEnabled}`);
+        return project.status === 'active';
+      });
       console.log('ProjectShowcase: Filtered active projects:', activeProjects);
       console.log('ProjectShowcase: Active projects count:', activeProjects.length);
       

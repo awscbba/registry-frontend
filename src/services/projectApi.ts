@@ -37,22 +37,30 @@ export const projectApi = {
 
   // Public project access (no authentication required)
   async getPublicProjects(): Promise<Project[]> {
+    console.log('getPublicProjects: Making API call...');
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECTS), {
       headers: {
         'Content-Type': 'application/json'
       }
     });
+    console.log('getPublicProjects: Response status:', response.status);
+    console.log('getPublicProjects: Response ok:', response.ok);
+    
     const data = await handleApiResponse(response);
+    console.log('getPublicProjects: Raw response data:', data);
 
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
+      console.log('getPublicProjects: Using v2 format, returning data.data');
       return data.data; // v2 format
     } else if (Array.isArray(data)) {
+      console.log('getPublicProjects: Using legacy array format');
       return data; // Legacy array format (backward compatibility)
     } else if (data && data.projects && Array.isArray(data.projects)) {
+      console.log('getPublicProjects: Using legacy object format');
       return data.projects; // Legacy object format (backward compatibility)
     } else {
-      console.error('Unexpected API response format:', data);
+      console.error('getPublicProjects: Unexpected API response format:', data);
       return []; // Fallback to empty array
     }
   },
