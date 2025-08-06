@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
+import { userAuthService } from '../services/userAuthService';
 import type { Project, SubscriptionCreate } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
+import UserLoginModal from './UserLoginModal';
+import UserDashboard from './UserDashboard';
 
 interface ProjectSubscriptionFormProps {
   projectId: string;
@@ -14,6 +17,12 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
+  // Authentication state
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showUserDashboard, setShowUserDashboard] = useState(false);
+  const [loginMessage, setLoginMessage] = useState<string>('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
   // Form data - simplified for new workflow
   const [formData, setFormData] = useState({
     firstName: '',
@@ -24,7 +33,12 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
   useEffect(() => {
     loadProject();
+    checkUserLoginStatus();
   }, [projectId]);
+
+  const checkUserLoginStatus = () => {
+    setIsLoggedIn(userAuthService.isLoggedIn());
+  };
 
   // Helper function to convert project name to URL-friendly slug
   const nameToSlug = (name: string): string => {
@@ -54,30 +68,28 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   };
 
   const loadProject = async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
+      setIsLoading(true);
+      setError(null);
+      
       // First, get all projects to find the one matching the slug
       const allProjects = await projectApi.getPublicProjects();
       
       // Find project by slug
-      const foundProject = allProjects.find(project => 
-        getProjectSlug(project) === projectId
-      );
+      const matchingProject = allProjects.find(p => {
+        const projectSlug = getProjectSlug(p);
+        return projectSlug === projectId;
+      });
       
-      if (!foundProject) {
+      if (!matchingProject) {
         setError('Proyecto no encontrado');
         return;
       }
       
-      setProject(foundProject);
+      setProject(matchingProject);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(`Error al cargar proyecto: ${err.message}`);
-      } else {
-        setError('Proyecto no encontrado');
-      }
+      console.error('Error loading project:', err);
+      setError('Error al cargar el proyecto');
     } finally {
       setIsLoading(false);
     }
@@ -89,6 +101,16 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleUserSubscription = async (projectId: string, notes?: string) => {
+    try {
+      const result = await userAuthService.subscribeToProject(projectId, notes);
+      setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
+      return result;
+    } catch (err) {
+      throw err;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,14 +155,14 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       if (err instanceof ApiError) {
         // Handle specific API errors with user-friendly messages
         if (err.message.includes('already subscribed') || err.message.includes('ya suscrito')) {
-          setError('Ya tienes una suscripción a este proyecto. Por favor inicia sesión para ver el estado de tu suscripción.');
+          setLoginMessage('Ya tienes una suscripción a este proyecto. Inicia sesión para ver el estado de tu suscripción.');
+          setShowLoginModal(true);
         } else if (err.message.includes('account exists') || err.message.includes('cuenta existe')) {
-          setError('Ya tienes una cuenta registrada con este email. Por favor inicia sesión para suscribirte al proyecto.');
+          setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
+          setShowLoginModal(true);
         } else {
           setError(`Error al procesar suscripción: ${err.message}`);
         }
-      } else if (err instanceof Error) {
-        setError(`Error al procesar suscripción: ${err.message}`);
       } else {
         setError('Error desconocido al procesar la suscripción');
       }
@@ -149,411 +171,512 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     }
   };
 
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    setIsLoggedIn(true);
+    setShowUserDashboard(true);
+    checkUserLoginStatus();
+  };
+
+  const handleShowUserDashboard = () => {
+    if (userAuthService.isLoggedIn()) {
+      setShowUserDashboard(true);
+    } else {
+      setLoginMessage('Inicia sesión para ver tu panel de usuario y gestionar tus suscripciones.');
+      setShowLoginModal(true);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="subscription-form">
-        <div className="container">
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Cargando información del proyecto...</p>
-          </div>
+      <div className="subscription-form-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Cargando información del proyecto...</p>
         </div>
-
-        <style jsx>{`
-          .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem 0;
-          }
-
-          .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-          }
-
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
 
   if (error && !project) {
     return (
-      <div className="subscription-form">
-        <div className="container">
-          <div className="error-state">
-            <div className="error-icon">
-              <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3>Proyecto no encontrado</h3>
-            <p>{error}</p>
-            <a href="/" className={BUTTON_CLASSES.BACK}>Volver al inicio</a>
-          </div>
+      <div className="subscription-form-container">
+        <div className="error-state">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={loadProject} className={BUTTON_CLASSES.secondary}>
+            Reintentar
+          </button>
         </div>
+      </div>
+    );
+  }
 
-        <style jsx>{`
-          .error-state {
-            text-align: center;
-            padding: 4rem 0;
-          }
-
-          .error-icon {
-            color: #ef4444;
-            margin-bottom: 1rem;
-          }
-
-          .btn-back {
-            background: #3b82f6;
-            color: white;
-            text-decoration: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            display: inline-block;
-            margin-top: 1rem;
-          }
-
-          .btn-back:hover {
-            background: #2563eb;
-          }
-        `}</style>
+  if (!project) {
+    return (
+      <div className="subscription-form-container">
+        <div className="error-state">
+          <h2>Proyecto no encontrado</h2>
+          <p>El proyecto que buscas no existe o no está disponible.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="subscription-form">
-      <div className="container">
-        {/* Project Header */}
-        <div className="project-header">
-          <a href="/" className="back-link">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Volver a proyectos
-          </a>
+    <div className="subscription-form-container">
+      {/* User Status Bar */}
+      {isLoggedIn && (
+        <div className="user-status-bar">
+          <div className="user-info">
+            <span className="user-icon">👤</span>
+            <span>Conectado como {userAuthService.getCurrentUser()?.firstName}</span>
+          </div>
+          <button 
+            onClick={handleShowUserDashboard}
+            className="dashboard-button"
+          >
+            Mi Panel
+          </button>
+        </div>
+      )}
+
+      <div className="subscription-form">
+        {/* Project Information */}
+        <div className="project-info">
+          <h1>{project.name}</h1>
+          <p className="project-description">{project.description}</p>
           
-          <div className="project-info">
-            <h1>Suscribirse a: {project?.name}</h1>
-            <p>{project?.description}</p>
-            <span className="project-status active">Proyecto Activo</span>
+          <div className="project-details">
+            <div className="detail-item">
+              <span className="detail-label">Fecha de inicio:</span>
+              <span className="detail-value">{new Date(project.startDate).toLocaleDateString()}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Fecha de fin:</span>
+              <span className="detail-value">{new Date(project.endDate).toLocaleDateString()}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Participantes máximos:</span>
+              <span className="detail-value">{project.maxParticipants}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Estado:</span>
+              <span className={`status-badge status-${project.status}`}>
+                {project.status === 'active' ? 'Activo' : 
+                 project.status === 'completed' ? 'Completado' : 
+                 project.status}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="alert success">
-            <div className="alert-icon">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="alert-content">
-              <h4>¡Suscripción exitosa!</h4>
-              <p>{success}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="alert error">
-            <div className="alert-icon">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="alert-content">
-              <h4>Error en la suscripción</h4>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Subscription Form */}
-        <div className="form-container">
-          <div className="form-intro">
-            <h2>Solicitar Suscripción</h2>
-            <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="subscription-form-content">
-            <div className="form-section">
-              <h3>Información Básica</h3>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="firstName">Nombre *</label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                    placeholder="Tu nombre"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="lastName">Apellido *</label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                    placeholder="Tu apellido"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="email">Email *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isSubmitting}
-                  placeholder="tu@email.com"
-                />
-                <small className="form-help">
-                  Usaremos este email para notificarte sobre el estado de tu solicitud
-                </small>
+        {/* Subscription Form or User Actions */}
+        {isLoggedIn ? (
+          <div className="authenticated-section">
+            <div className="auth-message">
+              <div className="message-icon">✅</div>
+              <div className="message-content">
+                <h3>¡Estás conectado!</h3>
+                <p>Puedes gestionar tus suscripciones desde tu panel de usuario.</p>
               </div>
             </div>
-
-            <div className="form-section">
-              <h3>Información Adicional</h3>
-              
-              <div className="form-group">
-                <label htmlFor="notes">¿Por qué te interesa este proyecto? (opcional)</label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows={4}
-                  placeholder="Cuéntanos sobre tu interés en el proyecto, experiencia relevante, o cualquier información que consideres importante..."
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={BUTTON_CLASSES.SUBMIT}
+            <div className="auth-actions">
+              <button 
+                onClick={handleShowUserDashboard}
+                className={BUTTON_CLASSES.primary}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="button-spinner"></div>
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Suscribirse al Proyecto
-                  </>
-                )}
+                Ver Mi Panel de Usuario
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        ) : (
+          <>
+            {/* Success Message */}
+            {success && (
+              <div className="success-message">
+                <div className="success-icon">✅</div>
+                <p>{success}</p>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="error-message">
+                <div className="error-icon">⚠️</div>
+                <p>{error}</p>
+              </div>
+            )}
+
+            {/* Subscription Form */}
+            <div className="form-intro">
+              <h2>Solicitar Suscripción</h2>
+              <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
+              <div className="existing-user-notice">
+                <p>¿Ya tienes una cuenta? 
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setLoginMessage('Inicia sesión para suscribirte al proyecto con tu cuenta existente.');
+                      setShowLoginModal(true);
+                    }}
+                    className="login-link"
+                  >
+                    Inicia sesión aquí
+                  </button>
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="subscription-form-content">
+              <div className="form-section">
+                <h3>Información Básica</h3>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="firstName">Nombre *</label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="lastName">Apellido *</label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
+                      placeholder="Tu apellido"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isSubmitting}
+                    placeholder="tu@email.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="notes">Notas adicionales</label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    placeholder="Información adicional que quieras compartir (opcional)"
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={BUTTON_CLASSES.primary}
+                >
+                  {isSubmitting ? 'Enviando solicitud...' : 'Enviar Solicitud de Suscripción'}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
 
-      <style jsx>{`
-        .subscription-form {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 2rem 0;
-        }
+      {/* Modals */}
+      <UserLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={handleLoginSuccess}
+        projectName={project.name}
+        message={loginMessage}
+      />
 
-        .container {
+      <UserDashboard
+        isOpen={showUserDashboard}
+        onClose={() => setShowUserDashboard(false)}
+        currentProjectId={project.id}
+        onSubscribeToProject={handleUserSubscription}
+      />
+
+      <style jsx>{`
+        .subscription-form-container {
           max-width: 800px;
           margin: 0 auto;
-          padding: 0 1rem;
+          padding: 20px;
         }
 
-        .project-header {
-          margin-bottom: 2rem;
-        }
-
-        .back-link {
-          display: inline-flex;
+        .user-status-bar {
+          display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 0.5rem;
-          color: white;
-          text-decoration: none;
-          margin-bottom: 1.5rem;
-          opacity: 0.9;
-          transition: opacity 0.3s ease;
+          background: #f0f9ff;
+          border: 1px solid #0ea5e9;
+          border-radius: 8px;
+          padding: 12px 20px;
+          margin-bottom: 24px;
         }
 
-        .back-link:hover {
-          opacity: 1;
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #0c4a6e;
+          font-weight: 500;
+        }
+
+        .user-icon {
+          font-size: 18px;
+        }
+
+        .dashboard-button {
+          background: #0ea5e9;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .dashboard-button:hover {
+          background: #0284c7;
+        }
+
+        .authenticated-section {
+          background: #f9fafb;
+          border-radius: 12px;
+          padding: 32px;
+          text-align: center;
+        }
+
+        .auth-message {
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+          margin-bottom: 24px;
+          text-align: left;
+        }
+
+        .message-icon {
+          font-size: 24px;
+          flex-shrink: 0;
+        }
+
+        .message-content h3 {
+          margin: 0 0 8px 0;
+          color: #1f2937;
+          font-size: 1.25rem;
+        }
+
+        .message-content p {
+          margin: 0;
+          color: #6b7280;
+          line-height: 1.5;
+        }
+
+        .existing-user-notice {
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 8px;
+          padding: 16px;
+          margin-top: 16px;
+        }
+
+        .existing-user-notice p {
+          margin: 0;
+          color: #1e40af;
+          text-align: center;
+        }
+
+        .login-link {
+          background: none;
+          border: none;
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+          font-weight: 500;
+          margin-left: 4px;
+        }
+
+        .login-link:hover {
+          color: #1d4ed8;
+        }
+
+        .loading-state,
+        .error-state {
+          text-align: center;
+          padding: 60px 20px;
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top: 4px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .subscription-form {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          overflow: hidden;
         }
 
         .project-info {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border-radius: 1rem;
-          padding: 2rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
+          padding: 40px;
           text-align: center;
         }
 
         .project-info h1 {
+          margin: 0 0 16px 0;
           font-size: 2rem;
           font-weight: 700;
-          margin-bottom: 1rem;
         }
 
-        .project-info p {
+        .project-description {
+          margin: 0 0 32px 0;
+          font-size: 1.1rem;
           opacity: 0.9;
-          margin-bottom: 1rem;
           line-height: 1.6;
         }
 
-        .project-status {
-          display: inline-block;
-          padding: 0.5rem 1rem;
-          border-radius: 9999px;
-          font-size: 0.875rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+        .project-details {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
-        .project-status.active {
-          background: rgba(34, 197, 94, 0.2);
-          color: #dcfce7;
-          border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .alert {
+        .detail-item {
           display: flex;
-          align-items: flex-start;
-          gap: 1rem;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          margin-bottom: 2rem;
+          flex-direction: column;
+          gap: 4px;
         }
 
-        .alert.success {
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.3);
-          color: #dcfce7;
+        .detail-label {
+          font-size: 14px;
+          opacity: 0.8;
+          font-weight: 500;
         }
 
-        .alert.error {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #fecaca;
-        }
-
-        .alert-icon {
-          flex-shrink: 0;
-          margin-top: 0.125rem;
-        }
-
-        .alert-content h4 {
+        .detail-value {
           font-weight: 600;
-          margin-bottom: 0.25rem;
         }
 
-        .alert-content p {
-          opacity: 0.9;
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: inline-block;
         }
 
-        .form-container {
-          background: white;
-          border-radius: 1rem;
-          padding: 2rem;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .status-badge.status-active {
+          background: rgba(34, 197, 94, 0.2);
+          color: #15803d;
+        }
+
+        .status-badge.status-completed {
+          background: rgba(156, 163, 175, 0.2);
+          color: #374151;
         }
 
         .form-intro {
+          padding: 40px;
           text-align: center;
-          margin-bottom: 2rem;
-          padding-bottom: 2rem;
           border-bottom: 1px solid #e5e7eb;
         }
 
         .form-intro h2 {
+          margin: 0 0 16px 0;
+          color: #1f2937;
           font-size: 1.5rem;
           font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
         }
 
         .form-intro p {
+          margin: 0;
           color: #6b7280;
           line-height: 1.6;
         }
 
-        .form-section {
-          margin-bottom: 2rem;
+        .subscription-form-content {
+          padding: 40px;
         }
 
-        .form-section:last-child {
-          margin-bottom: 0;
+        .form-section {
+          margin-bottom: 32px;
         }
 
         .form-section h3 {
+          margin: 0 0 24px 0;
+          color: #1f2937;
           font-size: 1.25rem;
           font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 1.5rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 2px solid #f3f4f6;
         }
 
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+          gap: 20px;
+          margin-bottom: 20px;
         }
 
         .form-group {
-          margin-bottom: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
         .form-group label {
-          display: block;
           font-weight: 500;
           color: #374151;
-          margin-bottom: 0.5rem;
+          font-size: 14px;
         }
 
         .form-group input,
         .form-group textarea {
-          width: 100%;
-          padding: 0.75rem;
+          padding: 12px 16px;
           border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 8px;
+          font-size: 16px;
+          transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .form-group input:focus,
@@ -565,76 +688,99 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
         .form-group input:disabled,
         .form-group textarea:disabled {
-          background: #f9fafb;
+          background-color: #f9fafb;
+          color: #6b7280;
           cursor: not-allowed;
         }
 
-        .form-help {
-          display: block;
-          margin-top: 0.25rem;
-          font-size: 0.875rem;
-          color: #6b7280;
+        .form-group textarea {
+          resize: vertical;
+          min-height: 100px;
+        }
+
+        .success-message,
+        .error-message {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px;
+          border-radius: 8px;
+          margin-bottom: 24px;
+        }
+
+        .success-message {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+        }
+
+        .success-icon {
+          color: #16a34a;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+
+        .success-message p {
+          margin: 0;
+          color: #15803d;
+          line-height: 1.5;
+        }
+
+        .error-message {
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+        }
+
+        .error-icon {
+          color: #dc2626;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+
+        .error-message p {
+          margin: 0;
+          color: #dc2626;
+          line-height: 1.5;
         }
 
         .form-actions {
           display: flex;
           justify-content: center;
-          margin-top: 2rem;
-        }
-
-        .btn-submit {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border: none;
-          padding: 1rem 2rem;
-          border-radius: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1rem;
-          min-width: 200px;
-          justify-content: center;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .button-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          padding-top: 20px;
+          border-top: 1px solid #e5e7eb;
         }
 
         @media (max-width: 768px) {
-          .form-row {
-            grid-template-columns: 1fr;
+          .subscription-form-container {
+            padding: 16px;
+          }
+
+          .project-info {
+            padding: 32px 24px;
           }
 
           .project-info h1 {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
           }
 
-          .form-container {
-            padding: 1.5rem;
+          .project-details {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .form-intro,
+          .subscription-form-content {
+            padding: 32px 24px;
+          }
+
+          .form-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .user-status-bar {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
           }
         }
       `}</style>
