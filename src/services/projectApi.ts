@@ -9,16 +9,38 @@ import type {
 } from '../types/project';
 import type { Person } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
-import { addAuthHeaders } from './authStub';
+import { addAuthHeaders, addRequiredAuthHeaders } from './authStub';
 import { API_CONFIG, getApiUrl } from '../config/api';
 
 export { ApiError };
 
 export const projectApi = {
-  // Project Management
+  // Project Management (Admin only)
   async getAllProjects(): Promise<Project[]> {
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECTS), {
-      headers: addAuthHeaders()
+      headers: addRequiredAuthHeaders()
+    });
+    const data = await handleApiResponse(response);
+
+    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data; // v2 format
+    } else if (Array.isArray(data)) {
+      return data; // Legacy array format (backward compatibility)
+    } else if (data && data.projects && Array.isArray(data.projects)) {
+      return data.projects; // Legacy object format (backward compatibility)
+    } else {
+      console.error('Unexpected API response format:', data);
+      return []; // Fallback to empty array
+    }
+  },
+
+  // Public project access (no authentication required)
+  async getPublicProjects(): Promise<Project[]> {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECTS), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     const data = await handleApiResponse(response);
 

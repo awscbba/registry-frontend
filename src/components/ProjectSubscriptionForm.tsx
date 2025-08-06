@@ -59,7 +59,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     
     try {
       // First, get all projects to find the one matching the slug
-      const allProjects = await projectApi.getAllProjects();
+      const allProjects = await projectApi.getPublicProjects();
       
       // Find project by slug
       const foundProject = allProjects.find(project => 

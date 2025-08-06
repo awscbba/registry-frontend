@@ -226,8 +226,24 @@ export const authService = {
   }
 };
 
-// Helper function to add auth headers to requests
+// Helper function to add auth headers to requests (optional authentication)
 export function addAuthHeaders(headers: Record<string, string> = {}): Record<string, string> {
+  // Check if token is expired before making the request
+  if (authService.checkTokenExpiration()) {
+    // Token was expired and user was logged out
+    console.warn('Token expired, proceeding without authentication');
+    return headers; // Return headers without auth token
+  }
+  
+  const token = authService.getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+// Helper function for requests that require authentication
+export function addRequiredAuthHeaders(headers: Record<string, string> = {}): Record<string, string> {
   // Check if token is expired before making the request
   if (authService.checkTokenExpiration()) {
     // Token was expired and user was logged out
@@ -235,8 +251,10 @@ export function addAuthHeaders(headers: Record<string, string> = {}): Record<str
   }
   
   const token = authService.getAuthToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (!token) {
+    throw new Error('Authentication required. Please login.');
   }
+  
+  headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }

@@ -33,8 +33,8 @@ export default function ProjectShowcase() {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('ProjectShowcase: Calling projectApi.getAllProjects()...');
-      const allProjects = await projectApi.getAllProjects();
+      console.log('ProjectShowcase: Calling projectApi.getPublicProjects()...');
+      const allProjects = await projectApi.getPublicProjects();
       console.log('ProjectShowcase: Raw API response:', allProjects);
       console.log('ProjectShowcase: Projects array length:', allProjects?.length);
       
