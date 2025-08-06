@@ -52,10 +52,12 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
           { status: 'cancelled', label: 'Cancelar', color: '#ef4444' }
         ];
       case 'completed':
-        return []; // Completed projects cannot be transitioned
+        return [
+          { status: 'active', label: 'Reactivar', color: '#10b981' }
+        ];
       case 'cancelled':
         return [
-          { status: 'pending', label: 'Reactivar', color: '#fbbf24' }
+          { status: 'active', label: 'Reactivar', color: '#10b981' }
         ];
       default:
         return [];
