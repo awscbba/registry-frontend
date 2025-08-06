@@ -411,19 +411,36 @@ export default function AdminDashboard() {
       return;
     }
 
+    // Optimistic update - immediately update the UI
+    setProjects(prevProjects => 
+      prevProjects.map(p => 
+        p.id === project.id ? { ...p, status: newStatus } : p
+      )
+    );
+
     try {
       await projectApi.updateProject(project.id, { status: newStatus });
       
       setSuccessMessage(`Estado del proyecto "${project.name}" actualizado a "${newStatusText}"`);
       
-      // Reload dashboard to reflect changes
-      await loadDashboard();
+      // Reload both dashboard and projects list to ensure consistency
+      await Promise.all([
+        loadDashboard(),
+        loadProjects()
+      ]);
       
-      // If we're viewing this project's subscribers, reload that too
+      // If we're viewing this project's subscribers, update the editing project too
       if (editingProject && editingProject.id === project.id) {
         setEditingProject({ ...editingProject, status: newStatus });
       }
     } catch (err) {
+      // Revert optimistic update on error
+      setProjects(prevProjects => 
+        prevProjects.map(p => 
+          p.id === project.id ? { ...p, status: project.status } : p
+        )
+      );
+      
       if (err instanceof ApiError) {
         setError(`Error al actualizar estado del proyecto: ${err.message}`);
       } else {
