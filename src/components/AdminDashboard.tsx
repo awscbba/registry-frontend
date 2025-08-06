@@ -838,18 +838,6 @@ La funcionalidad será restaurada en la próxima actualización.`);
         ) : currentView === 'project-subscribers' && editingProject ? (
           // Project Subscribers View
           <div className="project-subscribers-view">
-            {/* Warning banner for known subscription update issue */}
-            {currentProjectSubscribers.some(s => s.status === 'pending') && (
-              <div className="warning-banner">
-                <div className="warning-icon">⚠️</div>
-                <div className="warning-content">
-                  <strong>Problema Conocido:</strong> El sistema tiene un error interno al actualizar el estado de suscripciones.
-                  <br />
-                  <small>Los suscriptores pendientes YA ESTÁN REGISTRADOS y pueden participar. Contacta directamente para confirmar.</small>
-                </div>
-              </div>
-            )}
-            
             <div className="view-header">
               <button 
                 onClick={() => setCurrentView('projects')}
@@ -1422,42 +1410,6 @@ La funcionalidad será restaurada en la próxima actualización.`);
 
         .stat-card.people.clickable .stat-icon {
           color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Warning Banner Styles */
-        .warning-banner {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          background: #fff3cd;
-          border: 1px solid #ffeaa7;
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 20px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .warning-icon {
-          font-size: 24px;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .warning-content {
-          flex: 1;
-          color: #856404;
-          line-height: 1.5;
-        }
-
-        .warning-content strong {
-          font-weight: 600;
-          display: block;
-          margin-bottom: 4px;
-        }
-
-        .warning-content small {
-          font-size: 13px;
-          opacity: 0.9;
         }
 
         /* Project Subscribers View Styles */
