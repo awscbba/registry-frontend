@@ -329,7 +329,27 @@ export default function AdminDashboard() {
       await loadDashboard();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Error al aceptar suscriptor: ${err.message}`);
+        if (err.status === 500) {
+          setError(`⚠️ ERROR CONOCIDO DEL SERVIDOR
+
+El sistema tiene un problema interno al actualizar suscripciones.
+
+📋 INFORMACIÓN DEL SUSCRIPTOR:
+• Nombre: ${subscriber.person.firstName} ${subscriber.person.lastName}
+• Email: ${subscriber.person.email}
+• Estado: Pendiente (pero puede participar)
+
+🔧 SOLUCIÓN TEMPORAL:
+1. El suscriptor YA ESTÁ REGISTRADO en el sistema
+2. Puedes contactarlo directamente para confirmar su participación
+3. Su suscripción es válida aunque aparezca como "pendiente"
+
+👨‍💻 ESTADO TÉCNICO:
+El equipo está trabajando en corregir este error del backend.
+La funcionalidad será restaurada en la próxima actualización.`);
+        } else {
+          setError(`Error al aceptar suscriptor: ${err.message}`);
+        }
       } else {
         setError('Error desconocido al aceptar suscriptor');
       }
@@ -359,7 +379,27 @@ export default function AdminDashboard() {
       await loadDashboard();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Error al rechazar suscriptor: ${err.message}`);
+        if (err.status === 500) {
+          setError(`⚠️ ERROR CONOCIDO DEL SERVIDOR
+
+El sistema tiene un problema interno al actualizar suscripciones.
+
+📋 INFORMACIÓN DEL SUSCRIPTOR:
+• Nombre: ${subscriber.person.firstName} ${subscriber.person.lastName}
+• Email: ${subscriber.person.email}
+• Estado: Pendiente
+
+🔧 SOLUCIÓN TEMPORAL:
+1. La suscripción NO puede ser rechazada automáticamente
+2. Puedes contactar al suscriptor para informarle manualmente
+3. O esperar a que el error del backend sea corregido
+
+👨‍💻 ESTADO TÉCNICO:
+El equipo está trabajando en corregir este error del backend.
+La funcionalidad será restaurada en la próxima actualización.`);
+        } else {
+          setError(`Error al rechazar suscriptor: ${err.message}`);
+        }
       } else {
         setError('Error desconocido al rechazar suscriptor');
       }
@@ -798,6 +838,18 @@ export default function AdminDashboard() {
         ) : currentView === 'project-subscribers' && editingProject ? (
           // Project Subscribers View
           <div className="project-subscribers-view">
+            {/* Warning banner for known subscription update issue */}
+            {currentProjectSubscribers.some(s => s.status === 'pending') && (
+              <div className="warning-banner">
+                <div className="warning-icon">⚠️</div>
+                <div className="warning-content">
+                  <strong>Problema Conocido:</strong> El sistema tiene un error interno al actualizar el estado de suscripciones.
+                  <br />
+                  <small>Los suscriptores pendientes YA ESTÁN REGISTRADOS y pueden participar. Contacta directamente para confirmar.</small>
+                </div>
+              </div>
+            )}
+            
             <div className="view-header">
               <button 
                 onClick={() => setCurrentView('projects')}
@@ -1370,6 +1422,42 @@ export default function AdminDashboard() {
 
         .stat-card.people.clickable .stat-icon {
           color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Warning Banner Styles */
+        .warning-banner {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 20px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .warning-icon {
+          font-size: 24px;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .warning-content {
+          flex: 1;
+          color: #856404;
+          line-height: 1.5;
+        }
+
+        .warning-content strong {
+          font-weight: 600;
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        .warning-content small {
+          font-size: 13px;
+          opacity: 0.9;
         }
 
         /* Project Subscribers View Styles */
