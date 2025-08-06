@@ -2,7 +2,7 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  status: 'active' | 'inactive' | 'completed';
+  status: 'pending' | 'active' | 'ongoing' | 'completed' | 'cancelled';
   createdBy: string;
   maxParticipants?: number;
   startDate?: string;
@@ -16,7 +16,7 @@ export interface Project {
 export interface ProjectCreate {
   name: string;
   description: string;
-  status?: 'active' | 'inactive' | 'completed';
+  status?: 'pending' | 'active' | 'ongoing' | 'completed' | 'cancelled';
   createdBy?: string;
   maxParticipants?: number;
   startDate?: string;
@@ -28,7 +28,7 @@ export interface ProjectCreate {
 export interface ProjectUpdate {
   name?: string;
   description?: string;
-  status?: 'active' | 'inactive' | 'completed';
+  status?: 'pending' | 'active' | 'ongoing' | 'completed' | 'cancelled';
   maxParticipants?: number;
   startDate?: string;
   endDate?: string;
@@ -40,7 +40,7 @@ export interface Subscription {
   id: string;
   projectId: string;
   personId: string;
-  status: 'active' | 'inactive' | 'pending';
+  status: 'active' | 'cancelled' | 'pending';
   subscribedAt: string;
   subscribedBy: string;
   notes?: string;
@@ -49,7 +49,7 @@ export interface Subscription {
 export interface SubscriptionCreate {
   projectId: string;
   personId: string;
-  status?: 'active' | 'inactive' | 'pending';
+  status?: 'active' | 'cancelled' | 'pending';
   subscribedBy?: string;
   notes?: string;
 }
@@ -58,7 +58,7 @@ export interface ProjectSubscriber {
   id: string; // subscription ID
   personId: string;
   projectId: string;
-  status: 'active' | 'inactive' | 'pending';
+  status: 'active' | 'cancelled' | 'pending';
   subscribedAt: string;
   subscribedBy?: string;
   notes?: string;

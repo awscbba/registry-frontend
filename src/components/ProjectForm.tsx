@@ -12,7 +12,7 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
   const [formData, setFormData] = useState({
     name: project?.name || '',
     description: project?.description || '',
-    status: project?.status || 'active' as const,
+    status: project?.status || 'pending' as const,
     maxParticipants: project?.maxParticipants || '',
     startDate: project?.startDate || '',
     endDate: project?.endDate || '',
@@ -138,9 +138,11 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
                 className="form-control"
                 disabled={isLoading}
               >
+                <option value="pending">Pendiente</option>
                 <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
+                <option value="ongoing">En Curso</option>
                 <option value="completed">Completado</option>
+                <option value="cancelled">Cancelado</option>
               </select>
             </div>
 

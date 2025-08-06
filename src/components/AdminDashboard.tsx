@@ -799,7 +799,7 @@ export default function AdminDashboard() {
                 <div className="header-info">
                   <h2>Suscriptores del Proyecto</h2>
                   <p>Proyecto: {editingProject.name}</p>
-                  <p>Total suscriptores: {currentProjectSubscribers.filter(s => s.status !== 'inactive').length}</p>
+                  <p>Total suscriptores: {currentProjectSubscribers.filter(s => s.status !== 'cancelled').length}</p>
                   <div className="subscriber-stats">
                     <span className="stat-item">
                       ✅ Activos: {currentProjectSubscribers.filter(s => s.status === 'active').length}
@@ -830,7 +830,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="subscribers-list">
                 {currentProjectSubscribers
-                  .filter(subscriber => subscriber.status !== 'inactive' && subscriber.status !== 'cancelled') // Hide declined and deactivated subscribers
+                  .filter(subscriber => subscriber.status !== 'cancelled') // Hide cancelled subscribers
                   .map((subscriber) => (
                   <div key={subscriber.id} className="subscriber-card">
                     <div className="subscriber-info">
@@ -840,7 +840,7 @@ export default function AdminDashboard() {
                       <span className={`status-badge status-${subscriber.status}`}>
                         {subscriber.status === 'active' ? 'Activo' : 
                          subscriber.status === 'pending' ? 'Pendiente' : 
-                         subscriber.status === 'cancelled' ? 'Cancelado' : 'Inactivo'}
+                         subscriber.status === 'cancelled' ? 'Cancelado' : 'Desconocido'}
                       </span>
                     </div>
                     <div className="subscriber-meta">
@@ -1435,7 +1435,7 @@ export default function AdminDashboard() {
           color: #92400e;
         }
 
-        .status-inactive {
+        .status-cancelled {
           background-color: #f3f4f6;
           color: #6b7280;
         }

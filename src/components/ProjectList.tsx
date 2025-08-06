@@ -17,7 +17,6 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
       case 'ongoing': return '#3b82f6'; // Blue
       case 'completed': return '#6b7280'; // Gray
       case 'cancelled': return '#ef4444'; // Red
-      case 'inactive': return '#6c757d'; // Dark gray (deprecated)
       default: return '#6c757d';
     }
   };
@@ -29,7 +28,6 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
       case 'ongoing': return 'En Curso';
       case 'completed': return 'Completado';
       case 'cancelled': return 'Cancelado';
-      case 'inactive': return 'Inactivo';
       default: return status;
     }
   };

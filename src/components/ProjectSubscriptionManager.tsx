@@ -142,7 +142,7 @@ export default function ProjectSubscriptionManager({
                         <span className={`status-badge status-${subscriptionStatus}`}>
                           {subscriptionStatus === 'active' ? 'Activo' : 
                            subscriptionStatus === 'pending' ? 'Pendiente' : 
-                           subscriptionStatus === 'cancelled' ? 'Cancelado' : 'Inactivo'}
+                           subscriptionStatus === 'cancelled' ? 'Cancelado' : 'Desconocido'}
                         </span>
                       )}
                     </div>
@@ -295,7 +295,7 @@ export default function ProjectSubscriptionManager({
           color: #92400e;
         }
 
-        .status-inactive {
+        .status-cancelled {
           background-color: #f3f4f6;
           color: #6b7280;
         }
