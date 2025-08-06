@@ -5,6 +5,7 @@ import PersonList from './PersonList';
 import PersonForm from './PersonForm';
 import ProjectList from './ProjectList';
 import ProjectForm from './ProjectForm';
+import SessionMonitor from './SessionMonitor';
 import type { AdminDashboard as AdminDashboardType, ProjectCreate, Project, ProjectSubscriber } from '../types/project';
 import type { Person } from '../types/person';
 import { BUTTON_CLASSES } from '../types/ui';
@@ -616,6 +617,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
+      {/* Session Monitor for automatic logout */}
+      <SessionMonitor 
+        warningThreshold={300} // 5 minutes warning
+        onSessionExpired={() => {
+          setError('Your session has expired. Please login again.');
+          // The SessionMonitor will handle the redirect
+        }}
+        onWarning={(timeRemaining) => {
+          console.log(`Session warning: ${timeRemaining} seconds remaining`);
+        }}
+      />
+      
       <div className="container">
         {/* Success/Error Messages */}
         {successMessage && (

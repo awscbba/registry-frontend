@@ -23,8 +23,19 @@ export async function handleApiResponse(response: Response): Promise<any> {
     
     // Handle authentication errors specifically
     if (response.status === 401) {
-      console.warn('Authentication required - API now requires JWT tokens');
-      errorMessage = 'Authentication required. Please implement login system.';
+      console.warn('Authentication failed - token expired or invalid');
+      errorMessage = 'Session expired. Please login again.';
+      
+      // Automatically logout user and redirect to login
+      if (typeof window !== 'undefined') {
+        // Clear localStorage directly to avoid circular dependencies
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('token_expiry');
+        
+        // Redirect to admin page to show login form
+        window.location.href = '/admin';
+      }
     }
     
     throw new ApiError(response.status, errorMessage);
