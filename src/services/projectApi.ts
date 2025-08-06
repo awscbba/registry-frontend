@@ -200,14 +200,35 @@ export const projectApi = {
   },
 
   async updateProjectSubscription(projectId: string, subscriptionId: string, data: { status?: string; notes?: string }): Promise<Subscription> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIPTION_UPDATE(projectId, subscriptionId)), {
+    console.log('updateProjectSubscription called with:', { projectId, subscriptionId, data });
+    const url = getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIPTION_UPDATE(projectId, subscriptionId));
+    console.log('updateProjectSubscription URL:', url);
+    console.log('updateProjectSubscription request body:', JSON.stringify(data));
+    
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...addAuthHeaders()
+        ...addRequiredAuthHeaders()
       },
       body: JSON.stringify(data),
     });
+    
+    console.log('updateProjectSubscription response status:', response.status);
+    console.log('updateProjectSubscription response ok:', response.ok);
+    
+    if (!response.ok) {
+      // Get error details before handleApiResponse processes it
+      const errorText = await response.text();
+      console.error('updateProjectSubscription error response:', errorText);
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('updateProjectSubscription error JSON:', errorJson);
+      } catch (e) {
+        console.error('updateProjectSubscription error (not JSON):', errorText);
+      }
+    }
+    
     const result = await handleApiResponse(response);
 
     // Handle v2 API response format
