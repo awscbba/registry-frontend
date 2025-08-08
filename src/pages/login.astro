@@ -176,8 +176,59 @@
 
     <!-- Import and mount the LoginForm component -->
     <script>
-        // API Configuration
-        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        // Import API configuration
+        import('/src/config/api.ts').then(apiModule => {
+            const API_CONFIG = apiModule.API_CONFIG;
+            const loginUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH_LOGIN}`;
+            
+            // Update the form submission to use the imported config
+            const form = document.getElementById('simple-login-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    const messageDiv = document.getElementById('login-message');
+                    
+                    messageDiv.style.display = 'block';
+                    messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
+                    
+                    try {
+                        const response = await fetch(loginUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email, password }),
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
+                            
+                            // Store auth data
+                            if (data.token) {
+                                localStorage.setItem('authToken', data.token);
+                            }
+                            if (data.user && data.user.email) {
+                                localStorage.setItem('userEmail', data.user.email);
+                            }
+                            
+                            // Redirect to user dashboard
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 1500);
+                        } else {
+                            const error = await response.json();
+                            messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + (error.message || 'Credenciales incorrectas') + '</div>';
+                        }
+                    } catch (error) {
+                        messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
+                    }
+                });
+            }
+        });
         
         import('/src/components/LoginForm.tsx').then(module => {
             const LoginForm = module.default;
@@ -207,44 +258,6 @@
                 <div id="login-message" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
             `;
 
-            // Add form submission handler
-            const form = document.getElementById('simple-login-form');
-            const messageDiv = document.getElementById('login-message');
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                messageDiv.style.display = 'block';
-                messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ email, password }),
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
-                        
-                        // Redirect to user dashboard or home page
-                        setTimeout(() => {
-                            window.location.href = '/dashboard';
-                        }, 1500);
-                    } else {
-                        const error = await response.json();
-                        messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + (error.message || 'Credenciales incorrectas') + '</div>';
-                    }
-                } catch (error) {
-                    messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
-                }
-            });
         }).catch(error => {
             console.error('Error loading LoginForm component:', error);
             // Fallback is already rendered above
