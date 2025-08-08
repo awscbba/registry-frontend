@@ -176,6 +176,9 @@
 
     <!-- Import and mount the LoginForm component -->
     <script>
+        // API Configuration
+        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        
         import('/src/components/LoginForm.tsx').then(module => {
             const LoginForm = module.default;
             // Mount the React component
@@ -218,7 +221,7 @@
                 messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
                 
                 try {
-                    const response = await fetch('/api/auth/login', {
+                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
