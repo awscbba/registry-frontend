@@ -180,7 +180,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // API Configuration - use environment variable with fallback
             const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-            const LOGIN_ENDPOINT = '/auth/login';
+            const LOGIN_ENDPOINT = '/auth/user/login'; // Use user login endpoint, not admin login
             
             console.log('Setting up login form...');
             
@@ -235,15 +235,17 @@
                     console.log('Response status:', response.status);
                     console.log('Response ok:', response.ok);
                     
-                    if (response.ok) {
-                        const data = await response.json();
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    
+                    if (response.ok && data.success) {
                         console.log('Login successful:', data);
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
                         // Store auth data
-                        if (data.token) {
-                            localStorage.setItem('authToken', data.token);
+                        if (data.access_token) {
+                            localStorage.setItem('authToken', data.access_token);
                             console.log('Token stored');
                         }
                         if (data.user && data.user.email) {
@@ -257,9 +259,9 @@
                             window.location.href = '/dashboard';
                         }, 1500);
                     } else {
-                        const error = await response.json();
-                        console.error('Login failed:', error);
-                        messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + (error.detail || error.message || 'Credenciales incorrectas') + '</div>';
+                        console.error('Login failed:', data);
+                        const errorMessage = data.message || data.detail || 'Credenciales incorrectas';
+                        messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + errorMessage + '</div>';
                     }
                 } catch (error) {
                     console.error('Network error:', error);
