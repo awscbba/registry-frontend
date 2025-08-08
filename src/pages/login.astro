@@ -176,60 +176,101 @@
 
     <!-- Import and mount the LoginForm component -->
     <script>
-        // Import API configuration
-        import('/src/config/api.ts').then(apiModule => {
-            const API_CONFIG = apiModule.API_CONFIG;
-            const loginUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH_LOGIN}`;
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // API Configuration - use environment variable with fallback
+            const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+            const LOGIN_ENDPOINT = '/auth/login';
             
-            // Update the form submission to use the imported config
+            console.log('Setting up login form...');
+            
+            // Get form elements
             const form = document.getElementById('simple-login-form');
-            if (form) {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    const messageDiv = document.getElementById('login-message');
-                    
-                    messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
-                    
-                    try {
-                        const response = await fetch(loginUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ email, password }),
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
-                            
-                            // Store auth data
-                            if (data.token) {
-                                localStorage.setItem('authToken', data.token);
-                            }
-                            if (data.user && data.user.email) {
-                                localStorage.setItem('userEmail', data.user.email);
-                            }
-                            
-                            // Redirect to user dashboard
-                            setTimeout(() => {
-                                window.location.href = '/dashboard';
-                            }, 1500);
-                        } else {
-                            const error = await response.json();
-                            messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + (error.message || 'Credenciales incorrectas') + '</div>';
-                        }
-                    } catch (error) {
-                        messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
-                    }
-                });
+            const messageDiv = document.getElementById('login-message');
+            
+            if (!form) {
+                console.error('Login form not found');
+                return;
             }
+            
+            if (!messageDiv) {
+                console.error('Message div not found');
+                return;
+            }
+            
+            console.log('Form and message div found, attaching event listener...');
+            
+            // Add form submission handler
+            form.addEventListener('submit', async function(e) {
+                console.log('Form submitted!');
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                console.log('Email:', email);
+                console.log('Password length:', password.length);
+                
+                if (!email || !password) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.innerHTML = '<div style="color: #f56565;">Por favor, completa todos los campos.</div>';
+                    return;
+                }
+                
+                messageDiv.style.display = 'block';
+                messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
+                
+                try {
+                    const loginUrl = `${API_BASE_URL}${LOGIN_ENDPOINT}`;
+                    console.log('Making request to:', loginUrl);
+                    
+                    const response = await fetch(loginUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password }),
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Login successful:', data);
+                        
+                        messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
+                        
+                        // Store auth data
+                        if (data.token) {
+                            localStorage.setItem('authToken', data.token);
+                            console.log('Token stored');
+                        }
+                        if (data.user && data.user.email) {
+                            localStorage.setItem('userEmail', data.user.email);
+                            console.log('User email stored:', data.user.email);
+                        }
+                        
+                        // Redirect to user dashboard
+                        setTimeout(() => {
+                            console.log('Redirecting to dashboard...');
+                            window.location.href = '/dashboard';
+                        }, 1500);
+                    } else {
+                        const error = await response.json();
+                        console.error('Login failed:', error);
+                        messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + (error.detail || error.message || 'Credenciales incorrectas') + '</div>';
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
+                }
+            });
+            
+            console.log('Event listener attached successfully');
         });
         
+        // Try to load the LoginForm component (optional)
         import('/src/components/LoginForm.tsx').then(module => {
             const LoginForm = module.default;
             // Mount the React component
