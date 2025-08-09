@@ -6,16 +6,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="Iniciar Sesión - AWS User Group Cochabamba">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>Iniciar Sesión - AWS User Group Cochabamba</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
     <style>
         * {
             margin: 0;
@@ -24,7 +16,7 @@
         }
 
         body {
-            font-family: 'Open Sans', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -37,134 +29,87 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            padding: 2.5rem;
             width: 100%;
             max-width: 400px;
+        }
+
+        .logo-section {
             text-align: center;
+            margin-bottom: 2rem;
         }
 
         .logo {
-            display: flex;
+            width: 80px;
+            height: 80px;
+            background: #4299e1;
+            border-radius: 50%;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 2rem;
-            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
-        .logo-icon {
-            font-size: 2rem;
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
         }
 
-        .logo-text h1 {
+        h1 {
             color: #2d3748;
             font-size: 1.5rem;
             font-weight: 600;
-            margin: 0;
-        }
-
-        .logo-text .subtitle {
-            color: #718096;
-            font-size: 0.9rem;
-            display: block;
-            margin-top: 0.25rem;
-        }
-
-        .welcome-message {
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background: #f7fafc;
-            border-radius: 8px;
-            border-left: 4px solid #4299e1;
-        }
-
-        .welcome-message h2 {
-            color: #2d3748;
-            font-size: 1.25rem;
             margin-bottom: 0.5rem;
         }
 
-        .welcome-message p {
-            color: #4a5568;
+        .subtitle {
+            color: #718096;
             font-size: 0.9rem;
-            line-height: 1.5;
         }
 
-        .login-form-container {
-            margin-bottom: 2rem;
-        }
-
-        .navigation-links {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 1.5rem;
-        }
-
-        .navigation-links a {
-            display: inline-block;
-            color: #4299e1;
-            text-decoration: none;
-            font-weight: 500;
-            margin: 0 1rem;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .navigation-links a:hover {
-            background: #ebf8ff;
-            color: #2b6cb0;
+        .form-section {
+            margin-bottom: 1.5rem;
         }
 
         .info-text {
+            text-align: center;
+            font-size: 0.9rem;
             color: #718096;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            line-height: 1.4;
         }
 
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 1.5rem;
-                margin: 1rem;
-            }
-            
-            .logo-text h1 {
-                font-size: 1.25rem;
-            }
-            
-            .navigation-links a {
-                display: block;
-                margin: 0.5rem 0;
-            }
+        .info-text p {
+            margin-bottom: 0.5rem;
+        }
+
+        .info-text a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+
+        .info-text a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
-
 <body>
     <div class="login-container">
-        <!-- Logo -->
-        <div class="logo">
-            <div class="logo-icon">🌍</div>
-            <div class="logo-text">
-                <h1>AWS User Group Cochabamba</h1>
-                <span class="subtitle">Sistema de Registro</span>
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
             </div>
+            <h1>Iniciar Sesión</h1>
+            <p class="subtitle">AWS User Group Cochabamba</p>
         </div>
 
-        <!-- Welcome Message -->
-        <div class="welcome-message">
-            <h2>¡Bienvenido!</h2>
-            <p>Ingresa con las credenciales que recibiste en tu email de bienvenida para acceder a tu panel de usuario.</p>
-        </div>
-
-        <!-- Login Form Container -->
-        <div class="login-form-container">
-            <div id="login-form-mount"></div>
-        </div>
-
-        <!-- Navigation Links -->
-        <div class="navigation-links">
-            <a href="/">← Volver al Registro</a>
-            <a href="/admin">Panel Admin</a>
+        <!-- Form Section -->
+        <div class="form-section">
+            <div id="login-form-mount">
+                <!-- Form will be mounted here -->
+            </div>
         </div>
 
         <!-- Info Text -->
@@ -174,30 +119,51 @@
         </div>
     </div>
 
-    <!-- Import and mount the LoginForm component -->
     <script>
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // API Configuration - use environment variable with fallback
-            const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-            const LOGIN_ENDPOINT = '/auth/user/login'; // Use user login endpoint, not admin login
-            
-            console.log('Setting up login form...');
-            
-            // Get form elements
-            const form = document.getElementById('simple-login-form');
-            const messageDiv = document.getElementById('login-message');
-            
-            if (!form) {
-                console.error('Login form not found');
-                return;
-            }
-            
-            if (!messageDiv) {
-                console.error('Message div not found');
-                return;
-            }
-            
+        console.log('Login page loaded, setting up form...');
+        
+        // Create the form immediately
+        const container = document.getElementById('login-form-mount');
+        container.innerHTML = `
+            <form id="simple-login-form" style="text-align: left;">
+                <div style="margin-bottom: 1rem;">
+                    <label for="email" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Email:</label>
+                    <input type="email" id="email" name="email" required 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid #d2d6dc; border-radius: 0.375rem; font-size: 1rem;"
+                           placeholder="tu@email.com">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="password" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Contraseña temporal:</label>
+                    <input type="password" id="password" name="password" required 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid #d2d6dc; border-radius: 0.375rem; font-size: 1rem;"
+                           placeholder="Ingresa tu contraseña temporal">
+                </div>
+                <button type="submit" 
+                        style="width: 100%; background: #4299e1; color: white; padding: 0.75rem; border: none; border-radius: 0.375rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s;"
+                        onmouseover="this.style.background='#3182ce'" 
+                        onmouseout="this.style.background='#4299e1'">
+                    Iniciar Sesión
+                </button>
+            </form>
+            <div id="login-message" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
+        `;
+
+        // Set up the form handler immediately after creating the form
+        console.log('Form created, setting up event handler...');
+        
+        // API Configuration
+        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        const LOGIN_ENDPOINT = '/auth/user/login';
+        
+        // Get form elements
+        const form = document.getElementById('simple-login-form');
+        const messageDiv = document.getElementById('login-message');
+        
+        if (!form) {
+            console.error('Login form not found');
+        } else if (!messageDiv) {
+            console.error('Message div not found');
+        } else {
             console.log('Form and message div found, attaching event listener...');
             
             // Add form submission handler
@@ -270,41 +236,7 @@
             });
             
             console.log('Event listener attached successfully');
-        });
-        
-        // Try to load the LoginForm component (optional)
-        import('/src/components/LoginForm.tsx').then(module => {
-            const LoginForm = module.default;
-            // Mount the React component
-            // Note: This is a simplified approach. In a real app, you'd use proper React rendering
-            console.log('LoginForm component loaded');
-            
-            // For now, show a simple form until we properly integrate React
-            const container = document.getElementById('login-form-mount');
-            container.innerHTML = `
-                <form id="simple-login-form" style="text-align: left;">
-                    <div style="margin-bottom: 1rem;">
-                        <label for="email" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Email:</label>
-                        <input type="email" id="email" name="email" required 
-                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <label for="password" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Contraseña:</label>
-                        <input type="password" id="password" name="password" required 
-                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <button type="submit" 
-                            style="width: 100%; padding: 0.75rem; background: #4299e1; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background 0.2s;">
-                        Iniciar Sesión
-                    </button>
-                </form>
-                <div id="login-message" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
-            `;
-
-        }).catch(error => {
-            console.error('Error loading LoginForm component:', error);
-            // Fallback is already rendered above
-        });
+        }
     </script>
 </body>
 </html>
