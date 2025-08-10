@@ -297,8 +297,16 @@
         // Logout function
         function logout() {
             debugLog('Logging out user...');
-            localStorage.removeItem('userAuthToken');
-            localStorage.removeItem('userData');
+            // Use the unified auth service for logout
+            if (typeof window !== 'undefined') {
+                // Clear all possible localStorage keys for complete cleanup
+                localStorage.removeItem('userAuthToken');
+                localStorage.removeItem('userData');
+                localStorage.removeItem('authToken'); // Legacy cleanup
+                localStorage.removeItem('userEmail'); // Legacy cleanup
+                localStorage.removeItem('auth_token'); // Legacy cleanup
+                localStorage.removeItem('current_user'); // Legacy cleanup
+            }
             debugLog('Cleared localStorage, redirecting to login');
             window.location.href = '/login';
         }
@@ -392,6 +400,33 @@
         // Initialize dashboard when page loads with proper error handling
         document.addEventListener('DOMContentLoaded', async () => {
             debugLog('DOM loaded, initializing dashboard...');
+            
+            // Check for legacy authentication and migrate if needed
+            if (typeof window !== 'undefined') {
+                const legacyAuthToken = localStorage.getItem('authToken');
+                const legacyUserEmail = localStorage.getItem('userEmail');
+                
+                if (legacyAuthToken && !localStorage.getItem('userAuthToken')) {
+                    debugLog('Migrating legacy authentication data...');
+                    localStorage.setItem('userAuthToken', legacyAuthToken);
+                    
+                    if (legacyUserEmail) {
+                        const userData = {
+                            email: legacyUserEmail,
+                            firstName: '',
+                            lastName: '',
+                            id: ''
+                        };
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                    
+                    // Clean up legacy keys
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    debugLog('Legacy authentication data migrated successfully');
+                }
+            }
+            
             try {
                 await loadUserDashboard();
             } catch (error) {

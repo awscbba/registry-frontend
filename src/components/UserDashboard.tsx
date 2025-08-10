@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { userAuthService, type UserSubscription } from '../services/userAuthService';
+import { authService, type UserSubscription } from '../services/authService';
 
 interface UserDashboardProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export default function UserDashboard({
   const [subscriptionNotes, setSubscriptionNotes] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const user = userAuthService.getCurrentUser();
+  const user = authService.getCurrentUser();
   const currentSubscription = subscriptions.find(sub => sub.projectId === currentProjectId);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function UserDashboard({
     try {
       setIsLoading(true);
       setError(null);
-      const userSubs = await userAuthService.getUserSubscriptions();
+      const userSubs = await authService.getUserSubscriptions();
       
       // Filter out subscriptions to projects that no longer exist
       // and separate them for user notification
@@ -92,7 +92,7 @@ export default function UserDashboard({
   };
 
   const handleLogout = () => {
-    userAuthService.logout();
+    authService.logout();
     onClose();
   };
 

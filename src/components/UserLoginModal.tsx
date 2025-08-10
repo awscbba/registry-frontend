@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { userAuthService, type UserLoginRequest } from '../services/userAuthService';
+import { authService, type LoginRequest } from '../services/authService';
 
 interface UserLoginModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export default function UserLoginModal({
   projectName,
   message 
 }: UserLoginModalProps) {
-  const [formData, setFormData] = useState<UserLoginRequest>({
+  const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: ''
   });
@@ -37,7 +37,7 @@ export default function UserLoginModal({
     setError(null);
 
     try {
-      const result = await userAuthService.login(formData);
+      const result = await authService.login(formData);
       
       if (result.success) {
         // Reset form
