@@ -179,12 +179,11 @@ class AuthService {
       return false;
     }
 
-    // Check multiple possible admin indicators
+    // Check for admin role from backend
     return !!(
       this.user.isAdmin || 
       this.user.role === 'admin' || 
-      this.user.role === 'administrator' ||
-      this.user.email === 'admin@cbba.cloud.org.bo' // Fallback for initial admin
+      this.user.role === 'administrator'
     );
   }
 

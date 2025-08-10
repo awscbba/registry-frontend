@@ -229,8 +229,8 @@
             
             <div class="navigation-links">
                 <a href="/">← Volver al Registro</a>
-                <!-- Admin panel access temporarily disabled for security review -->
-                <!-- <a href="/admin">Panel Admin</a> -->
+                <!-- Admin panel access - only show for admin users -->
+                <a href="/admin" id="admin-link" style="display: none;">Panel Admin</a>
                 <a href="https://cbba.cloud.org.bo/aws" target="_blank">Sitio Principal</a>
             </div>
         </div>
@@ -338,6 +338,18 @@
                 } else {
                     document.getElementById('user-email').textContent = 'Usuario';
                     debugLog('No email found, using default');
+                }
+                
+                // Check if user is admin and show admin link
+                const userData = JSON.parse(userDataStr || '{}');
+                if (userData.isAdmin) {
+                    debugLog('User is admin, showing admin link');
+                    const adminLink = document.getElementById('admin-link');
+                    if (adminLink) {
+                        adminLink.style.display = 'inline-block';
+                    }
+                } else {
+                    debugLog('User is not admin, admin link remains hidden');
                 }
 
                 // Try to load the UserDashboard component
