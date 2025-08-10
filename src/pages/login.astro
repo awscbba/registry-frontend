@@ -203,21 +203,31 @@
                     
                     const data = await response.json();
                     console.log('Response data:', data);
+                    console.log('Token field present:', !!data.token);
+                    console.log('User field present:', !!data.user);
                     
                     if (response.ok && data.success) {
                         console.log('Login successful:', data);
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
-                        // Store auth data
-                        if (data.access_token) {
-                            localStorage.setItem('authToken', data.access_token);
-                            console.log('Token stored');
+                        // Store auth data with correct keys to match dashboard
+                        if (data.token) {
+                            localStorage.setItem('userAuthToken', data.token);
+                            console.log('Token stored as userAuthToken');
+                        } else {
+                            console.warn('No token received in response');
                         }
-                        if (data.user && data.user.email) {
-                            localStorage.setItem('userEmail', data.user.email);
-                            console.log('User email stored:', data.user.email);
+                        if (data.user) {
+                            localStorage.setItem('userData', JSON.stringify(data.user));
+                            console.log('User data stored:', data.user.email);
+                        } else {
+                            console.warn('No user data received in response');
                         }
+                        
+                        // Debug: Verify what was stored
+                        console.log('Verification - userAuthToken stored:', !!localStorage.getItem('userAuthToken'));
+                        console.log('Verification - userData stored:', !!localStorage.getItem('userData'));
                         
                         // Redirect to user dashboard
                         setTimeout(() => {
