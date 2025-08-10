@@ -34,13 +34,27 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!authService.isAdmin()) {
-      setError('Admin access required. You do not have sufficient privileges.');
-      setIsLoading(false);
-      return;
-    }
+    // Refresh user data from backend to ensure we have latest admin status
+    const checkAdminAccess = async () => {
+      try {
+        // Refresh user data to get latest admin status
+        await authService.refreshUserData();
+        
+        if (!authService.isAdmin()) {
+          setError('Admin access required. You do not have sufficient privileges.');
+          setIsLoading(false);
+          return;
+        }
 
-    loadAdminData();
+        loadAdminData();
+      } catch (error) {
+        console.error('Error checking admin access:', error);
+        setError('Failed to verify admin access. Please try logging in again.');
+        setIsLoading(false);
+      }
+    };
+
+    checkAdminAccess();
   }, []);
 
   const loadAdminData = async () => {

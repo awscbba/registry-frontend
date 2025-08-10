@@ -142,7 +142,7 @@ class AuthService {
   async adminLogin(credentials: LoginRequest): Promise<LoginResponse> {
     const result = await this.login(credentials);
     
-    if (result.success && result.user && !this.isAdmin()) {
+    if (result.success && result.user && !result.user.isAdmin) {
       // User logged in successfully but is not an admin
       this.logout();
       return {
@@ -173,8 +173,9 @@ class AuthService {
 
   /**
    * Check if user has admin privileges
+   * Optionally refresh user data from backend to ensure accuracy
    */
-  isAdmin(): boolean {
+  isAdmin(useCache: boolean = true): boolean {
     if (!this.isAuthenticated() || !this.user) {
       return false;
     }
@@ -185,6 +186,42 @@ class AuthService {
       this.user.role === 'admin' || 
       this.user.role === 'administrator'
     );
+  }
+
+  /**
+   * Refresh user data from backend to ensure we have latest admin status
+   */
+  async refreshUserData(): Promise<boolean> {
+    if (!this.token) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          ...API_CONFIG.DEFAULT_HEADERS
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user) {
+          this.user = data.user;
+          this.saveToStorage();
+          return true;
+        }
+      } else {
+        // Token is invalid, clear storage
+        this.logout();
+        return false;
+      }
+    } catch (error) {
+      console.warn('Failed to refresh user data:', error);
+      return false;
+    }
+    
+    return false;
   }
 
   /**
