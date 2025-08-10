@@ -236,16 +236,27 @@
     </main>
 
     <script>
-        // Check if user is logged in
+        // Debug logging function
+        function debugLog(message, data = null) {
+            console.log(`[Dashboard Debug] ${message}`, data || '');
+        }
+
+        // Check if user is logged in with enhanced validation
         async function checkAuth() {
+            debugLog('Starting authentication check...');
+            
             const token = localStorage.getItem('userAuthToken');
+            debugLog('Token from localStorage:', token ? 'present' : 'missing');
+            
             if (!token) {
+                debugLog('No token found, redirecting to login');
                 window.location.href = '/login';
                 return false;
             }
 
             // Validate token with backend
             try {
+                debugLog('Validating token with backend...');
                 const response = await fetch('https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/auth/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -253,7 +264,10 @@
                     }
                 });
 
+                debugLog('Token validation response status:', response.status);
+
                 if (!response.ok) {
+                    debugLog('Token validation failed, clearing storage and redirecting');
                     // Token is invalid, clear storage and redirect
                     localStorage.removeItem('userAuthToken');
                     localStorage.removeItem('userData');
@@ -263,42 +277,62 @@
 
                 // Token is valid, update user data if needed
                 const userData = await response.json();
+                debugLog('Token validation successful, user data:', userData);
+                
                 if (userData.user) {
                     localStorage.setItem('userData', JSON.stringify(userData.user));
+                    debugLog('Updated userData in localStorage');
                 }
 
                 return true;
             } catch (error) {
-                console.warn('Token validation failed:', error);
+                debugLog('Token validation error (network issue):', error.message);
                 // On network error, allow access but don't update data
+                // This prevents logout on temporary network issues
                 return true;
             }
         }
 
         // Logout function
         function logout() {
+            debugLog('Logging out user...');
             localStorage.removeItem('userAuthToken');
             localStorage.removeItem('userData');
+            debugLog('Cleared localStorage, redirecting to login');
             window.location.href = '/login';
         }
 
-        // Load user dashboard
+        // Load user dashboard with proper async handling
         async function loadUserDashboard() {
+            debugLog('Loading user dashboard...');
+            
+            // Add a small delay to ensure any login process has completed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const isAuthenticated = await checkAuth();
-            if (!isAuthenticated) return;
+            if (!isAuthenticated) {
+                debugLog('Authentication failed, stopping dashboard load');
+                return;
+            }
 
             try {
                 // Get user data from localStorage
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const userDataStr = localStorage.getItem('userData');
+                debugLog('UserData from localStorage:', userDataStr);
+                
+                const userData = JSON.parse(userDataStr || '{}');
                 const userEmail = userData.email;
                 
                 if (userEmail) {
                     document.getElementById('user-email').textContent = userEmail;
+                    debugLog('Set user email in header:', userEmail);
                 } else {
                     document.getElementById('user-email').textContent = 'Usuario';
+                    debugLog('No email found, using default');
                 }
 
                 // Try to load the UserDashboard component
+                debugLog('Loading dashboard component...');
                 const module = await import('/src/components/UserDashboard.tsx');
                 const UserDashboard = module.default;
                 
@@ -323,11 +357,17 @@
                             <p style="color: #22543d; font-weight: 500;">
                                 ✅ Tu cuenta está activa y funcionando correctamente
                             </p>
+                            <p style="color: #22543d; font-size: 0.9rem; margin-top: 0.5rem;">
+                                Email: ${userEmail || 'No disponible'}
+                            </p>
                         </div>
                     </div>
                 `;
                 
+                debugLog('Dashboard content loaded successfully');
+                
             } catch (error) {
+                debugLog('Error loading user dashboard:', error);
                 console.error('Error loading user dashboard:', error);
                 const container = document.getElementById('user-dashboard-mount');
                 container.innerHTML = `
@@ -340,13 +380,35 @@
                                 style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4299e1; color: white; border: none; border-radius: 6px; cursor: pointer;">
                             Recargar Página
                         </button>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #fef5e7; border: 1px solid #f6ad55; border-radius: 8px; font-size: 0.9rem;">
+                            <p style="color: #744210;">Debug info: ${error.message}</p>
+                        </div>
                     </div>
                 `;
             }
         }
 
-        // Initialize dashboard when page loads
-        document.addEventListener('DOMContentLoaded', loadUserDashboard);
+        // Initialize dashboard when page loads with proper error handling
+        document.addEventListener('DOMContentLoaded', async () => {
+            debugLog('DOM loaded, initializing dashboard...');
+            try {
+                await loadUserDashboard();
+            } catch (error) {
+                debugLog('Fatal error during dashboard initialization:', error);
+                console.error('Fatal error during dashboard initialization:', error);
+            }
+        });
+
+        // Add visibility change handler to re-validate auth when user returns to tab
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden) {
+                debugLog('Tab became visible, re-checking auth...');
+                const isAuthenticated = await checkAuth();
+                if (!isAuthenticated) {
+                    debugLog('Auth check failed on tab focus');
+                }
+            }
+        });
     </script>
 </body>
 </html>
