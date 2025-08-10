@@ -25,7 +25,7 @@ Actions:
             echo "🏗️ Production Build"
             echo "=================="
             
-            # Install Node.js 20 using NVM for better compatibility
+            # Install Node.js 20 for Astro 5.12.9 compatibility
             echo "📦 Installing Node.js 20 via NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
@@ -76,7 +76,7 @@ Actions:
             echo "🔒 Production Quality Gate"
             echo "========================="
             
-            # Install Node.js 20 using NVM for better compatibility
+            # Install Node.js 20 for Astro 5.12.9 compatibility
             echo "📦 Installing Node.js 20 via NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
@@ -122,7 +122,7 @@ Actions:
             echo "🚀 Production Deployment"
             echo "======================="
             
-            # Install Node.js 20 using NVM for better compatibility
+            # Install Node.js 20 for Astro 5.12.9 compatibility
             echo "📦 Installing Node.js 20 via NVM..."
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
             export NVM_DIR="$HOME/.nvm"

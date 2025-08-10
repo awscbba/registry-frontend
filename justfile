@@ -1,5 +1,5 @@
 # People Register Frontend - Production CI/CD Justfile
-# Modern Node.js 18.20.8 + Astro + Real AWS Deployment
+# Modern Node.js 20+ + Astro 5.12.9 + Real AWS Deployment
 
 # Default recipe - show available commands
 default:
@@ -9,24 +9,24 @@ default:
     @echo "Available commands:"
     @just --list
 
-# Environment setup and Node.js 18.20.8 upgrade
+# Environment setup and Node.js 20+ upgrade
 setup-nodejs:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🔧 Setting up Node.js 18.20.8 environment..."
+    echo "🔧 Setting up Node.js 20+ environment..."
     echo "Current Node.js: $(node --version 2>/dev/null || echo 'not available')"
     echo "Current npm: $(npm --version 2>/dev/null || echo 'not available')"
     echo ""
     
-    # Upgrade to Node.js 18.20.8 for Astro compatibility
+    # Upgrade to Node.js 20+ for Astro 5.12.9 compatibility
     if command -v dnf >/dev/null 2>&1; then
-        echo "📦 Using dnf to upgrade Node.js to 18.20.8..."
-        curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-        sudo dnf install -y nodejs-18.20.8 || sudo dnf update -y nodejs
+        echo "📦 Using dnf to upgrade Node.js to 20+..."
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+        sudo dnf install -y nodejs || sudo dnf update -y nodejs
     elif command -v yum >/dev/null 2>&1; then
-        echo "📦 Using yum to upgrade Node.js to 18.20.8..."
-        curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-        sudo yum install -y nodejs-18.20.8 || sudo yum update -y nodejs
+        echo "📦 Using yum to upgrade Node.js to 20+..."
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+        sudo yum install -y nodejs || sudo yum update -y nodejs
     fi
     
     # Force environment refresh with explicit path handling
