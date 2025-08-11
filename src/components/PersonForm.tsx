@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
 import ProjectSubscriptionManager from './ProjectSubscriptionManager';
-import { projectApi } from '../services/projectApi';
 
 interface PersonFormProps {
   person?: Person;
-  onSubmit: (data: PersonCreate | PersonUpdate | any, subscriptionData?: { projectIds: string[] }) => Promise<void>;
+  onSubmit: (data: PersonCreate | PersonUpdate, subscriptionData?: { projectIds: string[] }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -77,15 +76,33 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'Nombre es requerido';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Apellido es requerido';
-    if (!formData.email.trim()) newErrors.email = 'Email es requerido';
-    if (!formData.phone.trim()) newErrors.phone = 'Teléfono es requerido';
-    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Fecha de nacimiento es requerida';
-    if (!formData.address.street.trim()) newErrors.street = 'Dirección es requerida';
-    if (!formData.address.city.trim()) newErrors.city = 'Ciudad es requerida';
-    if (!formData.address.state.trim()) newErrors.state = 'Departamento es requerido';
-    if (!formData.address.country.trim()) newErrors.country = 'País es requerido';
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Nombre es requerido';
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Apellido es requerido';
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email es requerido';
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Teléfono es requerido';
+    }
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = 'Fecha de nacimiento es requerida';
+    }
+    if (!formData.address.street.trim()) {
+      newErrors.street = 'Dirección es requerida';
+    }
+    if (!formData.address.city.trim()) {
+      newErrors.city = 'Ciudad es requerida';
+    }
+    if (!formData.address.state.trim()) {
+      newErrors.state = 'Departamento es requerido';
+    }
+    if (!formData.address.country.trim()) {
+      newErrors.country = 'País es requerido';
+    }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,16 +117,12 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-
-    try {
-      // Pass both person data and subscription data to parent
-      await onSubmit(formData, { projectIds: selectedProjectIds });
-      
-    } catch (error) {
-      // Error handling is managed by parent component
-      throw error;
+    if (!validateForm()) {
+      return;
     }
+
+    // Pass both person data and subscription data to parent
+    await onSubmit(formData, { projectIds: selectedProjectIds });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

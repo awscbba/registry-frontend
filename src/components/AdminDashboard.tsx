@@ -47,8 +47,7 @@ export default function AdminDashboard() {
         }
 
         loadAdminData();
-      } catch (error) {
-        console.error('Error checking admin access:', error);
+      } catch {
         setError('Failed to verify admin access. Please try logging in again.');
         setIsLoading(false);
       }
@@ -90,7 +89,6 @@ export default function AdminDashboard() {
       }
 
     } catch (err) {
-      console.error('Error loading admin data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
     } finally {
       setIsLoading(false);
@@ -116,7 +114,6 @@ export default function AdminDashboard() {
         setUsers(data.data);
       }
     } catch (err) {
-      console.error('Error loading users:', err);
       setError(err instanceof Error ? err.message : 'Failed to load users');
     }
   };
@@ -177,7 +174,9 @@ export default function AdminDashboard() {
           className={currentView === 'users' ? 'active' : ''}
           onClick={() => {
             setCurrentView('users');
-            if (users.length === 0) loadUsers();
+            if (users.length === 0) {
+              loadUsers();
+            }
           }}
         >
           Users

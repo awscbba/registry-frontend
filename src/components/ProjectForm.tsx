@@ -50,7 +50,9 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       const submitData = {
@@ -63,7 +65,7 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
       };
 
       await onSubmit(submitData);
-    } catch (error) {
+    } catch {
       // Error handling is managed by parent component
     }
   };
