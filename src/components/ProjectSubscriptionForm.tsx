@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { userAuthService } from '../services/userAuthService';
+import { authService } from '../services/authService';
 import type { Project, SubscriptionCreate } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import UserLoginModal from './UserLoginModal';
@@ -37,7 +37,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   }, [projectId]);
 
   const checkUserLoginStatus = () => {
-    setIsLoggedIn(userAuthService.isLoggedIn());
+    setIsLoggedIn(authService.isAuthenticated());
   };
 
   // Helper function to convert project name to URL-friendly slug
@@ -105,7 +105,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
 
   const handleUserSubscription = async (projectId: string, notes?: string) => {
     try {
-      const result = await userAuthService.subscribeToProject(projectId, notes);
+      const result = await authService.subscribeToProject(projectId, notes);
       setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
       return result;
     } catch (err) {
@@ -183,7 +183,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   };
 
   const handleShowUserDashboard = () => {
-    if (userAuthService.isLoggedIn()) {
+    if (authService.isAuthenticated()) {
       setShowUserDashboard(true);
     } else {
       setLoginMessage('Inicia sesión para ver tu panel de usuario y gestionar tus suscripciones.');
@@ -234,7 +234,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         <div className="user-status-bar">
           <div className="user-info">
             <span className="user-icon">👤</span>
-            <span>Conectado como {userAuthService.getCurrentUser()?.firstName}</span>
+            <span>Conectado como {authService.getCurrentUser()?.firstName}</span>
           </div>
           <button 
             onClick={handleShowUserDashboard}

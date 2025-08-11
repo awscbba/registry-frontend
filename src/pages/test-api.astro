@@ -16,7 +16,8 @@ import Layout from '../layouts/Layout.astro';
       
       try {
         console.log('Testing API call...');
-        const response = await fetch('https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/v2/projects', {
+        const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        const response = await fetch(`${API_BASE_URL}/v2/projects`, {
           headers: {
             'Content-Type': 'application/json'
           }
