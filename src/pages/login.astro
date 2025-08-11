@@ -122,25 +122,9 @@
     <script>
         console.log('Login page loaded, setting up form...');
         
-        // Import authService - this will be available after the module loads
-        let authService = null;
-        
-        // Try to get authService from global scope or import it
-        const initAuthService = async () => {
-            if (window.authService) {
-                authService = window.authService;
-                console.log('Using global authService');
-            } else {
-                try {
-                    // Fallback: try to import the module
-                    const authModule = await import('/assets/authService.CFcKI7c1.js');
-                    authService = authModule.a; // 'a' is the exported name from the minified module
-                    console.log('Imported authService module');
-                } catch (error) {
-                    console.warn('Could not import authService, using direct API calls');
-                }
-            }
-        };
+        // API Configuration
+        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        const LOGIN_ENDPOINT = '/auth/user/login'; // User login endpoint
         
         // Create the form immediately
         const container = document.getElementById('login-form-mount');
@@ -170,9 +154,6 @@
 
         // Set up the form handler immediately after creating the form
         console.log('Form created, setting up event handler...');
-        
-        // Initialize authService
-        initAuthService();
         
         // Get form elements
         const form = document.getElementById('simple-login-form');
