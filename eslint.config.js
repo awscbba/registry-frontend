@@ -5,7 +5,6 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
-import astro from 'eslint-plugin-astro';
 
 export default [
   js.configs.recommended,
@@ -43,6 +42,8 @@ export default [
         HTMLSelectElement: 'readonly',
         HTMLElement: 'readonly',
         Event: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
         React: 'readonly',
       },
     },
@@ -110,24 +111,6 @@ export default [
     },
   },
   {
-    files: ['**/*.astro'],
-    plugins: {
-      astro,
-    },
-    languageOptions: {
-      parser: astro.parser,
-      parserOptions: {
-        parser: '@typescript-eslint/parser',
-        extraFileExtensions: ['.astro'],
-      },
-    },
-    rules: {
-      ...astro.configs.recommended.rules,
-      'astro/no-conflict-set-directives': 'error',
-      'astro/no-unused-define-vars-in-style': 'error',
-    },
-  },
-  {
     ignores: [
       'dist/',
       'node_modules/',
@@ -135,6 +118,10 @@ export default [
       'fallback/',
       '*.config.js',
       '*.config.ts',
+      '**/*.astro',  // Explicitly ignore all Astro files
+      'src/**/*.astro',  // Double-ensure Astro files are ignored
+      'src/layouts/**',  // Ignore layouts directory (contains Astro files)
+      'src/pages/**',    // Ignore pages directory (contains Astro files)
     ],
   },
 ];

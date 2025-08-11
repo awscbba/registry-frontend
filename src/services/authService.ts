@@ -193,6 +193,41 @@ class AuthService {
   }
 
   /**
+   * Force logout (same as logout but with explicit naming for session expiry)
+   */
+  forceLogout(): void {
+    this.logout();
+  }
+
+  /**
+   * Get remaining time for current token in seconds
+   * Returns 0 if no token or token is expired
+   */
+  getTokenTimeRemaining(): number {
+    if (!this.token) {
+      return 0;
+    }
+
+    try {
+      // Decode JWT token to get expiration time
+      const payload = JSON.parse(atob(this.token.split('.')[1]));
+      const exp = payload.exp;
+      
+      if (!exp) {
+        return 0;
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = exp - now;
+      
+      return Math.max(0, remaining);
+    } catch (error) {
+      console.warn('Failed to decode token for time remaining:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
@@ -401,6 +436,3 @@ export function addRequiredAuthHeaders(): Record<string, string> {
 if (typeof window !== 'undefined') {
   (window as any).authService = authService;
 }
-
-// Export types
-export type { User, LoginRequest, LoginResponse, UserSubscription };
