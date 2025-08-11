@@ -21,8 +21,8 @@ export interface LoginResponse {
 }
 
 // Authentication state with localStorage persistence
-const AUTH_TOKEN_KEY = 'auth_token';
-const CURRENT_USER_KEY = 'current_user';
+const AUTH_TOKEN_KEY = 'userAuthToken';
+const CURRENT_USER_KEY = 'userData';
 const TOKEN_EXPIRY_KEY = 'token_expiry';
 
 // Helper functions for localStorage
