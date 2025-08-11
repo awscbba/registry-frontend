@@ -9,7 +9,7 @@ import type {
 } from '../types/project';
 import type { Person } from '../types/person';
 import { ApiError, handleApiResponse } from '../types/api';
-import { addAuthHeaders, addRequiredAuthHeaders } from './authStub';
+import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { API_CONFIG, getApiUrl } from '../config/api';
 
 export { ApiError };

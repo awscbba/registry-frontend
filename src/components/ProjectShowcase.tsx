@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { authService } from '../services/authStub';
+import { authService } from '../services/authService';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import LoginForm from './LoginForm';

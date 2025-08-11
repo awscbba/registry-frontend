@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { authService } from '../services/authStub';
+import { authService } from '../services/authService';
 
 interface SessionMonitorProps {
   warningThreshold?: number; // Show warning when this many seconds remain (default: 5 minutes)

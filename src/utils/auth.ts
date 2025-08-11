@@ -3,7 +3,7 @@
  * Provides consistent authentication handling across components
  */
 
-import { authService } from '../services/authStub';
+import { authService } from '../services/authService';
 
 export interface AuthState {
   isAuthenticated: boolean;

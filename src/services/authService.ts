@@ -379,6 +379,20 @@ class AuthService {
 // Export singleton instance
 export const authService = AuthService.getInstance();
 
+// Helper functions for adding auth headers
+export function addAuthHeaders(): Record<string, string> {
+  const token = authService.getToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+export function addRequiredAuthHeaders(): Record<string, string> {
+  const token = authService.getToken();
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 // Make authService available globally for debugging and direct access
 if (typeof window !== 'undefined') {
   (window as any).authService = authService;
