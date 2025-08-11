@@ -153,7 +153,7 @@
         
         // API Configuration
         const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-        const LOGIN_ENDPOINT = '/auth/user/login';
+        const LOGIN_ENDPOINT = '/auth/login';
         
         // Get form elements
         const form = document.getElementById('simple-login-form');
@@ -206,17 +206,17 @@
                     console.log('Token field present:', !!data.token);
                     console.log('User field present:', !!data.user);
                     
-                    if (response.ok && data.success) {
+                    if (response.ok && data.access_token) {
                         console.log('Login successful:', data);
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
                         // Store auth data with correct keys to match dashboard
-                        if (data.token) {
-                            localStorage.setItem('userAuthToken', data.token);
+                        if (data.access_token) {
+                            localStorage.setItem('userAuthToken', data.access_token);
                             console.log('Token stored as userAuthToken');
                         } else {
-                            console.warn('No token received in response');
+                            console.warn('No access_token received in response');
                         }
                         if (data.user) {
                             localStorage.setItem('userData', JSON.stringify(data.user));
