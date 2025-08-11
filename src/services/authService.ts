@@ -108,24 +108,48 @@ class AuthService {
 
   /**
    * Login user with email and password
+   * Uses the admin login endpoint which returns admin status for all users
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/user/login`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
         method: 'POST',
         headers: API_CONFIG.DEFAULT_HEADERS,
         body: JSON.stringify(credentials)
       });
 
-      const data: LoginResponse = await response.json();
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Convert admin login response format to match LoginResponse interface
+        const loginResponse: LoginResponse = {
+          success: true,
+          token: data.access_token,
+          user: {
+            id: data.user.id,
+            email: data.user.email,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+            isAdmin: data.user.isAdmin,
+            requirePasswordChange: data.require_password_change
+          },
+          message: 'Inicio de sesión exitoso'
+        };
 
-      if (response.ok && data.success && data.token && data.user) {
-        this.token = data.token;
-        this.user = data.user;
+        // Store token and user data
+        this.token = loginResponse.token!;
+        this.user = loginResponse.user!;
         this.saveToStorage();
-      }
 
-      return data;
+        return loginResponse;
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.detail || 'Credenciales incorrectas',
+          error_code: 'AUTHENTICATION_FAILED'
+        };
+      }
     } catch (error) {
       console.error('Login error:', error);
       return {
@@ -137,7 +161,7 @@ class AuthService {
   }
 
   /**
-   * Login admin user (uses same endpoint but checks for admin role)
+   * Login admin user (uses same endpoint as regular login, but validates admin status)
    */
   async adminLogin(credentials: LoginRequest): Promise<LoginResponse> {
     const result = await this.login(credentials);
