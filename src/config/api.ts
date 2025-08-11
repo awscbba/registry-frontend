@@ -9,9 +9,8 @@
 export const API_CONFIG = {
   BASE_URL: import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod',
   ENDPOINTS: {
-    // Authentication
-    AUTH_LOGIN: '/auth/login',           // Admin login
-    AUTH_USER_LOGIN: '/auth/user/login', // User login (for welcome email users)
+    // Authentication - Unified login endpoint for all users
+    AUTH_LOGIN: '/auth/login',           // Unified login endpoint (admin and regular users)
     AUTH_LOGOUT: '/auth/logout',
     AUTH_ME: '/auth/me',
     
