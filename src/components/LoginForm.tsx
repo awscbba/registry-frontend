@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { authService } from '../services/authStub';
+import { authService } from '../services/authService';
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
 }
 
 export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,13 +16,24 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setError(null);
 
     try {
-      await authService.login(email, password);
-      onLoginSuccess();
+      const result = await authService.login(formData);
+      
+      if (result.success) {
+        // Reset form
+        setFormData({ email: '', password: '' });
+        onLoginSuccess();
+      } else {
+        setError(result.message || 'Login failed');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de autenticación');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleInputChange = (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
   };
 
   return (
@@ -40,8 +50,8 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
             <input
               id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange('email')}
               required
               disabled={isLoading}
               placeholder="tu@email.com"
@@ -53,8 +63,8 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
             <input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleInputChange('password')}
               required
               disabled={isLoading}
               placeholder="Tu contraseña"

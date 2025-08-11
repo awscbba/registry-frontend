@@ -379,5 +379,10 @@ class AuthService {
 // Export singleton instance
 export const authService = AuthService.getInstance();
 
+// Make authService available globally for debugging and direct access
+if (typeof window !== 'undefined') {
+  (window as any).authService = authService;
+}
+
 // Export types
 export type { User, LoginRequest, LoginResponse, UserSubscription };
