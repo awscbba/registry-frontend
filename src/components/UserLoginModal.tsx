@@ -59,7 +59,9 @@ export default function UserLoginModal({
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="modal-overlay" onClick={handleClose}>

@@ -76,7 +76,9 @@ export default function UserDashboard({
   };
 
   const handleSubscribeToCurrentProject = async () => {
-    if (!currentProjectId || !onSubscribeToProject) return;
+    if (!currentProjectId || !onSubscribeToProject) {
+      return;
+    }
 
     try {
       setIsSubscribing(true);
@@ -96,7 +98,9 @@ export default function UserDashboard({
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {

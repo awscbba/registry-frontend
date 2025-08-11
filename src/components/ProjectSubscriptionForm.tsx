@@ -104,13 +104,9 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   };
 
   const handleUserSubscription = async (projectId: string, notes?: string) => {
-    try {
-      const result = await authService.subscribeToProject(projectId, notes);
-      setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
-      return result;
-    } catch (err) {
-      throw err;
-    }
+    const result = await authService.subscribeToProject(projectId, notes);
+    setSuccess('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
+    return result;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

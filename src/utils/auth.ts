@@ -32,7 +32,7 @@ export const checkAuthStatus = (): AuthState => {
       isLoading: false,
       error: null,
     };
-  } catch (error) {
+  } catch {
     return {
       isAuthenticated: false,
       user: null,

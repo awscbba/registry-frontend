@@ -8,7 +8,9 @@
  * Migrate legacy authentication data to new unified format
  */
 export function migrateLegacyAuth(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
   let migrated = false;
 
@@ -76,7 +78,9 @@ export function migrateLegacyAuth(): boolean {
  * Check if user needs authentication migration
  */
 export function needsAuthMigration(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
   const hasLegacyAuth = !!(
     localStorage.getItem('authToken') ||

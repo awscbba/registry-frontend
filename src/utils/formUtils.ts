@@ -66,12 +66,7 @@ export function createSubmitHandler<T extends FormData>(
       }
     }
     
-    try {
-      await onSubmit(formData);
-    } catch (error) {
-      // Error handling is managed by parent component
-      throw error;
-    }
+    await onSubmit(formData);
   };
 }
 
@@ -80,8 +75,8 @@ export function createSubmitHandler<T extends FormData>(
  */
 export function validateEmail(email: string): string | null {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email) return 'Email es requerido';
-  if (!emailRegex.test(email)) return 'Email no es válido';
+  if (!email) {return 'Email es requerido';}
+  if (!emailRegex.test(email)) {return 'Email no es válido';}
   return null;
 }
 
@@ -89,9 +84,9 @@ export function validateEmail(email: string): string | null {
  * Phone validation utility
  */
 export function validatePhone(phone: string): string | null {
-  const phoneRegex = /^\+?[\d\s\-\(\)]{8,}$/;
-  if (!phone) return 'Teléfono es requerido';
-  if (!phoneRegex.test(phone)) return 'Teléfono no es válido';
+  const phoneRegex = /^\+?[\d\s\-()]{8,}$/;
+  if (!phone) {return 'Teléfono es requerido';}
+  if (!phoneRegex.test(phone)) {return 'Teléfono no es válido';}
   return null;
 }
 
@@ -109,9 +104,9 @@ export function validateRequired(value: any, fieldName: string): string | null {
  * Date validation utility
  */
 export function validateDate(date: string): string | null {
-  if (!date) return 'Fecha es requerida';
+  if (!date) {return 'Fecha es requerida';}
   const dateObj = new Date(date);
-  if (isNaN(dateObj.getTime())) return 'Fecha no es válida';
+  if (isNaN(dateObj.getTime())) {return 'Fecha no es válida';}
   return null;
 }
 
@@ -137,28 +132,31 @@ export function validateForm<T extends FormData>(
     }
     
     // Skip validation if field is empty and not required
-    if (!value) continue;
+    if (!value) {continue;}
     
     // Type-specific validation
     switch (field.type) {
-      case 'email':
+      case 'email': {
         const emailError = validateEmail(value);
-        if (emailError) errors[field.name] = emailError;
+        if (emailError) {errors[field.name] = emailError;}
         break;
-      case 'tel':
+      }
+      case 'tel': {
         const phoneError = validatePhone(value);
-        if (phoneError) errors[field.name] = phoneError;
+        if (phoneError) {errors[field.name] = phoneError;}
         break;
-      case 'date':
+      }
+      case 'date': {
         const dateError = validateDate(value);
-        if (dateError) errors[field.name] = dateError;
+        if (dateError) {errors[field.name] = dateError;}
         break;
+      }
     }
     
     // Custom validation
     if (field.validation) {
       const customError = field.validation(value);
-      if (customError) errors[field.name] = customError;
+      if (customError) {errors[field.name] = customError;}
     }
   }
   
