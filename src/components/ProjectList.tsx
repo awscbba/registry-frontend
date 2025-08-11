@@ -65,7 +65,9 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No definida';
+    if (!dateString) {
+      return 'No definida';
+    }
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 

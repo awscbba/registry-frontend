@@ -78,7 +78,9 @@ class AuthService {
   }
 
   private saveToStorage(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     if (this.token) {
       localStorage.setItem(AUTH_TOKEN_KEY, this.token);
@@ -94,7 +96,9 @@ class AuthService {
   }
 
   private clearStorage(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
     
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(USER_DATA_KEY);
@@ -199,7 +203,7 @@ class AuthService {
    * Check if user has admin privileges
    * Optionally refresh user data from backend to ensure accuracy
    */
-  isAdmin(useCache: boolean = true): boolean {
+  isAdmin(_useCache: boolean = true): boolean {
     if (!this.isAuthenticated() || !this.user) {
       return false;
     }

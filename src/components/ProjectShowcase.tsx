@@ -36,39 +36,28 @@ export default function ProjectShowcase() {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('ProjectShowcase: Calling projectApi.getPublicProjects()...');
       const allProjects = await projectApi.getPublicProjects();
-      console.log('ProjectShowcase: Raw API response:', allProjects);
-      console.log('ProjectShowcase: Projects array length:', allProjects?.length);
-      console.log('ProjectShowcase: Projects array:', JSON.stringify(allProjects, null, 2));
       
       // Filter only active projects for public display (simplified)
       const activeProjects = allProjects.filter(project => {
-        console.log(`ProjectShowcase: Checking project ${project.name}: status=${project.status}, isEnabled=${project.isEnabled}`);
         return project.status === 'active';
       });
-      console.log('ProjectShowcase: Filtered active projects:', activeProjects);
-      console.log('ProjectShowcase: Active projects count:', activeProjects.length);
       
       setProjects(activeProjects);
-      console.log('ProjectShowcase: Projects state updated successfully');
     } catch (err) {
       if (err instanceof ApiError) {
         // Handle authentication errors gracefully
         if (err.status === 401) {
           // Authentication error - user session expired or invalid
-          console.log('ProjectShowcase: Authentication error, clearing session');
           setIsAuthenticated(false);
           setError(null); // Don't show error message for auth issues
           // Clear any stored auth data
           authService.logout();
         } else {
           // Other API errors
-          console.warn('ProjectShowcase: API Error details:', err.status, err.message);
           setError(`Error al cargar proyectos: ${err.message}`);
         }
       } else {
-        console.error('ProjectShowcase: Unknown error:', err);
         setError('Error desconocido al cargar proyectos');
       }
     } finally {
@@ -105,12 +94,7 @@ export default function ProjectShowcase() {
 
   const handleSubscribeClick = (project: Project) => {
     const slug = getProjectSlug(project);
-    console.log('Navigating to subscription page:', {
-      projectName: project.name,
-      projectId: project.id,
-      generatedSlug: slug,
-      targetUrl: `/subscribe/${slug}/`
-    });
+
     // Navigate to project-specific subscription form - use Astro dynamic route
     // Add trailing slash to ensure proper static site routing
     window.location.href = `/subscribe/${slug}/`;
@@ -131,15 +115,16 @@ export default function ProjectShowcase() {
       
       // Redirect to clean main page to avoid showing error messages
       window.location.href = '/';
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
       // Still redirect even if logout fails to ensure clean state
       window.location.href = '/';
     }
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No definida';
+    if (!dateString) {
+      return 'No definida';
+    }
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',

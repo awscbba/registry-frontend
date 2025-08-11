@@ -8,9 +8,9 @@ import type {
   AdminDashboard
 } from '../types/project';
 import type { Person } from '../types/person';
+import { API_CONFIG, getApiUrl } from '../config/api';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
-import { API_CONFIG, getApiUrl } from '../config/api';
 
 export { ApiError };
 
@@ -224,7 +224,7 @@ export const projectApi = {
       try {
         const errorJson = JSON.parse(errorText);
         console.error('updateProjectSubscription error JSON:', errorJson);
-      } catch (e) {
+      } catch {
         console.error('updateProjectSubscription error (not JSON):', errorText);
       }
     }
@@ -285,7 +285,7 @@ export const projectApi = {
     }
   },
 
-  async deleteSubscription(id: string): Promise<void> {
+  async deleteSubscription(_id: string): Promise<void> {
     // Subscription deletion may not be available in the current API version
     throw new ApiError(501, 'La eliminación de suscripciones no está disponible en la versión actual de la API.');
   },
