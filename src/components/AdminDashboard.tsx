@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { API_CONFIG } from '../config/api';
+import { projectApi } from '../services/projectApi';
+import PersonForm from './PersonForm';
+import type { Person, PersonUpdate } from '../types/person';
 
 interface AdminStats {
   totalUsers: number;
@@ -17,6 +20,17 @@ interface AdminUser {
   isAdmin: boolean;
   isActive: boolean;
   createdAt: string;
+  // Additional fields for full person data
+  phone?: string;
+  dateOfBirth?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+  };
+  updatedAt?: string;
 }
 
 export default function AdminDashboard() {
@@ -24,7 +38,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'projects'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'projects' | 'edit-user' | 'view-user'>('dashboard');
+  
+  // Person editing state
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [isEditingUser, setIsEditingUser] = useState(false);
 
   useEffect(() => {
     // Check admin access first
@@ -121,6 +139,72 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     authService.logout();
     window.location.href = '/login';
+  };
+
+  const handleEditUser = async (user: AdminUser) => {
+    try {
+      setIsLoading(true);
+      setSelectedUser(user);
+      setCurrentView('edit-user');
+      setIsEditingUser(true);
+      
+      // Fetch complete person data for editing
+      const fullPersonData = await projectApi.getPerson(user.id);
+      setSelectedUser({
+        ...user,
+        phone: fullPersonData.phone || '',
+        dateOfBirth: fullPersonData.dateOfBirth || '',
+        address: fullPersonData.address || {
+          street: '',
+          city: '',
+          state: '',
+          country: '',
+          postalCode: ''
+        },
+        updatedAt: fullPersonData.updatedAt || user.createdAt
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load user details');
+      // Still show the edit form with basic data if full data fetch fails
+      setSelectedUser(user);
+      setCurrentView('edit-user');
+      setIsEditingUser(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleViewUser = (user: AdminUser) => {
+    setSelectedUser(user);
+    setCurrentView('view-user');
+    setIsEditingUser(false);
+  };
+
+  const handleSaveUser = async (userData: PersonUpdate) => {
+    if (!selectedUser) return;
+    
+    try {
+      setIsLoading(true);
+      await projectApi.updatePerson(selectedUser.id, userData);
+      
+      // Refresh users list
+      await loadUsers();
+      
+      // Go back to users view
+      setCurrentView('users');
+      setSelectedUser(null);
+      setIsEditingUser(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setCurrentView('users');
+    setSelectedUser(null);
+    setIsEditingUser(false);
   };
 
   if (isLoading) {
@@ -232,11 +316,112 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="user-actions">
-                    <button className="btn-small">Edit</button>
-                    <button className="btn-small">View Details</button>
+                    <button 
+                      className="btn-small"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="btn-small"
+                      onClick={() => handleViewUser(user)}
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {currentView === 'edit-user' && selectedUser && (
+          <div className="user-edit">
+            <div className="section-header">
+              <h2>Edit User: {selectedUser.firstName} {selectedUser.lastName}</h2>
+              <button 
+                className="btn-secondary"
+                onClick={handleCancelEdit}
+              >
+                ← Back to Users
+              </button>
+            </div>
+            <PersonForm
+              person={{
+                id: selectedUser.id,
+                firstName: selectedUser.firstName,
+                lastName: selectedUser.lastName,
+                email: selectedUser.email,
+                isAdmin: selectedUser.isAdmin,
+                isActive: selectedUser.isActive,
+                createdAt: selectedUser.createdAt,
+                updatedAt: selectedUser.updatedAt || selectedUser.createdAt,
+                phone: selectedUser.phone || '',
+                dateOfBirth: selectedUser.dateOfBirth || '',
+                address: selectedUser.address || {
+                  street: '',
+                  city: '',
+                  state: '',
+                  country: '',
+                  postalCode: ''
+                }
+              }}
+              onSubmit={handleSaveUser}
+              onCancel={handleCancelEdit}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+
+        {currentView === 'view-user' && selectedUser && (
+          <div className="user-view">
+            <div className="section-header">
+              <h2>User Details: {selectedUser.firstName} {selectedUser.lastName}</h2>
+              <div className="header-actions">
+                <button 
+                  className="btn-primary"
+                  onClick={() => handleEditUser(selectedUser)}
+                >
+                  Edit User
+                </button>
+                <button 
+                  className="btn-secondary"
+                  onClick={handleCancelEdit}
+                >
+                  ← Back to Users
+                </button>
+              </div>
+            </div>
+            <div className="user-details-card">
+              <div className="detail-section">
+                <h3>Basic Information</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <label>Name:</label>
+                    <span>{selectedUser.firstName} {selectedUser.lastName}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Email:</label>
+                    <span>{selectedUser.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Status:</label>
+                    <span className={`status ${selectedUser.isActive ? 'active' : 'inactive'}`}>
+                      {selectedUser.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Role:</label>
+                    <span className={`role ${selectedUser.isAdmin ? 'admin' : 'user'}`}>
+                      {selectedUser.isAdmin ? 'Administrator' : 'User'}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Created:</label>
+                    <span>{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -450,6 +635,85 @@ export default function AdminDashboard() {
           padding: 0.75rem 1.5rem;
           border-radius: 4px;
           cursor: pointer;
+        }
+
+        /* Edit and View User Styles */
+        .user-edit, .user-view {
+          padding: 2rem;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          padding-bottom: 1rem;
+          border-bottom: 2px solid #e0e0e0;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .user-details-card {
+          background: white;
+          border-radius: 8px;
+          padding: 2rem;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .detail-section h3 {
+          color: #2c3e50;
+          margin-bottom: 1.5rem;
+          font-size: 1.2rem;
+        }
+
+        .detail-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .detail-item label {
+          font-weight: 600;
+          color: #555;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .detail-item span {
+          font-size: 1rem;
+          color: #333;
+        }
+
+        .status.active {
+          color: #27ae60;
+          font-weight: 600;
+        }
+
+        .status.inactive {
+          color: #e74c3c;
+          font-weight: 600;
+        }
+
+        .role.admin {
+          color: #8e44ad;
+          font-weight: 600;
+        }
+
+        .role.user {
+          color: #34495e;
+          font-weight: 600;
         }
       `}</style>
     </div>
