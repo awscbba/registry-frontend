@@ -75,9 +75,22 @@ export interface ProjectSubscriber {
 }
 
 export interface AdminDashboard {
-  totalPeople: number;
+  totalUsers: number;  // Fix: Changed from totalPeople to totalUsers
+  activeUsers: number; // Fix: Added activeUsers field
+  adminUsers: number;  // Fix: Added adminUsers field
   totalProjects: number;
+  activeProjects: number; // Fix: Added activeProjects field
   totalSubscriptions: number; // Now excludes inactive subscriptions (active + pending only)
+  activeSubscriptions: number; // Fix: Added activeSubscriptions field
+  pendingSubscriptions: number; // Fix: Added pendingSubscriptions field
   totalSubscriptionsEverCreated?: number; // Historical count including inactive
+  recentActivity?: any[]; // Fix: Added recentActivity field
+  statistics?: {
+    projectsCreatedThisMonth: number;
+    subscriptionsThisMonth: number;
+    usersCreatedThisMonth: number;
+    averageSubscriptionsPerProject: number;
+    userEngagementRate: number;
+  };
   timestamp: string;
 }

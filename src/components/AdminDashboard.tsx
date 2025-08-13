@@ -81,10 +81,10 @@ export default function AdminDashboard() {
       
       if (data.success && data.data) {
         setStats({
-          totalUsers: data.data.totalPeople || 0,
+          totalUsers: data.data.totalUsers || 0,  // Fix: Use correct field name
           totalProjects: data.data.totalProjects || 0,
           totalSubscriptions: data.data.totalSubscriptions || 0,
-          activeUsers: data.data.activePeople || 0
+          activeUsers: data.data.activeUsers || 0  // Fix: Use correct field name
         });
       }
 
