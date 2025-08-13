@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { API_CONFIG } from '../config/api';
 import { projectApi } from '../services/projectApi';
+import type { PersonUpdate } from '../types/person';
 import PersonForm from './PersonForm';
-import type { Person, PersonUpdate } from '../types/person';
 
 interface AdminStats {
   totalUsers: number;
@@ -42,7 +42,6 @@ export default function AdminDashboard() {
   
   // Person editing state
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [isEditingUser, setIsEditingUser] = useState(false);
 
   useEffect(() => {
     // Check admin access first
@@ -146,7 +145,6 @@ export default function AdminDashboard() {
       setIsLoading(true);
       setSelectedUser(user);
       setCurrentView('edit-user');
-      setIsEditingUser(true);
       
       // Fetch complete person data for editing
       const fullPersonData = await projectApi.getPerson(user.id);
@@ -168,7 +166,6 @@ export default function AdminDashboard() {
       // Still show the edit form with basic data if full data fetch fails
       setSelectedUser(user);
       setCurrentView('edit-user');
-      setIsEditingUser(true);
     } finally {
       setIsLoading(false);
     }
@@ -177,11 +174,12 @@ export default function AdminDashboard() {
   const handleViewUser = (user: AdminUser) => {
     setSelectedUser(user);
     setCurrentView('view-user');
-    setIsEditingUser(false);
   };
 
   const handleSaveUser = async (userData: PersonUpdate) => {
-    if (!selectedUser) return;
+    if (!selectedUser) {
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -193,7 +191,6 @@ export default function AdminDashboard() {
       // Go back to users view
       setCurrentView('users');
       setSelectedUser(null);
-      setIsEditingUser(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update user');
     } finally {
@@ -204,7 +201,6 @@ export default function AdminDashboard() {
   const handleCancelEdit = () => {
     setCurrentView('users');
     setSelectedUser(null);
-    setIsEditingUser(false);
   };
 
   if (isLoading) {
