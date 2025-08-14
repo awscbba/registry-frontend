@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PerformanceDashboard from '../components/performance/PerformanceDashboard';
+---
+
+<Layout title="Performance Dashboard - AWS User Group Cochabamba">
+	<div class="min-h-screen bg-gray-50">
+		<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+			<div class="px-4 py-6 sm:px-0">
+				<PerformanceDashboard client:load showAdvancedMetrics={true} />
+			</div>
+		</div>
+	</div>
+</Layout>
