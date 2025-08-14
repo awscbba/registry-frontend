@@ -6,6 +6,10 @@ import PersonForm from '../PersonForm';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
 import SystemHealthOverview from '../performance/SystemHealthOverview';
+import DatabasePerformancePanel from '../performance/DatabasePerformancePanel';
+import QueryOptimizationPanel from '../performance/QueryOptimizationPanel';
+import ConnectionPoolMonitor from '../performance/ConnectionPoolMonitor';
+import DatabaseCharts from '../performance/DatabaseCharts';
 import performanceService, { PerformanceService } from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
 
@@ -36,7 +40,7 @@ interface AdminUser {
   updatedAt?: string;
 }
 
-type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'system-health' | 'edit-user' | 'view-user';
+type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user';
 
 export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -208,6 +212,20 @@ export default function EnhancedAdminDashboard() {
               </button>
 
               <button
+                onClick={() => setCurrentView('database')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  currentView === 'database'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Database
+              </button>
+
+              <button
                 onClick={() => setCurrentView('users')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                   currentView === 'users'
@@ -360,16 +378,16 @@ export default function EnhancedAdminDashboard() {
               View Performance Dashboard
             </button>
             <button
+              onClick={() => setCurrentView('database')}
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Database Performance
+            </button>
+            <button
               onClick={() => setCurrentView('cache')}
               className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Manage Cache
-            </button>
-            <button
-              onClick={() => setCurrentView('users')}
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Manage Users
             </button>
           </div>
         </div>
@@ -384,6 +402,20 @@ export default function EnhancedAdminDashboard() {
       
       case 'cache':
         return <CacheManagementPanel showControls={true} allowCacheClear={true} showDetailedStats={true} />;
+      
+      case 'database':
+        return (
+          <div className="space-y-6">
+            <DatabasePerformancePanel showDetailedMetrics={true} />
+            <DatabaseCharts timeRange="24h" metrics={['queryTime', 'poolUtilization', 'throughput', 'connections']} />
+          </div>
+        );
+      
+      case 'query-optimization':
+        return <QueryOptimizationPanel showRecommendations={true} allowOptimizationApplication={true} />;
+      
+      case 'connection-pools':
+        return <ConnectionPoolMonitor showAllPools={true} alertThreshold={0.8} />;
       
       case 'system-health':
         return systemHealth ? <SystemHealthOverview healthStatus={systemHealth} /> : null;
