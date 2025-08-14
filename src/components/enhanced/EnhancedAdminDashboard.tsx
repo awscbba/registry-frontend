@@ -127,7 +127,9 @@ export default function EnhancedAdminDashboard() {
   };
 
   const handleUserUpdate = async (updates: PersonUpdate) => {
-    if (!selectedUser) return;
+    if (!selectedUser) {
+      return;
+    }
 
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/admin/users/${selectedUser.id}`, {

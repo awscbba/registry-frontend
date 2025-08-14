@@ -11,7 +11,7 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<string>(metrics[0]);
-  const chartRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<HTMLCanvasElement | null>(null);
 
   // Fetch performance history data
   const fetchPerformanceHistory = async () => {
@@ -33,17 +33,23 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
 
   // Simple chart rendering function (without external dependencies)
   const renderChart = () => {
-    if (!performanceHistory || !chartRef.current) return;
+    if (!performanceHistory || !chartRef.current) {
+      return;
+    }
 
     const canvas = chartRef.current;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const data = performanceHistory.dataPoints;
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      return;
+    }
 
     // Chart dimensions
     const padding = 60;
@@ -78,7 +84,9 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
         break;
     }
 
-    if (values.length === 0) return;
+    if (values.length === 0) {
+      return;
+    }
 
     // Calculate scales
     const minValue = Math.min(...values);
