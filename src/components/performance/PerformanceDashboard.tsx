@@ -5,9 +5,6 @@ import type {
   PerformanceDashboardProps 
 } from '../../types/performance';
 import performanceService, { PerformanceService } from '../../services/performanceService';
-import CacheManagementPanel from './CacheManagementPanel';
-import PerformanceCharts from './PerformanceCharts';
-import SystemHealthOverview from './SystemHealthOverview';
 
 const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   refreshInterval = 30000, // 30 seconds default

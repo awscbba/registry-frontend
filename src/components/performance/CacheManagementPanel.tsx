@@ -29,7 +29,9 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
 
   // Clear cache handler
   const handleClearCache = async (cacheType?: string) => {
-    if (!allowCacheClear) return;
+    if (!allowCacheClear) {
+      return;
+    }
     
     setClearingCache(true);
     setClearMessage(null);

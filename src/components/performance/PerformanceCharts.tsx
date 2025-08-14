@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { PerformanceHistory, PerformanceChartsProps, ChartDataPoint } from '../../types/performance';
+import type { PerformanceHistory, PerformanceChartsProps } from '../../types/performance';
 import performanceService from '../../services/performanceService';
 
 const PerformanceCharts: React.FC<PerformanceChartsProps> = ({

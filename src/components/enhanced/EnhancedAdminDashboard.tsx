@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
 import { API_CONFIG } from '../../config/api';
-import { projectApi } from '../../services/projectApi';
 import type { PersonUpdate } from '../../types/person';
 import PersonForm from '../PersonForm';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
 import SystemHealthOverview from '../performance/SystemHealthOverview';
-import { PerformanceService } from '../../services/performanceService';
+import performanceService, { PerformanceService } from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
 
 interface AdminStats {

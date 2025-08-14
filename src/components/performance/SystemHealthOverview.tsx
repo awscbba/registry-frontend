@@ -12,16 +12,28 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
   compactView = false
 }) => {
   const getHealthScoreColor = (score: number): string => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-blue-600';
-    if (score >= 50) return 'text-yellow-600';
+    if (score >= 90) {
+      return 'text-green-600';
+    }
+    if (score >= 70) {
+      return 'text-blue-600';
+    }
+    if (score >= 50) {
+      return 'text-yellow-600';
+    }
     return 'text-red-600';
   };
 
   const getHealthScoreBackground = (score: number): string => {
-    if (score >= 90) return 'bg-green-100';
-    if (score >= 70) return 'bg-blue-100';
-    if (score >= 50) return 'bg-yellow-100';
+    if (score >= 90) {
+      return 'bg-green-100';
+    }
+    if (score >= 70) {
+      return 'bg-blue-100';
+    }
+    if (score >= 50) {
+      return 'bg-yellow-100';
+    }
     return 'bg-red-100';
   };
 
