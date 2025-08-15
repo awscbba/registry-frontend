@@ -103,13 +103,6 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
             )}
           </button>
         </form>
-
-        <div className="login-footer">
-          <p>
-            <strong>Nota:</strong> Este es un sistema de demostración. 
-            Usa cualquier email válido y contraseña para acceder.
-          </p>
-        </div>
       </div>
 
       <ForgotPasswordModal
@@ -266,19 +259,6 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-
-        .login-footer {
-          margin-top: 2rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid #e5e7eb;
-          text-align: center;
-        }
-
-        .login-footer p {
-          color: #666;
-          font-size: 0.875rem;
-          line-height: 1.5;
         }
 
         @media (max-width: 480px) {
