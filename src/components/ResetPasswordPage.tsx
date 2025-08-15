@@ -25,23 +25,23 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    validateToken();
-  }, [token]);
-
-  const validateToken = async () => {
-    try {
-      const result = await authService.validateResetToken(token!);
-      setTokenValid(result.valid);
-      
-      if (!result.valid) {
-        setMessage('El enlace de restablecimiento ha expirado o no es válido');
+    const validateTokenAsync = async () => {
+      try {
+        const result = await authService.validateResetToken(token!);
+        setTokenValid(result.valid);
+        
+        if (!result.valid) {
+          setMessage('El enlace de restablecimiento ha expirado o no es válido');
+        }
+      } catch (error) {
+        setMessage('Error al validar el enlace de restablecimiento');
+      } finally {
+        setIsValidating(false);
       }
-    } catch (err) {
-      setMessage('Error al validar el enlace de restablecimiento');
-    } finally {
-      setIsValidating(false);
-    }
-  };
+    };
+
+    validateTokenAsync();
+  }, [token]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
       } else {
         setMessage(result.message || 'Error al restablecer la contraseña');
       }
-    } catch (err) {
+    } catch (error) {
       setMessage('Error al procesar la solicitud. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
