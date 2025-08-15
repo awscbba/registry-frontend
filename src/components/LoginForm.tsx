@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
@@ -9,6 +10,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +71,16 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               disabled={isLoading}
               placeholder="Tu contraseña"
             />
+            <div className="forgot-password-link">
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => setShowForgotPassword(true)}
+                disabled={isLoading}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -99,6 +111,11 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
           </p>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
 
       <style jsx>{`
         .login-container {
@@ -170,6 +187,30 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
         .form-group input:disabled {
           background-color: #f9fafb;
+          cursor: not-allowed;
+        }
+
+        .forgot-password-link {
+          text-align: right;
+          margin-top: 8px;
+        }
+
+        .link-button {
+          background: none;
+          border: none;
+          color: #3b82f6;
+          cursor: pointer;
+          font-size: 14px;
+          text-decoration: underline;
+          padding: 0;
+        }
+
+        .link-button:hover:not(:disabled) {
+          color: #2563eb;
+        }
+
+        .link-button:disabled {
+          color: #9ca3af;
           cursor: not-allowed;
         }
 
