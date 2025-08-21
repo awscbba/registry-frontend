@@ -1,7 +1,6 @@
 // Performance Service - Integration with backend Performance Optimization APIs
 // Connects to 7 performance endpoints from Phase 1
 
-import { httpClient, getApiUrl } from './httpClient';
 import type {
   PerformanceMetrics,
   CacheStats,
@@ -10,6 +9,7 @@ import type {
   EndpointMetric,
   HealthStatus
 } from '../types/performance';
+import { httpClient, getApiUrl } from './httpClient';
 
 class PerformanceService {
   constructor() {
