@@ -340,7 +340,7 @@ export const projectApi = {
     }
   },
 
-  async createPerson(person: any): Promise<Person> {
+  async createPerson(person: Partial<Person>): Promise<Person> {
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PEOPLE), {
       method: 'POST',
       headers: {

@@ -166,7 +166,7 @@ class PerformanceService {
    * Get cache health status
    * Endpoint: GET /admin/performance/cache/health
    */
-  async getCacheHealth(): Promise<{ status: string; details: any }> {
+  async getCacheHealth(): Promise<{ status: string; details: Record<string, unknown> }> {
     try {
       const data = await httpClient.getJson(getApiUrl('/admin/performance/cache/health'));
       return {
