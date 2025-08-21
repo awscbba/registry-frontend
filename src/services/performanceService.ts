@@ -1,7 +1,7 @@
 // Performance Service - Integration with backend Performance Optimization APIs
 // Connects to 7 performance endpoints from Phase 1
 
-import { API_CONFIG } from '../config/api';
+import { httpClient, getApiUrl } from './httpClient';
 import type {
   PerformanceMetrics,
   CacheStats,
@@ -12,11 +12,8 @@ import type {
 } from '../types/performance';
 
 class PerformanceService {
-  private baseUrl: string;
-
   constructor() {
-    // Use existing API configuration
-    this.baseUrl = API_CONFIG.BASE_URL;
+    // No need to store baseUrl, using httpClient with getApiUrl
   }
 
   /**
@@ -25,19 +22,7 @@ class PerformanceService {
    */
   async getMetrics(): Promise<PerformanceMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/metrics`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance metrics: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/metrics'));
       return {
         responseTime: data.average_response_time || 0,
         cacheHitRate: data.cache_hit_rate || 0,
@@ -58,19 +43,7 @@ class PerformanceService {
    */
   async getCacheStats(): Promise<CacheStats> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/stats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch cache stats: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/cache/stats'));
       return {
         hitRate: data.hit_rate || 0,
         missRate: data.miss_rate || 0,
@@ -101,19 +74,7 @@ class PerformanceService {
    */
   async getSlowestEndpoints(): Promise<EndpointMetric[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/slowest-endpoints`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch slowest endpoints: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/slowest-endpoints'));
       return data.endpoints || [];
     } catch (error) {
       console.error('Error fetching slowest endpoints:', error);
@@ -127,19 +88,7 @@ class PerformanceService {
    */
   async getHealthStatus(): Promise<HealthStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch health status: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/health'));
       return {
         status: data.status || 'healthy',
         score: data.score || 100,
@@ -158,19 +107,7 @@ class PerformanceService {
    */
   async getAnalytics(): Promise<PerformanceAnalytics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/analytics`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance analytics: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/analytics'));
       return {
         summary: data.summary || {
           totalRequests: 0,
@@ -195,19 +132,7 @@ class PerformanceService {
    */
   async getPerformanceHistory(timeRange: string = '24h'): Promise<PerformanceHistory> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/history?range=${timeRange}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance history: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl(`/admin/performance/history?range=${timeRange}`));
       return {
         timeRange: data.time_range || timeRange,
         dataPoints: data.data_points || [],
@@ -226,21 +151,7 @@ class PerformanceService {
   async clearCache(cacheType?: string): Promise<{ success: boolean; message: string }> {
     try {
       const body = cacheType ? { cache_type: cacheType } : {};
-      
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/clear`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to clear cache: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.postJson(getApiUrl('/admin/performance/cache/clear'), body);
       return {
         success: data.success || false,
         message: data.message || 'Cache cleared successfully',
@@ -257,19 +168,7 @@ class PerformanceService {
    */
   async getCacheHealth(): Promise<{ status: string; details: any }> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch cache health: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/cache/health'));
       return {
         status: data.status || 'healthy',
         details: data.details || {},
@@ -280,14 +179,7 @@ class PerformanceService {
     }
   }
 
-  /**
-   * Get authorization header for API requests
-   */
-  private getAuthHeader(): string {
-    // Get token from localStorage (consistent with existing authService)
-    const token = localStorage.getItem('userAuthToken');
-    return token ? `Bearer ${token}` : '';
-  }
+
 
   /**
    * Format response time for display

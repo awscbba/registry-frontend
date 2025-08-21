@@ -11,6 +11,7 @@ import type { Person } from '../types/person';
 import { API_CONFIG, getApiUrl } from '../config/api';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
+import { httpClient } from './httpClient';
 
 export { ApiError };
 
@@ -292,17 +293,18 @@ export const projectApi = {
 
   // Admin Dashboard
   async getAdminDashboard(): Promise<AdminDashboard> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD), {
-      headers: addAuthHeaders()
-    });
-
-    const data = await handleApiResponse(response);
-
-    // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
-    if (data && data.data) {
-      return data.data; // v2 format
-    } else {
-      return data; // Legacy format (backward compatibility)
+    try {
+      const data = await httpClient.getJson(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD));
+      
+      // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
+      if (data && data.data) {
+        return data.data; // v2 format
+      } else {
+        return data; // Legacy format (backward compatibility)
+      }
+    } catch (error) {
+      console.error('Error fetching admin dashboard:', error);
+      throw error;
     }
   },
 

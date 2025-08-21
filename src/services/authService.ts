@@ -43,12 +43,15 @@ export interface UserSubscription {
 
 // Consistent localStorage keys
 const AUTH_TOKEN_KEY = 'userAuthToken';
+const REFRESH_TOKEN_KEY = 'userRefreshToken';
 const USER_DATA_KEY = 'userData';
 
 class AuthService {
   private static instance: AuthService;
   private token: string | null = null;
+  private refreshToken: string | null = null;
   private user: User | null = null;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -65,6 +68,7 @@ class AuthService {
 
   private loadFromStorage(): void {
     this.token = localStorage.getItem(AUTH_TOKEN_KEY);
+    this.refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const userDataStr = localStorage.getItem(USER_DATA_KEY);
     
     if (userDataStr) {
@@ -88,6 +92,12 @@ class AuthService {
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    if (this.refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken);
+    } else {
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
+
     if (this.user) {
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(this.user));
     } else {
@@ -101,6 +111,7 @@ class AuthService {
     }
     
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_DATA_KEY);
     
     // Also clear any legacy keys for cleanup
@@ -140,8 +151,9 @@ class AuthService {
           message: 'Inicio de sesión exitoso'
         };
 
-        // Store token and user data
-        this.token = loginResponse.token!;
+        // Store token, refresh token, and user data
+        this.token = data.access_token;
+        this.refreshToken = data.refresh_token;
         this.user = loginResponse.user!;
         this.saveToStorage();
 
@@ -188,7 +200,9 @@ class AuthService {
    */
   logout(): void {
     this.token = null;
+    this.refreshToken = null;
     this.user = null;
+    this.refreshPromise = null;
     this.clearStorage();
   }
 
@@ -299,6 +313,84 @@ class AuthService {
    */
   getToken(): string | null {
     return this.token;
+  }
+
+  /**
+   * Get current refresh token
+   */
+  getRefreshToken(): string | null {
+    return this.refreshToken;
+  }
+
+  /**
+   * Refresh the access token using the refresh token
+   */
+  async refreshAccessToken(): Promise<string | null> {
+    // If there's already a refresh in progress, wait for it
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    if (!this.refreshToken) {
+      console.warn('No refresh token available');
+      this.logout();
+      return null;
+    }
+
+    this.refreshPromise = this.performTokenRefresh();
+    const result = await this.refreshPromise;
+    this.refreshPromise = null;
+    return result;
+  }
+
+  private async performTokenRefresh(): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refresh_token: this.refreshToken,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.token = data.access_token;
+        this.saveToStorage();
+        console.log('Token refreshed successfully');
+        return this.token;
+      } else {
+        console.warn('Token refresh failed:', response.status);
+        // Refresh token is invalid or expired, logout user
+        this.logout();
+        return null;
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      // On network error, don't logout but return null
+      return null;
+    }
+  }
+
+  /**
+   * Get a valid access token, refreshing if necessary
+   */
+  async getValidToken(): Promise<string | null> {
+    if (!this.token) {
+      return null;
+    }
+
+    // Check if token is expired or about to expire (within 5 minutes)
+    const timeRemaining = this.getTokenTimeRemaining();
+    if (timeRemaining > 300) { // More than 5 minutes remaining
+      return this.token;
+    }
+
+    // Token is expired or about to expire, try to refresh
+    console.log('Token expired or expiring soon, refreshing...');
+    return await this.refreshAccessToken();
   }
 
   /**
@@ -518,6 +610,20 @@ export function addAuthHeaders(): Record<string, string> {
 
 export function addRequiredAuthHeaders(): Record<string, string> {
   const token = authService.getToken();
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  return { 'Authorization': `Bearer ${token}` };
+}
+
+// Helper function for adding auth headers with automatic refresh
+export async function addAuthHeadersWithRefresh(): Promise<Record<string, string>> {
+  const token = await authService.getValidToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+export async function addRequiredAuthHeadersWithRefresh(): Promise<Record<string, string>> {
+  const token = await authService.getValidToken();
   if (!token) {
     throw new Error('Authentication required');
   }
