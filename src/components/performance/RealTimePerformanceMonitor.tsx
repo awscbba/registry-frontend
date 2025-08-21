@@ -1,16 +1,16 @@
+/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
 import type { 
   RealTimePerformanceProps, 
   PerformanceStreamData, 
-  WebSocketConnectionStatus,
-  RealTimeChartData 
+  WebSocketConnectionStatus
 } from '../../types/websocket';
 import webSocketService from '../../services/webSocketService';
 
 const RealTimePerformanceMonitor: React.FC<RealTimePerformanceProps> = ({
   autoConnect = true,
   showConnectionStatus = true,
-  updateInterval = 1000,
+  updateInterval: _updateInterval = 1000,
   maxDataPoints = 60
 }) => {
   const [isConnected, setIsConnected] = useState(false);

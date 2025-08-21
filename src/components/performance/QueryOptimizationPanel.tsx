@@ -11,7 +11,7 @@ const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [applyingOptimization, setApplyingOptimization] = useState<string | null>(null);
-  const [appliedOptimizations, setAppliedOptimizations] = useState<Set<string>>(new Set());
+  const [, setAppliedOptimizations] = useState<Set<string>>(new Set());
 
   // Fetch optimization recommendations
   const fetchRecommendations = async () => {

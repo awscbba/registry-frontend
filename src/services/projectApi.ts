@@ -295,7 +295,7 @@ export const projectApi = {
   async getAdminDashboard(): Promise<AdminDashboard> {
     try {
       const data = await httpClient.getJson(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD));
-      
+
       // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
       if (data && data.data) {
         return data.data; // v2 format
@@ -340,7 +340,7 @@ export const projectApi = {
     }
   },
 
-  async createPerson(person: any): Promise<Person> {
+  async createPerson(person: Partial<Person>): Promise<Person> {
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PEOPLE), {
       method: 'POST',
       headers: {

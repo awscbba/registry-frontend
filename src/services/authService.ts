@@ -459,7 +459,7 @@ class AuthService {
   /**
    * Subscribe to a project
    */
-  async subscribeToProject(projectId: string, notes?: string): Promise<any> {
+  async subscribeToProject(projectId: string, notes?: string): Promise<unknown> {
     if (!this.isAuthenticated() || !this.token) {
       throw new Error('User not authenticated');
     }
@@ -632,5 +632,5 @@ export async function addRequiredAuthHeadersWithRefresh(): Promise<Record<string
 
 // Make authService available globally for debugging and direct access
 if (typeof window !== 'undefined') {
-  (window as any).authService = authService;
+  (window as unknown as { authService: typeof authService }).authService = authService;
 }

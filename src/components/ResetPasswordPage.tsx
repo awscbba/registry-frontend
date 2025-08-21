@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
         if (!result.valid) {
           setMessage('El enlace de restablecimiento ha expirado o no es válido');
         }
-      } catch (error) {
+      } catch {
         setMessage('Error al validar el enlace de restablecimiento');
       } finally {
         setIsValidating(false);
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
       } else {
         setMessage(result.message || 'Error al restablecer la contraseña');
       }
-    } catch (error) {
+    } catch {
       setMessage('Error al procesar la solicitud. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);

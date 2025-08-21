@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
 import type { PerformanceHistory, PerformanceChartsProps } from '../../types/performance';
 import performanceService from '../../services/performanceService';
