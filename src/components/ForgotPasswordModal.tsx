@@ -26,7 +26,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
       } else {
         setMessage(result.message || 'Error al enviar el email de restablecimiento');
       }
-    } catch (error) {
+    } catch {
       setMessage('Error al procesar la solicitud. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
@@ -40,13 +40,19 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div 
       className="modal-overlay" 
       onClick={handleClose}
-      onKeyDown={(e) => e.key === 'Escape' && handleClose()}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          handleClose();
+        }
+      }}
       role="dialog"
       aria-modal="true"
       tabIndex={-1}

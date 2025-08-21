@@ -3,7 +3,7 @@ import type { ConnectionPoolMetrics, ConnectionPoolMonitorProps } from '../../ty
 import databaseService, { DatabaseService } from '../../services/databaseService';
 
 const ConnectionPoolMonitor: React.FC<ConnectionPoolMonitorProps> = ({
-  showAllPools = true,
+  showAllPools: _showAllPools = true,
   alertThreshold = 0.8,
   refreshInterval = 15000
 }) => {

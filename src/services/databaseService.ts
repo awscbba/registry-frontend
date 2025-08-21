@@ -6,7 +6,6 @@ import type {
   DatabaseMetrics,
   DatabaseOptimizationHistory,
   ConnectionPoolMetrics,
-  QueryOptimizationResult,
   Recommendation
 } from '../types/database';
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
 import type { DatabaseOptimizationHistory, DatabaseChartsProps } from '../../types/database';
 import databaseService from '../../services/databaseService';
