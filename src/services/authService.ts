@@ -405,11 +405,7 @@ class AuthService {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
       const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/me`, { skipRefresh: true });
-<<<<<<< HEAD
       
-=======
-
->>>>>>> origin/main
       if (data.user) {
         this.user = data.user;
         this.saveToStorage();
@@ -538,11 +534,7 @@ class AuthService {
         }, 
         { skipAuth: true }
       );
-<<<<<<< HEAD
       
-=======
-
->>>>>>> origin/main
       return {
         success: data.success || false,
         message: data.message,
