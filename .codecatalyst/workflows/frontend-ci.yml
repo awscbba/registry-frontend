@@ -52,7 +52,7 @@ Actions:
             curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
             echo "✅ Just version: $(just --version)"
 
-            # Run validation with proper Node.js
+            # Run validation with Node.js 20 runtime
             echo "🔍 Running CI validation pipeline..."
             just ci-validate
             echo ""
@@ -127,7 +127,7 @@ Actions:
             curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
             echo "✅ Just version: $(just --version)"
 
-            # Run quality checks with proper Node.js
+            # Run quality checks with Node.js 20 runtime
             echo "🔍 Running CI quality pipeline..."
             just ci-quality
             echo ""
