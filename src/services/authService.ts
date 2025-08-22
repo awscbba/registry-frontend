@@ -402,25 +402,15 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/me`, { skipRefresh: true });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          this.user = data.user;
-          this.saveToStorage();
-        }
-        return true;
-      } else {
-        // Token is invalid, clear storage
-        this.logout();
-        return false;
+      if (data.user) {
+        this.user = data.user;
+        this.saveToStorage();
       }
+      return true;
     } catch (error) {
       console.warn('Token validation failed:', error);
       // On network error, don't logout but return false
@@ -437,16 +427,9 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/subscriptions`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user subscriptions');
-      }
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
 
       const data = await response.json();
       return data.subscriptions || [];
@@ -465,24 +448,12 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        },
-        body: JSON.stringify({
-          projectId,
-          notes: notes || undefined
-        })
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/user/subscribe`, {
+        projectId,
+        notes: notes || undefined
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Subscription failed');
-      }
-
-      return response.json();
     } catch (error) {
       console.error('Error subscribing to project:', error);
       throw error;
@@ -511,15 +482,12 @@ class AuthService {
    */
   async forgotPassword(email: string): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/forgot-password`, 
+        { email }, 
+        { skipAuth: true }
+      );
       return {
         success: data.success || false,
         message: data.message,
@@ -538,18 +506,11 @@ class AuthService {
    */
   async validateResetToken(token: string): Promise<{ valid: boolean; expires_at?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/validate-reset-token/${token}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        return { valid: false };
-      }
-
-      const data = await response.json();
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/validate-reset-token/${token}`, 
+        { skipAuth: true }
+      );
       return {
         valid: data.valid || false,
         expires_at: data.expires_at,
@@ -565,25 +526,15 @@ class AuthService {
    */
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/reset-password`, 
+        {
           reset_token: token,
           new_password: newPassword,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return {
-          success: false,
-          message: data.detail || data.message || 'Error al restablecer la contraseña',
-        };
-      }
+        }, 
+        { skipAuth: true }
+      );
 
       return {
         success: data.success || false,
