@@ -18,6 +18,29 @@ setup-nodejs:
     echo "Current npm: $(npm --version 2>/dev/null || echo 'not available')"
     echo ""
     
+    # Check if we already have a compatible Node.js version (e.g., from NVM)
+    CURRENT_NODE_VERSION=$(node --version 2>/dev/null | sed 's/v//' || echo "0.0.0")
+    NODE_MAJOR=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f1)
+    NODE_MINOR=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f2)
+    NODE_PATCH=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f3)
+    
+    echo "Detected Node.js version: $CURRENT_NODE_VERSION"
+    
+    # Check if current version meets requirements (>=18.20.8 or >=20.0.0)
+    if [ "$NODE_MAJOR" -gt 20 ] || ([ "$NODE_MAJOR" -eq 20 ] && [ "$NODE_MINOR" -ge 0 ]) || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -gt 20 ]) || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -eq 20 ] && [ "$NODE_PATCH" -ge 8 ]); then
+        echo "✅ Current Node.js $CURRENT_NODE_VERSION meets requirements (>=18.20.8)"
+        echo "🎯 Skipping Node.js installation - using existing version"
+        
+        # Create environment configuration with current Node.js
+        echo "NODE_CMD=node" > .env.nodejs
+        echo "NPM_CMD=npm" >> .env.nodejs
+        echo "✅ Using current Node.js: $(which node)"
+        echo "✅ Using current npm: $(which npm)"
+        return 0
+    fi
+    
+    echo "⚠️ Current Node.js $CURRENT_NODE_VERSION below requirements, upgrading..."
+    
     # Upgrade to Node.js 20+ for Astro 5.12.9 compatibility
     if command -v dnf >/dev/null 2>&1; then
         echo "📦 Using dnf to upgrade Node.js to 20+..."
