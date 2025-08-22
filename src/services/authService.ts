@@ -431,7 +431,6 @@ class AuthService {
       const { httpClient } = await import('./httpClient');
       const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
 
-      const data = await response.json();
       return data.subscriptions || [];
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
