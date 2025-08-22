@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
 import { API_CONFIG } from '../../config/api';
+import { httpClient, getApiUrl } from '../../services/httpClient';
 import type { PersonUpdate } from '../../types/person';
 import PersonForm from '../PersonForm';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
@@ -83,33 +84,11 @@ export default function EnhancedAdminDashboard() {
       setError(null);
 
       // Fetch admin statistics
-      const statsResponse = await fetch(`${API_CONFIG.BASE_URL}/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${authService.getToken()}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!statsResponse.ok) {
-        throw new Error('Failed to fetch admin statistics');
-      }
-
-      const statsData = await statsResponse.json();
+      const statsData = await httpClient.getJson(getApiUrl('/admin/stats'));
       setStats(statsData);
 
       // Fetch users list
-      const usersResponse = await fetch(`${API_CONFIG.BASE_URL}/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${authService.getToken()}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!usersResponse.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const usersData = await usersResponse.json();
+      const usersData = await httpClient.getJson(getApiUrl('/admin/users'));
       setUsers(usersData.users || []);
 
     } catch (err) {
@@ -136,18 +115,7 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/admin/users/${selectedUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${authService.getToken()}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update user');
-      }
+      await httpClient.putJson(getApiUrl(`/admin/users/${selectedUser.id}`), updates);
 
       // Refresh users list
       await fetchAdminData();

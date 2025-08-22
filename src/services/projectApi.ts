@@ -46,7 +46,7 @@ export const projectApi = {
     });
     console.log('getPublicProjects: Response status:', response.status);
     console.log('getPublicProjects: Response ok:', response.ok);
-    
+
     const data = await handleApiResponse(response);
     console.log('getPublicProjects: Raw response data:', data);
 
@@ -71,9 +71,9 @@ export const projectApi = {
       method: 'GET',
       headers: addAuthHeaders()
     });
-    
+
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 response format
     if (data && data.success && data.data) {
       return data.data;
@@ -93,9 +93,9 @@ export const projectApi = {
       },
       body: JSON.stringify(project)
     });
-    
+
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 response format
     if (data && data.success && data.data) {
       return data.data;
@@ -115,9 +115,9 @@ export const projectApi = {
       },
       body: JSON.stringify(project)
     });
-    
+
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 response format
     if (data && data.success && data.data) {
       return data.data;
@@ -133,9 +133,9 @@ export const projectApi = {
       method: 'DELETE',
       headers: addAuthHeaders()
     });
-    
+
     const data = await handleApiResponse(response);
-    
+
     // Handle v2 response format - should return success confirmation
     if (data && data.success && data.data && data.data.deleted) {
       return; // Successfully deleted
@@ -150,12 +150,12 @@ export const projectApi = {
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId)), {
         headers: addAuthHeaders()
       });
-      
+
       // If endpoint doesn't exist (404), throw 501 to indicate not implemented
       if (response.status === 404) {
         throw new ApiError(501, 'La gestión de suscriptores de proyecto no está disponible en la versión actual de la API.');
       }
-      
+
       const data = await handleApiResponse(response);
 
       // Handle v2 API response format
@@ -205,7 +205,7 @@ export const projectApi = {
     const url = getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIPTION_UPDATE(projectId, subscriptionId));
     console.log('updateProjectSubscription URL:', url);
     console.log('updateProjectSubscription request body:', JSON.stringify(data));
-    
+
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
@@ -214,10 +214,10 @@ export const projectApi = {
       },
       body: JSON.stringify(data),
     });
-    
+
     console.log('updateProjectSubscription response status:', response.status);
     console.log('updateProjectSubscription response ok:', response.ok);
-    
+
     if (!response.ok) {
       // Get error details before handleApiResponse processes it
       const errorText = await response.text();
@@ -229,7 +229,7 @@ export const projectApi = {
         console.error('updateProjectSubscription error (not JSON):', errorText);
       }
     }
-    
+
     const result = await handleApiResponse(response);
 
     // Handle v2 API response format
@@ -245,7 +245,7 @@ export const projectApi = {
       method: 'DELETE',
       headers: addAuthHeaders()
     });
-    
+
     if (!response.ok) {
       throw new ApiError(response.status, 'Error al desuscribir persona del proyecto');
     }
@@ -295,7 +295,7 @@ export const projectApi = {
   async getAdminDashboard(): Promise<AdminDashboard> {
     try {
       const data = await httpClient.getJson(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_DASHBOARD));
-      
+
       // Handle v2 API response format: {success: true, data: {...}, version: "v2"}
       if (data && data.data) {
         return data.data; // v2 format
@@ -349,7 +349,7 @@ export const projectApi = {
       },
       body: JSON.stringify(person),
     });
-    
+
     const data = await handleApiResponse(response);
     return data.data; // v2 responses have data wrapped in a data field
   },
@@ -399,13 +399,13 @@ export const projectApi = {
     // Get current subscriptions for the person
     const currentSubscriptions = await this.getPersonSubscriptions(personId);
     const currentProjectIds = currentSubscriptions.map(sub => sub.projectId);
-    
+
     // Find projects to subscribe to (new ones)
     const toSubscribe = projectIds.filter(projectId => !currentProjectIds.includes(projectId));
-    
+
     // Find projects to unsubscribe from (removed ones)
     const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.projectId));
-    
+
     // Subscribe to new projects
     for (const projectId of toSubscribe) {
       try {
@@ -419,7 +419,7 @@ export const projectApi = {
         // Continue with other subscriptions even if one fails
       }
     }
-    
+
     // Unsubscribe from removed projects
     for (const subscription of toUnsubscribe) {
       try {

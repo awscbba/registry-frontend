@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { API_CONFIG } from '../config/api';
 import { projectApi } from '../services/projectApi';
+import { httpClient, getApiUrl } from '../services/httpClient';
 import type { PersonUpdate } from '../types/person';
 import PersonForm from './PersonForm';
 
@@ -79,22 +80,7 @@ export default function AdminDashboard() {
       setError(null);
 
       // Load dashboard stats
-      const token = authService.getToken();
-      const response = await fetch(`${API_CONFIG.BASE_URL}/v2/admin/dashboard`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('Access denied. Admin privileges required.');
-        }
-        throw new Error(`Failed to load admin data: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/v2/admin/dashboard'));
       
       if (data.success && data.data) {
         setStats({
@@ -114,19 +100,7 @@ export default function AdminDashboard() {
 
   const loadUsers = async () => {
     try {
-      const token = authService.getToken();
-      const response = await fetch(`${API_CONFIG.BASE_URL}/v2/admin/people`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to load users: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await httpClient.getJson(getApiUrl('/v2/admin/people'));
       if (data.success && data.data) {
         setUsers(data.data);
       }
