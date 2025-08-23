@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
-import { API_CONFIG } from '../../config/api';
 import { httpClient, getApiUrl } from '../../services/httpClient';
 import type { PersonUpdate } from '../../types/person';
 import PersonForm from '../PersonForm';
