@@ -158,9 +158,24 @@ export const projectApi = {
 
       const data = await handleApiResponse(response);
 
-      // Handle v2 API response format
-      if (data && data.data && data.data.subscribers) {
-        return data.data.subscribers; // v2 format
+      // Handle v2 API response format - backend returns subscriptions, we need to map to subscribers
+      if (data && data.data && Array.isArray(data.data)) {
+        // Map subscription data to subscriber format
+        return data.data.map((subscription: any) => ({
+          id: subscription.id,
+          personId: subscription.person_id || subscription.personId,
+          projectId: subscription.project_id || subscription.projectId,
+          status: subscription.status,
+          notes: subscription.notes || '',
+          subscribedAt: subscription.created_at || subscription.subscribedAt,
+          subscribedBy: subscription.subscribed_by || subscription.subscribedBy,
+          person: {
+            id: subscription.person_id || subscription.personId,
+            firstName: subscription.person_name ? subscription.person_name.split(' ')[0] : 'Unknown',
+            lastName: subscription.person_name ? subscription.person_name.split(' ').slice(1).join(' ') : '',
+            email: subscription.person_email || subscription.personEmail || 'unknown@example.com'
+          }
+        }));
       } else if (Array.isArray(data)) {
         return data; // Fallback
       } else {
@@ -177,6 +192,23 @@ export const projectApi = {
   },
 
   async subscribePersonToProject(projectId: string, personId: string, data: { subscribedBy?: string; notes?: string; status?: string } = {}): Promise<Subscription> {
+    // For project subscription endpoint, we need to provide person info
+    // First get the person details to include in the subscription
+    let personData;
+    try {
+      const person = await this.getPerson(personId);
+      personData = {
+        email: person.email,
+        name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.email
+      };
+    } catch (error) {
+      // If we can't get person details, use minimal data
+      personData = {
+        email: `person-${personId}@example.com`,
+        name: `Person ${personId}`
+      };
+    }
+
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBE(projectId)), {
       method: 'POST',
       headers: {
@@ -184,9 +216,8 @@ export const projectApi = {
         ...addAuthHeaders()
       },
       body: JSON.stringify({
-        personId,
+        person: personData,
         status: data.status || 'active',
-        subscribedBy: data.subscribedBy,
         notes: data.notes || ''
       }),
     });
@@ -286,9 +317,21 @@ export const projectApi = {
     }
   },
 
-  async deleteSubscription(_id: string): Promise<void> {
-    // Subscription deletion may not be available in the current API version
-    throw new ApiError(501, 'La eliminación de suscripciones no está disponible en la versión actual de la API.');
+  async deleteSubscription(id: string): Promise<void> {
+    const response = await fetch(getApiUrl(`/v2/subscriptions/${id}`), {
+      method: 'DELETE',
+      headers: addAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Error al eliminar suscripción');
+    }
+
+    // Handle v2 response format - should return success confirmation
+    const data = await handleApiResponse(response);
+    if (data && !data.success) {
+      throw new ApiError(500, 'Failed to delete subscription');
+    }
   },
 
   // Admin Dashboard

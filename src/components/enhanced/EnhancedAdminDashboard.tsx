@@ -85,11 +85,17 @@ export default function EnhancedAdminDashboard() {
 
       // Fetch admin statistics
       const statsData = await httpClient.getJson(getApiUrl('/admin/stats'));
-      setStats(statsData);
+      const statsOverview = statsData.data?.overview || {};
+      setStats({
+        totalUsers: statsOverview.total_users || 0,
+        totalProjects: statsOverview.total_projects || 0,
+        totalSubscriptions: statsOverview.total_subscriptions || 0,
+        activeUsers: statsOverview.active_users || 0,
+      });
 
       // Fetch users list
       const usersData = await httpClient.getJson(getApiUrl('/admin/users'));
-      setUsers(usersData.users || []);
+      setUsers(usersData.data?.users || usersData.users || []);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
@@ -115,7 +121,7 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
-      await httpClient.putJson(getApiUrl(`/admin/users/${selectedUser.id}`), updates);
+      await httpClient.putJson(getApiUrl(`/v2/admin/users/${selectedUser.id}`), updates);
 
       // Refresh users list
       await fetchAdminData();

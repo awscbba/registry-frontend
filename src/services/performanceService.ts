@@ -18,18 +18,18 @@ class PerformanceService {
 
   /**
    * Get current performance metrics
-   * Endpoint: GET /admin/performance/metrics
+   * Endpoint: GET /admin/performance/dashboard
    */
   async getMetrics(): Promise<PerformanceMetrics> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/metrics'));
+      const data = await httpClient.getJson(getApiUrl('/admin/performance/dashboard'));
       return {
-        responseTime: data.average_response_time || 0,
-        cacheHitRate: data.cache_hit_rate || 0,
-        slowestEndpoints: data.slowest_endpoints || [],
-        systemHealth: data.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
-        activeRequests: data.active_requests || 0,
-        timestamp: data.timestamp || new Date().toISOString(),
+        responseTime: data.data?.overview?.average_response_time || 0,
+        cacheHitRate: data.data?.cache?.hit_rate || 0,
+        slowestEndpoints: data.data?.slowest_endpoints || [],
+        systemHealth: data.data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
+        activeRequests: data.data?.overview?.active_requests || 0,
+        timestamp: data.data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error fetching performance metrics:', error);
@@ -90,10 +90,10 @@ class PerformanceService {
     try {
       const data = await httpClient.getJson(getApiUrl('/admin/performance/health'));
       return {
-        status: data.status || 'healthy',
-        score: data.score || 100,
-        issues: data.issues || [],
-        uptime: data.uptime || 0,
+        status: data.data?.status || 'healthy',
+        score: data.data?.score || 100,
+        issues: data.data?.issues || [],
+        uptime: data.data?.uptime || 0,
       };
     } catch (error) {
       console.error('Error fetching health status:', error);
