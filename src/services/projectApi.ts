@@ -201,7 +201,7 @@ export const projectApi = {
         email: person.email,
         name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.email
       };
-    } catch (error) {
+    } catch {
       // If we can't get person details, use minimal data
       personData = {
         email: `person-${personId}@example.com`,
