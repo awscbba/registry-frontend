@@ -96,7 +96,7 @@ export default function EnhancedAdminDashboard() {
       });
 
       // Fetch users list
-      const usersResponse = await httpClient.getJson(getApiUrl('/admin/users')) as any;
+      const usersResponse = await httpClient.getJson(getApiUrl('/v2/admin/users')) as any;
       // Handle both v2 response format and direct response format
       const usersList = usersResponse.success ? 
         (usersResponse.data?.users || usersResponse.data || []) : 
