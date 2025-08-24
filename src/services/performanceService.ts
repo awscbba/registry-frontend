@@ -22,14 +22,15 @@ class PerformanceService {
    */
   async getMetrics(): Promise<PerformanceMetrics> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/dashboard'));
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/dashboard')) as any;
+      const data = response.success ? response.data : response;
       return {
-        responseTime: data.data?.overview?.average_response_time || 0,
-        cacheHitRate: data.data?.cache?.hit_rate || 0,
-        slowestEndpoints: data.data?.slowest_endpoints || [],
-        systemHealth: data.data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
-        activeRequests: data.data?.overview?.active_requests || 0,
-        timestamp: data.data?.timestamp || new Date().toISOString(),
+        responseTime: data?.overview?.average_response_time || 0,
+        cacheHitRate: data?.cache?.hit_rate || 0,
+        slowestEndpoints: data?.slowest_endpoints || [],
+        systemHealth: data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
+        activeRequests: data?.overview?.active_requests || 0,
+        timestamp: data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error fetching performance metrics:', error);
@@ -43,23 +44,24 @@ class PerformanceService {
    */
   async getCacheStats(): Promise<CacheStats> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/cache/stats'));
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/cache/stats')) as any;
+      const data = response.success ? response.data : response;
       return {
-        hitRate: data.hit_rate || 0,
-        missRate: data.miss_rate || 0,
-        totalRequests: data.total_requests || 0,
-        cacheSize: data.cache_size || 0,
+        hitRate: data?.hit_rate || 0,
+        missRate: data?.miss_rate || 0,
+        totalRequests: data?.total_requests || 0,
+        cacheSize: data?.cache_size || 0,
         ttlStats: {
-          averageTTL: data.ttl_stats?.average_ttl || 0,
-          expiredKeys: data.ttl_stats?.expired_keys || 0,
-          activeKeys: data.ttl_stats?.active_keys || 0,
-          memoryUsage: data.ttl_stats?.memory_usage || 0,
+          averageTTL: data?.ttl_stats?.average_ttl || 0,
+          expiredKeys: data?.ttl_stats?.expired_keys || 0,
+          activeKeys: data?.ttl_stats?.active_keys || 0,
+          memoryUsage: data?.ttl_stats?.memory_usage || 0,
         },
         performance: {
-          averageHitTime: data.performance?.average_hit_time || 0,
-          averageMissTime: data.performance?.average_miss_time || 0,
-          performanceImpact: data.performance?.performance_impact || 0,
-          efficiency: data.performance?.efficiency || 0,
+          averageHitTime: data?.performance?.average_hit_time || 0,
+          averageMissTime: data?.performance?.average_miss_time || 0,
+          performanceImpact: data?.performance?.performance_impact || 0,
+          efficiency: data?.performance?.efficiency || 0,
         },
       };
     } catch (error) {
@@ -74,8 +76,9 @@ class PerformanceService {
    */
   async getSlowestEndpoints(): Promise<EndpointMetric[]> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/slowest-endpoints'));
-      return data.endpoints || [];
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/slowest-endpoints')) as any;
+      const data = response.success ? response.data : response;
+      return data?.endpoints || [];
     } catch (error) {
       console.error('Error fetching slowest endpoints:', error);
       throw error;
@@ -88,12 +91,13 @@ class PerformanceService {
    */
   async getHealthStatus(): Promise<HealthStatus> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/health'));
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/health')) as any;
+      const data = response.success ? response.data : response;
       return {
-        status: data.data?.status || 'healthy',
-        score: data.data?.score || 100,
-        issues: data.data?.issues || [],
-        uptime: data.data?.uptime || 0,
+        status: data?.status || data?.system_status || 'healthy',
+        score: data?.score || data?.performance?.score || 100,
+        issues: data?.issues || [],
+        uptime: data?.uptime || 0,
       };
     } catch (error) {
       console.error('Error fetching health status:', error);
@@ -107,18 +111,19 @@ class PerformanceService {
    */
   async getAnalytics(): Promise<PerformanceAnalytics> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/analytics'));
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/analytics')) as any;
+      const data = response.success ? response.data : response;
       return {
-        summary: data.summary || {
+        summary: data?.summary || {
           totalRequests: 0,
           averageResponseTime: 0,
           overallCacheHitRate: 0,
           systemHealthScore: 100,
           performanceGrade: 'A',
         },
-        trends: data.trends || [],
-        recommendations: data.recommendations || [],
-        alerts: data.alerts || [],
+        trends: data?.trends || [],
+        recommendations: data?.recommendations || [],
+        alerts: data?.alerts || [],
       };
     } catch (error) {
       console.error('Error fetching performance analytics:', error);
@@ -132,11 +137,12 @@ class PerformanceService {
    */
   async getPerformanceHistory(timeRange: string = '24h'): Promise<PerformanceHistory> {
     try {
-      const data = await httpClient.getJson(getApiUrl(`/admin/performance/history?range=${timeRange}`));
+      const response = await httpClient.getJson(getApiUrl(`/admin/performance/history?range=${timeRange}`)) as any;
+      const data = response.success ? response.data : response;
       return {
-        timeRange: data.time_range || timeRange,
-        dataPoints: data.data_points || [],
-        trends: data.trends || [],
+        timeRange: data?.time_range || timeRange,
+        dataPoints: data?.data_points || [],
+        trends: data?.trends || [],
       };
     } catch (error) {
       console.error('Error fetching performance history:', error);
@@ -151,10 +157,10 @@ class PerformanceService {
   async clearCache(cacheType?: string): Promise<{ success: boolean; message: string }> {
     try {
       const body = cacheType ? { cache_type: cacheType } : {};
-      const data = await httpClient.postJson(getApiUrl('/admin/performance/cache/clear'), body);
+      const response = await httpClient.postJson(getApiUrl('/admin/performance/cache/clear'), body) as any;
       return {
-        success: data.success || false,
-        message: data.message || 'Cache cleared successfully',
+        success: response.success || false,
+        message: response.message || response.data?.message || 'Cache cleared successfully',
       };
     } catch (error) {
       console.error('Error clearing cache:', error);
@@ -168,10 +174,11 @@ class PerformanceService {
    */
   async getCacheHealth(): Promise<{ status: string; details: Record<string, unknown> }> {
     try {
-      const data = await httpClient.getJson(getApiUrl('/admin/performance/cache/health'));
+      const response = await httpClient.getJson(getApiUrl('/admin/performance/cache/health')) as any;
+      const data = response.success ? response.data : response;
       return {
-        status: data.status || 'healthy',
-        details: data.details || {},
+        status: data?.status || 'healthy',
+        details: data?.details || {},
       };
     } catch (error) {
       console.error('Error fetching cache health:', error);

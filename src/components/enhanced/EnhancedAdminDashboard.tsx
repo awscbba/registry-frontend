@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
 import { httpClient, getApiUrl } from '../../services/httpClient';
 import type { PersonUpdate } from '../../types/person';
@@ -83,8 +83,11 @@ export default function EnhancedAdminDashboard() {
       setError(null);
 
       // Fetch admin statistics
-      const statsData = await httpClient.getJson(getApiUrl('/admin/stats'));
-      const statsOverview = statsData.data?.overview || {};
+      const statsResponse = await httpClient.getJson(getApiUrl('/admin/stats')) as any;
+      // Handle v2 response format: {success: true, data: {overview: {...}}}
+      const statsOverview = statsResponse.success ? 
+        (statsResponse.data?.overview || {}) : 
+        (statsResponse.overview || statsResponse.data?.overview || {});
       setStats({
         totalUsers: statsOverview.total_users || 0,
         totalProjects: statsOverview.total_projects || 0,
@@ -93,8 +96,12 @@ export default function EnhancedAdminDashboard() {
       });
 
       // Fetch users list
-      const usersData = await httpClient.getJson(getApiUrl('/admin/users'));
-      setUsers(usersData.data?.users || usersData.users || []);
+      const usersResponse = await httpClient.getJson(getApiUrl('/admin/users')) as any;
+      // Handle both v2 response format and direct response format
+      const usersList = usersResponse.success ? 
+        (usersResponse.data?.users || usersResponse.data || []) : 
+        (usersResponse.users || usersResponse.data || usersResponse || []);
+      setUsers(Array.isArray(usersList) ? usersList : []);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');

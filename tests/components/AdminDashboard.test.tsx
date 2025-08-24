@@ -1,12 +1,12 @@
 /**
- * AdminDashboard Component Tests
+ * EnhancedAdminDashboard Component Tests
  * 
  * These tests would have caught the person update workflow issues
  */
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import AdminDashboard from '../../src/components/AdminDashboard';
+import EnhancedAdminDashboard from '../../src/components/enhanced/EnhancedAdminDashboard';
 import { projectApi } from '../../src/services/projectApi';
 
 // Mock the projectApi
@@ -34,7 +34,7 @@ jest.mock('../../src/services/authStub', () => ({
 
 const mockProjectApi = projectApi as jest.Mocked<typeof projectApi>;
 
-describe('AdminDashboard', () => {
+describe('EnhancedAdminDashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
@@ -73,7 +73,7 @@ describe('AdminDashboard', () => {
   });
 
   it('should render dashboard with correct data', async () => {
-    render(<AdminDashboard />);
+    render(<EnhancedAdminDashboard />);
     
     // Wait for dashboard to load
     await waitFor(() => {
@@ -114,7 +114,7 @@ describe('AdminDashboard', () => {
 
     mockProjectApi.updatePerson.mockResolvedValue(updatedPerson);
 
-    render(<AdminDashboard />);
+    render(<EnhancedAdminDashboard />);
     
     // Wait for component to load
     await waitFor(() => {
@@ -146,7 +146,7 @@ describe('AdminDashboard', () => {
     // Mock API error
     mockProjectApi.getAdminDashboard.mockRejectedValue(new Error('API Error'));
     
-    render(<AdminDashboard />);
+    render(<EnhancedAdminDashboard />);
     
     // Should show error state
     await waitFor(() => {
@@ -155,7 +155,7 @@ describe('AdminDashboard', () => {
   });
 
   it('should not make API calls with undefined parameters', async () => {
-    render(<AdminDashboard />);
+    render(<EnhancedAdminDashboard />);
     
     await waitFor(() => {
       expect(screen.getByText('Panel de Administración')).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe('AdminDashboard', () => {
   });
 
   it('should use v2 API endpoints', async () => {
-    render(<AdminDashboard />);
+    render(<EnhancedAdminDashboard />);
     
     await waitFor(() => {
       expect(mockProjectApi.getAdminDashboard).toHaveBeenCalled();
