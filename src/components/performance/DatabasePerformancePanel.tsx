@@ -21,7 +21,7 @@ const DatabasePerformancePanel: React.FC<DatabasePerformancePanelProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch database metrics');
-      console.error('Database metrics error:', err);
+      logger.error('Database metrics error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

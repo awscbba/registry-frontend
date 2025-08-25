@@ -22,7 +22,7 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
       setPerformanceHistory(history);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch performance history');
-      console.error('Performance history error:', err);
+      logger.error('Performance history error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

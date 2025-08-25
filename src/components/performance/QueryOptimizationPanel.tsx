@@ -21,7 +21,7 @@ const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
       setRecommendations(data.slice(0, maxRecommendations));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
-      console.error('Recommendations error:', err);
+      logger.error('Recommendations error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

@@ -61,7 +61,7 @@ export function createSubmitHandler<T extends FormData>(
       const result = validation(formData);
       if (!result.isValid) {
         // Handle validation errors (could be enhanced with error state)
-        console.warn('Form validation failed:', result.errors);
+        // Form validation failed - errors are handled by the form component
         return;
       }
     }

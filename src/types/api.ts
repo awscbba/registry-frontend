@@ -1,3 +1,7 @@
+import { getServiceLogger } from '../utils/logger';
+
+const logger = getServiceLogger('ApiError');
+
 /**
  * Shared API Error class for consistent error handling across services
  */
@@ -23,7 +27,10 @@ export async function handleApiResponse(response: Response): Promise<any> {
     
     // Handle authentication errors specifically
     if (response.status === 401) {
-      console.warn('Authentication failed - token expired or invalid');
+      logger.warn('Authentication failed - token expired or invalid', { 
+        status: response.status, 
+        event_type: 'auth_failed' 
+      });
       errorMessage = 'Session expired. Please login again.';
       
       // Automatically logout user and redirect to login

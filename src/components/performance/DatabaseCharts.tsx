@@ -22,7 +22,7 @@ const DatabaseCharts: React.FC<DatabaseChartsProps> = ({
       setOptimizationHistory(history);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch optimization history');
-      console.error('Database history error:', err);
+      logger.error('Database history error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

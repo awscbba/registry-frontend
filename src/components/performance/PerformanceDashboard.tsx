@@ -31,7 +31,7 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch performance data');
-      console.error('Performance dashboard error:', err);
+      logger.error('Performance dashboard error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

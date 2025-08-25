@@ -12,8 +12,11 @@ import { API_CONFIG, getApiUrl } from '../config/api';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
+import { getApiLogger } from '../utils/logger';
 
 export { ApiError };
+
+const logger = getApiLogger('projectApi');
 
 export const projectApi = {
   // Project Management (Admin only)
@@ -31,37 +34,36 @@ export const projectApi = {
     } else if (data && data.projects && Array.isArray(data.projects)) {
       return data.projects; // Legacy object format (backward compatibility)
     } else {
-      console.error('Unexpected API response format:', data);
+      logger.error('Unexpected API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
     }
   },
 
   // Public project access (no authentication required)
   async getPublicProjects(): Promise<Project[]> {
-    console.log('getPublicProjects: Making API call...');
+    logger.logApiRequest('GET', API_CONFIG.ENDPOINTS.PROJECTS);
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECTS), {
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    console.log('getPublicProjects: Response status:', response.status);
-    console.log('getPublicProjects: Response ok:', response.ok);
+    logger.logApiResponse('GET', API_CONFIG.ENDPOINTS.PROJECTS, response.status);
 
     const data = await handleApiResponse(response);
-    console.log('getPublicProjects: Raw response data:', data);
+    logger.debug('Raw response data received', { data_type: typeof data, has_data: !!data });
 
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
-      console.log('getPublicProjects: Using v2 format, returning data.data');
+      logger.debug('Using v2 API response format', { count: data.data.length });
       return data.data; // v2 format
     } else if (Array.isArray(data)) {
-      console.log('getPublicProjects: Using legacy array format');
+      logger.debug('Using legacy array format', { count: data.length });
       return data; // Legacy array format (backward compatibility)
     } else if (data && data.projects && Array.isArray(data.projects)) {
-      console.log('getPublicProjects: Using legacy object format');
+      logger.debug('Using legacy object format', { count: data.projects.length });
       return data.projects; // Legacy object format (backward compatibility)
     } else {
-      console.error('getPublicProjects: Unexpected API response format:', data);
+      logger.error('Unexpected public projects API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
     }
   },
@@ -187,7 +189,7 @@ export const projectApi = {
       } else if (Array.isArray(data)) {
         return data; // Fallback
       } else {
-        console.error('Unexpected project subscribers API response format:', data);
+        logger.error('Unexpected project subscribers API response format', { data_type: typeof data, data });
         return [];
       }
     } catch (error) {
@@ -240,10 +242,12 @@ export const projectApi = {
   },
 
   async updateProjectSubscription(projectId: string, subscriptionId: string, data: { status?: string; notes?: string }): Promise<Subscription> {
-    console.log('updateProjectSubscription called with:', { projectId, subscriptionId, data });
     const url = getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIPTION_UPDATE(projectId, subscriptionId));
-    console.log('updateProjectSubscription URL:', url);
-    console.log('updateProjectSubscription request body:', JSON.stringify(data));
+    logger.logApiRequest('PUT', url, { 
+      project_id: projectId, 
+      subscription_id: subscriptionId,
+      update_data: data
+    });
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -254,18 +258,17 @@ export const projectApi = {
       body: JSON.stringify(data),
     });
 
-    console.log('updateProjectSubscription response status:', response.status);
-    console.log('updateProjectSubscription response ok:', response.ok);
+    logger.logApiResponse('PUT', url, response.status);
 
     if (!response.ok) {
       // Get error details before handleApiResponse processes it
       const errorText = await response.text();
-      console.error('updateProjectSubscription error response:', errorText);
+      logger.error('Update project subscription error response', { error_text: errorText });
       try {
         const errorJson = JSON.parse(errorText);
-        console.error('updateProjectSubscription error JSON:', errorJson);
+        logger.error('Update project subscription error JSON', { error_json: errorJson });
       } catch {
-        console.error('updateProjectSubscription error (not JSON):', errorText);
+        logger.error('Update project subscription error (not JSON)', { error_text: errorText });
       }
     }
 
@@ -302,7 +305,7 @@ export const projectApi = {
     } else if (Array.isArray(data)) {
       return data; // Legacy format (backward compatibility)
     } else {
-      console.error('Unexpected subscriptions API response format:', data);
+      logger.error('Unexpected subscriptions API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
     }
   },
@@ -354,7 +357,7 @@ export const projectApi = {
         return data; // Legacy format (backward compatibility)
       }
     } catch (error) {
-      console.error('Error fetching admin dashboard:', error);
+      logger.error('Error fetching admin dashboard', { error: error.message }, error);
       throw error;
     }
   },
@@ -395,7 +398,7 @@ export const projectApi = {
       
       return []; // Fallback to empty array
     } catch (error) {
-      console.error('Error fetching people:', error);
+      logger.error('Error fetching people', { error: error.message }, error);
       return []; // Return empty array on error
     }
   },
@@ -507,7 +510,11 @@ export const projectApi = {
           notes: 'Subscribed via admin panel'
         });
       } catch (error) {
-        console.error(`Failed to subscribe person ${personId} to project ${projectId}:`, error);
+        logger.error('Failed to subscribe person to project', { 
+          person_id: personId, 
+          project_id: projectId, 
+          error: error.message 
+        }, error);
         // Continue with other subscriptions even if one fails
       }
     }
@@ -517,7 +524,11 @@ export const projectApi = {
       try {
         await this.unsubscribePersonFromProject(subscription.projectId, subscription.id);
       } catch (error) {
-        console.error(`Failed to unsubscribe person ${personId} from project ${subscription.projectId}:`, error);
+        logger.error('Failed to unsubscribe person from project', { 
+          person_id: personId, 
+          project_id: subscription.projectId, 
+          error: error.message 
+        }, error);
         // Continue with other unsubscriptions even if one fails
       }
     }

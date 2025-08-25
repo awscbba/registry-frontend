@@ -6,6 +6,7 @@
  */
 
 import { API_CONFIG } from '../config/api';
+import { authLogger } from '../utils/logger';
 
 export interface User {
   id: string;
@@ -75,7 +76,7 @@ class AuthService {
       try {
         this.user = JSON.parse(userDataStr);
       } catch (error) {
-        console.warn('Failed to parse stored user data:', error);
+        authLogger.warn('Failed to parse stored user data', { error: error.message }, error);
         this.clearStorage();
       }
     }
@@ -167,7 +168,7 @@ class AuthService {
         };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      authLogger.error('Login error', { error: error.message }, error);
       return {
         success: false,
         message: 'Error de conexión. Por favor, intenta nuevamente.',
@@ -236,7 +237,7 @@ class AuthService {
       
       return Math.max(0, remaining);
     } catch (error) {
-      console.warn('Failed to decode token for time remaining:', error);
+      authLogger.warn('Failed to decode token for time remaining', { error: error.message }, error);
       return 0;
     }
   }
@@ -294,7 +295,7 @@ class AuthService {
         return false;
       }
     } catch (error) {
-      console.warn('Failed to refresh user data:', error);
+      authLogger.warn('Failed to refresh user data', { error: error.message }, error);
       return false;
     }
     
@@ -332,7 +333,7 @@ class AuthService {
     }
 
     if (!this.refreshToken) {
-      console.warn('No refresh token available');
+      authLogger.warn('No refresh token available', { event_type: 'refresh_token_missing' });
       this.logout();
       return null;
     }
@@ -359,16 +360,19 @@ class AuthService {
         const data = await response.json();
         this.token = data.access_token;
         this.saveToStorage();
-        console.log('Token refreshed successfully');
+        authLogger.info('Token refreshed successfully', { event_type: 'token_refresh' });
         return this.token;
       } else {
-        console.warn('Token refresh failed:', response.status);
+        authLogger.warn('Token refresh failed', { 
+          status: response.status, 
+          event_type: 'token_refresh_failed' 
+        });
         // Refresh token is invalid or expired, logout user
         this.logout();
         return null;
       }
     } catch (error) {
-      console.error('Token refresh error:', error);
+      authLogger.error('Token refresh error', { error: error.message }, error);
       // On network error, don't logout but return null
       return null;
     }
@@ -389,7 +393,7 @@ class AuthService {
     }
 
     // Token is expired or about to expire, try to refresh
-    console.log('Token expired or expiring soon, refreshing...');
+    authLogger.info('Token expired or expiring soon, refreshing...', { event_type: 'token_expiry_detected' });
     return await this.refreshAccessToken();
   }
 
@@ -412,7 +416,7 @@ class AuthService {
       }
       return true;
     } catch (error) {
-      console.warn('Token validation failed:', error);
+      authLogger.warn('Token validation failed', { error: error.message }, error);
       // On network error, don't logout but return false
       return false;
     }
@@ -433,7 +437,7 @@ class AuthService {
 
       return data.subscriptions || [];
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
+      authLogger.error('Error fetching subscriptions', { error: error.message }, error);
       throw error;
     }
   }
@@ -454,7 +458,7 @@ class AuthService {
         notes: notes || undefined
       });
     } catch (error) {
-      console.error('Error subscribing to project:', error);
+      authLogger.error('Error subscribing to project', { error: error.message }, error);
       throw error;
     }
   }
@@ -471,7 +475,7 @@ class AuthService {
       const subscriptions = await this.getUserSubscriptions();
       return subscriptions.find(sub => sub.projectId === projectId) || null;
     } catch (error) {
-      console.warn('Failed to check project subscription:', error);
+      authLogger.warn('Failed to check project subscription', { error: error.message }, error);
       return null;
     }
   }
@@ -492,7 +496,7 @@ class AuthService {
         message: data.message,
       };
     } catch (error) {
-      console.error('Error requesting password reset:', error);
+      authLogger.error('Error requesting password reset', { error: error.message }, error);
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
@@ -515,7 +519,7 @@ class AuthService {
         expires_at: data.expires_at,
       };
     } catch (error) {
-      console.error('Error validating reset token:', error);
+      authLogger.error('Error validating reset token', { error: error.message }, error);
       return { valid: false };
     }
   }
@@ -540,7 +544,7 @@ class AuthService {
         message: data.message,
       };
     } catch (error) {
-      console.error('Error resetting password:', error);
+      authLogger.error('Error resetting password', { error: error.message }, error);
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',

@@ -7,6 +7,7 @@
 
 import { API_CONFIG } from '../config/api';
 import { authService } from './authService';
+import { getServiceLogger } from '../utils/logger';
 
 export interface HttpClientOptions {
   skipAuth?: boolean;
@@ -15,6 +16,8 @@ export interface HttpClientOptions {
   headers?: Record<string, string>;
   body?: string;
 }
+
+const logger = getServiceLogger('httpClient');
 
 export class HttpClient {
   private static instance: HttpClient;
@@ -57,7 +60,7 @@ export class HttpClient {
 
     // Handle 401 responses with token refresh (if not already refreshed)
     if (response.status === 401 && !skipAuth && !skipRefresh) {
-      // console.log('Received 401, attempting token refresh...');
+      logger.info('Received 401, attempting token refresh', { event_type: 'token_refresh_attempt' });
       
       const newToken = await authService.refreshAccessToken();
       if (newToken) {
@@ -70,7 +73,7 @@ export class HttpClient {
         });
       } else {
         // Refresh failed, redirect to login
-        // console.log('Token refresh failed, redirecting to login');
+        logger.warn('Token refresh failed, redirecting to login', { event_type: 'token_refresh_failed' });
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }

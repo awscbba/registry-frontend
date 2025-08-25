@@ -21,7 +21,7 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
       setCacheStats(stats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch cache stats');
-      console.error('Cache stats error:', err);
+      logger.error('Cache stats error', { error: err.message }, err);
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,8 @@
  * Helps migrate users from old authentication systems to the new unified system.
  */
 
+import { authLogger } from './logger';
+
 /**
  * Migrate legacy authentication data to new unified format
  */
@@ -19,7 +21,7 @@ export function migrateLegacyAuth(): boolean {
   const legacyUserEmail = localStorage.getItem('userEmail');
   
   if (legacyAuthToken && !localStorage.getItem('userAuthToken')) {
-    console.log('Migrating legacy authToken to userAuthToken');
+    authLogger.info('Migrating legacy authToken to userAuthToken', { event_type: 'auth_migration' });
     localStorage.setItem('userAuthToken', legacyAuthToken);
     
     // If we have userEmail, create userData object
@@ -32,7 +34,7 @@ export function migrateLegacyAuth(): boolean {
         id: ''
       };
       localStorage.setItem('userData', JSON.stringify(userData));
-      console.log('Migrated legacy userEmail to userData');
+      authLogger.info('Migrated legacy userEmail to userData', { event_type: 'user_data_migration' });
     }
     
     migrated = true;
@@ -43,7 +45,7 @@ export function migrateLegacyAuth(): boolean {
   const legacyCurrentUser = localStorage.getItem('current_user');
   
   if (legacyAdminToken && !localStorage.getItem('userAuthToken')) {
-    console.log('Migrating legacy admin auth_token to userAuthToken');
+    authLogger.info('Migrating legacy admin auth_token to userAuthToken', { event_type: 'admin_auth_migration' });
     localStorage.setItem('userAuthToken', legacyAdminToken);
     
     if (legacyCurrentUser) {
@@ -52,9 +54,9 @@ export function migrateLegacyAuth(): boolean {
         // Mark as admin if migrating from admin system
         userData.isAdmin = true;
         localStorage.setItem('userData', JSON.stringify(userData));
-        console.log('Migrated legacy admin user data');
+        authLogger.info('Migrated legacy admin user data', { event_type: 'admin_data_migration' });
       } catch (error) {
-        console.warn('Failed to parse legacy admin user data:', error);
+        authLogger.warn('Failed to parse legacy admin user data', { error: error.message }, error);
       }
     }
     
@@ -63,7 +65,7 @@ export function migrateLegacyAuth(): boolean {
 
   // Clean up legacy keys after successful migration
   if (migrated) {
-    console.log('Cleaning up legacy authentication keys');
+    authLogger.info('Cleaning up legacy authentication keys', { event_type: 'auth_cleanup' });
     localStorage.removeItem('authToken');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('auth_token');

@@ -10,6 +10,9 @@ import type {
   HealthStatus
 } from '../types/performance';
 import { httpClient, getApiUrl } from './httpClient';
+import { getServiceLogger } from '../utils/logger';
+
+const logger = getServiceLogger('PerformanceService');
 
 class PerformanceService {
   constructor() {
@@ -33,7 +36,7 @@ class PerformanceService {
         timestamp: data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
+      logger.error('Error fetching performance metrics', { error: error.message }, error);
       throw error;
     }
   }
@@ -65,7 +68,7 @@ class PerformanceService {
         },
       };
     } catch (error) {
-      console.error('Error fetching cache stats:', error);
+      logger.error('Error fetching cache stats', { error: error.message }, error);
       throw error;
     }
   }
@@ -80,7 +83,7 @@ class PerformanceService {
       const data = response.success ? response.data : response;
       return data?.endpoints || [];
     } catch (error) {
-      console.error('Error fetching slowest endpoints:', error);
+      logger.error('Error fetching slowest endpoints', { error: error.message }, error);
       throw error;
     }
   }
@@ -100,7 +103,7 @@ class PerformanceService {
         uptime: data?.uptime || 0,
       };
     } catch (error) {
-      console.error('Error fetching health status:', error);
+      logger.error('Error fetching health status', { error: error.message }, error);
       throw error;
     }
   }
@@ -126,7 +129,7 @@ class PerformanceService {
         alerts: data?.alerts || [],
       };
     } catch (error) {
-      console.error('Error fetching performance analytics:', error);
+      logger.error('Error fetching performance analytics', { error: error.message }, error);
       throw error;
     }
   }
@@ -145,7 +148,7 @@ class PerformanceService {
         trends: data?.trends || [],
       };
     } catch (error) {
-      console.error('Error fetching performance history:', error);
+      logger.error('Error fetching performance history', { error: error.message }, error);
       throw error;
     }
   }
@@ -163,7 +166,7 @@ class PerformanceService {
         message: response.message || response.data?.message || 'Cache cleared successfully',
       };
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      logger.error('Error clearing cache', { error: error.message }, error);
       throw error;
     }
   }
@@ -181,7 +184,7 @@ class PerformanceService {
         details: data?.details || {},
       };
     } catch (error) {
-      console.error('Error fetching cache health:', error);
+      logger.error('Error fetching cache health', { error: error.message }, error);
       throw error;
     }
   }

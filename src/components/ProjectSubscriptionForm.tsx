@@ -88,7 +88,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       
       setProject(matchingProject);
     } catch (err) {
-      console.error('Error loading project:', err);
+      logger.error('Error loading project', { project_id: projectId, error: err.message }, err);
       setError('Error al cargar el proyecto');
     } finally {
       setIsLoading(false);

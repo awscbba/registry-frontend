@@ -8,6 +8,9 @@ import type {
   ConnectionPoolMetrics,
   Recommendation
 } from '../types/database';
+import { getServiceLogger } from '../utils/logger';
+
+const logger = getServiceLogger('databaseService');
 
 class DatabaseService {
   private baseUrl: string;
@@ -60,7 +63,7 @@ class DatabaseService {
         timestamp: data.timestamp || new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching database metrics:', error);
+      logger.error('Error fetching database metrics', { error: error.message }, error);
       throw error;
     }
   }
@@ -86,7 +89,7 @@ class DatabaseService {
       const data = await response.json();
       return data.recommendations || [];
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      logger.error('Error fetching recommendations', { error: error.message }, error);
       throw error;
     }
   }
@@ -112,7 +115,7 @@ class DatabaseService {
       const data = await response.json();
       return data.pools || [];
     } catch (error) {
-      console.error('Error fetching connection pool status:', error);
+      logger.error('Error fetching connection pool status', { error: error.message }, error);
       throw error;
     }
   }
@@ -138,7 +141,7 @@ class DatabaseService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching query analysis:', error);
+      logger.error('Error fetching query analysis', { error: error.message }, error);
       throw error;
     }
   }
@@ -168,7 +171,7 @@ class DatabaseService {
         trends: data.trends || [],
       };
     } catch (error) {
-      console.error('Error fetching optimization history:', error);
+      logger.error('Error fetching optimization history', { error: error.message }, error);
       throw error;
     }
   }
@@ -198,7 +201,7 @@ class DatabaseService {
         message: data.message || 'Optimization applied successfully',
       };
     } catch (error) {
-      console.error('Error applying optimization:', error);
+      logger.error('Error applying optimization', { error: error.message }, error);
       throw error;
     }
   }

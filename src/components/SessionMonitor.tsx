@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { authService } from '../services/authService';
+import { authLogger } from '../utils/logger';
 
 interface SessionMonitorProps {
   warningThreshold?: number; // Show warning when this many seconds remain (default: 5 minutes)
@@ -7,10 +8,10 @@ interface SessionMonitorProps {
   onWarning?: (timeRemaining: number) => void; // Callback when warning threshold is reached
 }
 
-export default function SessionMonitor({ 
+export default function SessionMonitor({
   warningThreshold = 300, // 5 minutes
   onSessionExpired,
-  onWarning 
+  onWarning,
 }: SessionMonitorProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [showWarning, setShowWarning] = useState(false);
@@ -42,7 +43,9 @@ export default function SessionMonitor({
 
       // Auto-logout if token expired
       if (remaining <= 0) {
-        console.log('Session expired, logging out automatically');
+        authLogger.info('Session expired, logging out automatically', {
+          event_type: 'session_expired',
+        });
         authService.forceLogout();
         if (onSessionExpired) {
           onSessionExpired();
@@ -69,7 +72,7 @@ export default function SessionMonitor({
     // In a real implementation, you might refresh the token here
     // For now, we'll just hide the warning
     setShowWarning(false);
-    console.log('Session extension requested - implement token refresh here');
+    authLogger.info('Session extension requested', { event_type: 'session_extension_requested' });
   };
 
   if (!showWarning) {
@@ -85,10 +88,7 @@ export default function SessionMonitor({
           <p>Your session will expire in {formatTime(timeRemaining)}. Save your work.</p>
         </div>
         <div className="warning-actions">
-          <button 
-            onClick={handleExtendSession}
-            className="btn btn-primary btn-sm"
-          >
+          <button onClick={handleExtendSession} className="btn btn-primary btn-sm">
             Continue Session
           </button>
         </div>

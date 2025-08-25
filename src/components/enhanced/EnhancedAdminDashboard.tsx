@@ -18,6 +18,7 @@ import ConnectionPoolMonitor from '../performance/ConnectionPoolMonitor';
 import DatabaseCharts from '../performance/DatabaseCharts';
 import performanceService, { PerformanceService } from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
+import { adminLogger } from '../../utils/logger';
 
 interface AdminStats {
   totalUsers: number;
@@ -111,12 +112,18 @@ export default function EnhancedAdminDashboard() {
 
       // Fetch projects list
       const projectsList = await projectApi.getAllProjects();
-      console.log('Fetched projects:', projectsList.length, 'projects');
+      adminLogger.info('Fetched projects for admin dashboard', { 
+        count: projectsList.length,
+        event_type: 'data_fetch'
+      });
       setProjects(projectsList);
 
       // Fetch people list for PersonList component
       const peopleList = await projectApi.getAllPeople();
-      console.log('Fetched people:', peopleList.length, 'people');
+      adminLogger.info('Fetched people for admin dashboard', { 
+        count: peopleList.length,
+        event_type: 'data_fetch'
+      });
       setPeople(peopleList);
 
     } catch (err) {
@@ -168,12 +175,15 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
-      console.log('Deleting project:', projectId);
+      adminLogger.logUserAction('delete_project', { project_id: projectId });
       await projectApi.deleteProject(projectId);
-      console.log('Project deleted successfully');
+      adminLogger.info('Project deleted successfully', { 
+        project_id: projectId,
+        event_type: 'project_deleted'
+      });
       await fetchAdminData(); // Refresh projects list
     } catch (err) {
-      console.error('Error deleting project:', err);
+      adminLogger.error('Error deleting project', { project_id: projectId, error: err.message }, err);
       setError(err instanceof Error ? err.message : 'Failed to delete project');
     }
   };
@@ -241,12 +251,15 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
-      console.log('Deleting person:', personId);
+      adminLogger.logUserAction('delete_person', { person_id: personId });
       await projectApi.deletePerson(personId);
-      console.log('Person deleted successfully');
+      adminLogger.info('Person deleted successfully', { 
+        person_id: personId,
+        event_type: 'person_deleted'
+      });
       await fetchAdminData(); // Refresh people list
     } catch (err) {
-      console.error('Error deleting person:', err);
+      adminLogger.error('Error deleting person', { person_id: personId, error: err.message }, err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
     }
   };
