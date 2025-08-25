@@ -10,12 +10,21 @@ interface PersonFormProps {
 }
 
 export default function PersonForm({ person, onSubmit, onCancel, isLoading = false }: PersonFormProps) {
+  // Helper function to format date for HTML date input (YYYY-MM-DD)
+  const formatDateForInput = (dateString?: string): string => {
+    if (!dateString) return '';
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    // If it's a datetime string, extract just the date part
+    return dateString.split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     firstName: person?.firstName || '',
     lastName: person?.lastName || '',
     email: person?.email || '',
     phone: person?.phone || '',
-    dateOfBirth: person?.dateOfBirth || '',
+    dateOfBirth: formatDateForInput(person?.dateOfBirth),
     address: {
       street: person?.address?.street || '',
       city: person?.address?.city || '',

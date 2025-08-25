@@ -9,13 +9,22 @@ interface ProjectFormProps {
 }
 
 export default function ProjectForm({ project, onSubmit, onCancel, isLoading = false }: ProjectFormProps) {
+  // Helper function to format date for HTML date input (YYYY-MM-DD)
+  const formatDateForInput = (dateString?: string): string => {
+    if (!dateString) return '';
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    // If it's a datetime string, extract just the date part
+    return dateString.split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     name: project?.name || '',
     description: project?.description || '',
     status: project?.status || 'pending' as const,
     maxParticipants: project?.maxParticipants || '',
-    startDate: project?.startDate || '',
-    endDate: project?.endDate || '',
+    startDate: formatDateForInput(project?.startDate),
+    endDate: formatDateForInput(project?.endDate),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
