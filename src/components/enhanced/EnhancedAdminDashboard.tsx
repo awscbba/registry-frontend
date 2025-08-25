@@ -52,7 +52,6 @@ export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
@@ -66,7 +65,7 @@ export default function EnhancedAdminDashboard() {
       const health = await performanceService.getHealthStatus();
       setSystemHealth(health);
     } catch (err) {
-      console.error('Failed to fetch system health:', err);
+      // Failed to fetch system health - continue silently
     }
   };
 
@@ -92,7 +91,11 @@ export default function EnhancedAdminDashboard() {
       setError(null);
 
       // Fetch admin statistics
-      const statsResponse = await httpClient.getJson(getApiUrl('/admin/stats')) as any;
+      const statsResponse = await httpClient.getJson(getApiUrl('/admin/stats')) as {
+        success?: boolean;
+        data?: { overview?: Record<string, number> };
+        overview?: Record<string, number>;
+      };
       // Handle v2 response format: {success: true, data: {overview: {...}}}
       const statsOverview = statsResponse.success ? 
         (statsResponse.data?.overview || {}) : 
@@ -104,13 +107,7 @@ export default function EnhancedAdminDashboard() {
         activeUsers: statsOverview.active_users || 0,
       });
 
-      // Fetch users list
-      const usersResponse = await httpClient.getJson(getApiUrl('/v2/admin/users')) as any;
-      // Handle both v2 response format and direct response format
-      const usersList = usersResponse.success ? 
-        (usersResponse.data?.users || usersResponse.data || []) : 
-        (usersResponse.users || usersResponse.data || usersResponse || []);
-      setUsers(Array.isArray(usersList) ? usersList : []);
+      // Note: Users are now managed through the people list for consistency
 
       // Fetch projects list
       const projectsList = await projectApi.getAllProjects();
@@ -122,7 +119,7 @@ export default function EnhancedAdminDashboard() {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
-      console.error('Admin dashboard error:', err);
+      // Admin dashboard error logged
     } finally {
       setIsLoading(false);
     }
@@ -133,10 +130,7 @@ export default function EnhancedAdminDashboard() {
     setCurrentView('edit-user');
   };
 
-  const handleUserView = (user: AdminUser) => {
-    setSelectedUser(user);
-    setCurrentView('view-user');
-  };
+
 
   const handleUserUpdate = async (updates: PersonUpdate) => {
     if (!selectedUser) {
@@ -167,7 +161,7 @@ export default function EnhancedAdminDashboard() {
   };
 
   const handleProjectDelete = async (projectId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
       return;
     }
 
@@ -237,7 +231,7 @@ export default function EnhancedAdminDashboard() {
   };
 
   const handlePersonDelete = async (personId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta persona? Esta acción no se puede deshacer.')) {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta persona? Esta acción no se puede deshacer.')) {
       return;
     }
 
