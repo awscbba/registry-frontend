@@ -3,6 +3,8 @@ import { getComponentLogger } from '../../utils/logger';
 import type { ConnectionPoolMetrics, ConnectionPoolMonitorProps } from '../../types/database';
 import databaseService, { DatabaseService } from '../../services/databaseService';
 
+const logger = getComponentLogger('ConnectionPoolMonitor');
+
 const ConnectionPoolMonitor: React.FC<ConnectionPoolMonitorProps> = ({
   showAllPools: _showAllPools = true,
   alertThreshold = 0.8,

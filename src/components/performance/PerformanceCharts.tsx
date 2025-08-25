@@ -3,6 +3,8 @@ import { getComponentLogger } from '../../utils/logger';
 import type { PerformanceHistory, PerformanceChartsProps } from '../../types/performance';
 import performanceService from '../../services/performanceService';
 
+const logger = getComponentLogger('PerformanceCharts');
+
 const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   timeRange = '24h',
   metrics = ['responseTime', 'cacheHitRate', 'activeRequests'],

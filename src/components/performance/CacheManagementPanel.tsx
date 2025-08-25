@@ -3,6 +3,8 @@ import { getComponentLogger } from '../../utils/logger';
 import type { CacheStats, CacheManagementProps } from '../../types/performance';
 import performanceService, { PerformanceService } from '../../services/performanceService';
 
+const logger = getComponentLogger('CacheManagementPanel');
+
 const CacheManagementPanel: React.FC<CacheManagementProps> = ({
   showControls = true,
   allowCacheClear = true,

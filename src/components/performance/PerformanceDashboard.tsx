@@ -7,6 +7,8 @@ import type {
 } from '../../types/performance';
 import performanceService, { PerformanceService } from '../../services/performanceService';
 
+const logger = getComponentLogger('PerformanceDashboard');
+
 const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   refreshInterval = 30000, // 30 seconds default
   showAdvancedMetrics = true,

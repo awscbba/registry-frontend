@@ -11,6 +11,8 @@ interface ProjectSubscriptionFormProps {
   projectId: string;
 }
 
+const logger = getComponentLogger('ProjectSubscriptionForm');
+
 export default function ProjectSubscriptionForm({ projectId }: ProjectSubscriptionFormProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -3,6 +3,8 @@ import { getComponentLogger } from '../../utils/logger';
 import type { Recommendation, QueryOptimizationPanelProps } from '../../types/database';
 import databaseService, { DatabaseService } from '../../services/databaseService';
 
+const logger = getComponentLogger('QueryOptimizationPanel');
+
 const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
   showRecommendations = true,
   allowOptimizationApplication = true,
