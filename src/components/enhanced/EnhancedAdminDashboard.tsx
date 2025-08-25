@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
 import { httpClient, getApiUrl } from '../../services/httpClient';
-import type { PersonUpdate } from '../../types/person';
+import { projectApi } from '../../services/projectApi';
+import type { PersonUpdate, Person } from '../../types/person';
+import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project';
 import PersonForm from '../PersonForm';
+import PersonList from '../PersonList';
+import ProjectList from '../ProjectList';
+import ProjectForm from '../ProjectForm';
+import ProjectSubscriptionManager from '../ProjectSubscriptionManager';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
 import SystemHealthOverview from '../performance/SystemHealthOverview';
@@ -40,15 +46,18 @@ interface AdminUser {
   updatedAt?: string;
 }
 
-type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user';
+type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user' | 'create-project' | 'edit-project' | 'view-project-subscribers';
 
 export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
 
   // Fetch system health for quick overview
@@ -103,6 +112,14 @@ export default function EnhancedAdminDashboard() {
         (usersResponse.users || usersResponse.data || usersResponse || []);
       setUsers(Array.isArray(usersList) ? usersList : []);
 
+      // Fetch projects list
+      const projectsList = await projectApi.getAllProjects();
+      setProjects(projectsList);
+
+      // Fetch people list for PersonList component
+      const peopleList = await projectApi.getAllPeople();
+      setPeople(peopleList);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
       console.error('Admin dashboard error:', err);
@@ -137,6 +154,102 @@ export default function EnhancedAdminDashboard() {
       setError(err instanceof Error ? err.message : 'Failed to update user');
     }
   };
+
+  // Project Management Handlers
+  const handleProjectEdit = (project: Project) => {
+    setSelectedProject(project);
+    setCurrentView('edit-project');
+  };
+
+  const handleProjectCreate = () => {
+    setSelectedProject(null);
+    setCurrentView('create-project');
+  };
+
+  const handleProjectDelete = async (projectId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      await projectApi.deleteProject(projectId);
+      await fetchAdminData(); // Refresh projects list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete project');
+    }
+  };
+
+  const handleProjectSubmit = async (projectData: ProjectCreate | ProjectUpdate) => {
+    try {
+      if (selectedProject) {
+        // Update existing project
+        await projectApi.updateProject(selectedProject.id, projectData as ProjectUpdate);
+      } else {
+        // Create new project
+        await projectApi.createProject(projectData as ProjectCreate);
+      }
+      
+      await fetchAdminData(); // Refresh projects list
+      setCurrentView('projects');
+      setSelectedProject(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save project');
+    }
+  };
+
+  const handleProjectCancel = () => {
+    setCurrentView('projects');
+    setSelectedProject(null);
+  };
+
+  const handleViewProjectSubscribers = (project: Project) => {
+    setSelectedProject(project);
+    setCurrentView('view-project-subscribers');
+  };
+
+  const handleProjectStatusUpdate = async (project: Project, newStatus: string) => {
+    try {
+      await projectApi.updateProject(project.id, { status: newStatus });
+      await fetchAdminData(); // Refresh projects list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update project status');
+    }
+  };
+
+  // Person Management Handlers
+  const handlePersonEdit = (person: Person) => {
+    // Convert Person to AdminUser format for compatibility
+    const adminUser: AdminUser = {
+      id: person.id,
+      email: person.email,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      isAdmin: person.isAdmin || false,
+      isActive: person.isActive,
+      createdAt: person.createdAt,
+      phone: person.phone,
+      dateOfBirth: person.dateOfBirth,
+      address: person.address,
+      updatedAt: person.updatedAt
+    };
+    setSelectedUser(adminUser);
+    setCurrentView('edit-user');
+  };
+
+  const handlePersonDelete = async (personId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta persona? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      await projectApi.deletePerson(personId);
+      await fetchAdminData(); // Refresh people list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete person');
+    }
+  };
+
+
 
   const renderNavigation = () => (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -400,66 +513,96 @@ export default function EnhancedAdminDashboard() {
       case 'system-health':
         return systemHealth ? <SystemHealthOverview healthStatus={systemHealth} /> : null;
       
+      case 'projects':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Project Management</h2>
+              <button
+                onClick={handleProjectCreate}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Project
+              </button>
+            </div>
+            <ProjectList
+              projects={projects}
+              onEdit={handleProjectEdit}
+              onDelete={handleProjectDelete}
+              onViewSubscribers={handleViewProjectSubscribers}
+              onUpdateStatus={handleProjectStatusUpdate}
+              isLoading={isLoading}
+            />
+          </div>
+        );
+      
+      case 'create-project':
+      case 'edit-project':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleProjectCancel}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedProject ? 'Edit Project' : 'Create New Project'}
+              </h2>
+            </div>
+            <ProjectForm
+              project={selectedProject || undefined}
+              onSubmit={handleProjectSubmit}
+              onCancel={handleProjectCancel}
+              isLoading={isLoading}
+            />
+          </div>
+        );
+      
+      case 'view-project-subscribers':
+        return selectedProject ? (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setCurrentView('projects')}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Subscribers: {selectedProject.name}
+              </h2>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <p className="text-gray-600 mb-4">{selectedProject.description}</p>
+              <ProjectSubscriptionManager
+                personId={undefined}
+                isEditing={false}
+              />
+            </div>
+          </div>
+        ) : null;
+      
       case 'users':
         return (
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">User Management</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.firstName} {user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.isAdmin ? 'Admin' : 'User'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleUserView(user)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleUserEdit(user)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
             </div>
+            <PersonList
+              people={people}
+              onEdit={handlePersonEdit}
+              onDelete={handlePersonDelete}
+              isLoading={isLoading}
+            />
           </div>
         );
       
