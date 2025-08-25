@@ -26,9 +26,15 @@ export default function ProjectSubscriptionManager({
       setError(null);
       
       try {
-        // Load all projects
+        // Load all projects and filter for active/ongoing/upcoming only
         const allProjects = await projectApi.getAllProjects();
-        setProjects(allProjects);
+        const filteredProjects = allProjects.filter(project => 
+          project.status === 'active' || 
+          project.status === 'ongoing' || 
+          project.status === 'upcoming' ||
+          project.status === 'planning'
+        );
+        setProjects(filteredProjects);
         
         // Load person's subscriptions if personId is provided
         if (personId) {
@@ -105,11 +111,16 @@ export default function ProjectSubscriptionManager({
 
   return (
     <div className="subscription-manager">
-      <h3>Suscripciones a Proyectos</h3>
+      <div className="header-section">
+        <h3>Suscripciones a Proyectos</h3>
+        <p className="projects-count">
+          Mostrando {projects.length} proyectos activos/próximos
+        </p>
+      </div>
       
       {projects.length === 0 ? (
         <div className="empty-state">
-          <p>No hay proyectos disponibles</p>
+          <p>No hay proyectos activos disponibles</p>
         </div>
       ) : (
         <div className="projects-list">
@@ -163,11 +174,21 @@ export default function ProjectSubscriptionManager({
           background: #f9fafb;
         }
 
+        .header-section {
+          margin-bottom: 1rem;
+        }
+
         .subscription-manager h3 {
-          margin: 0 0 1rem 0;
+          margin: 0 0 0.5rem 0;
           color: #374151;
           font-size: 1.1rem;
           font-weight: 600;
+        }
+
+        .projects-count {
+          margin: 0;
+          color: #6b7280;
+          font-size: 0.875rem;
         }
 
         .loading-state, .error-state, .empty-state {
@@ -199,6 +220,30 @@ export default function ProjectSubscriptionManager({
         .projects-list {
           display: grid;
           gap: 0.75rem;
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 1rem;
+          background: white;
+        }
+
+        .projects-list::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .projects-list::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
 
         .project-item {

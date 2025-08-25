@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { authService } from '../../services/authService';
 import { httpClient, getApiUrl } from '../../services/httpClient';
 import { projectApi } from '../../services/projectApi';
-import type { PersonUpdate, Person } from '../../types/person';
+import type { PersonUpdate, Person, PersonCreate } from '../../types/person';
 import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project';
 import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
@@ -47,7 +47,7 @@ interface AdminUser {
   updatedAt?: string;
 }
 
-type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user' | 'create-project' | 'edit-project' | 'view-project-subscribers';
+type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user' | 'create-user' | 'create-project' | 'edit-project' | 'view-project-subscribers';
 
 export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -261,6 +261,22 @@ export default function EnhancedAdminDashboard() {
     } catch (err) {
       adminLogger.error('Error deleting person', { person_id: personId, error: err.message }, err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
+    }
+  };
+
+  const handleUserCreate = async (userData: PersonCreate) => {
+    try {
+      adminLogger.logUserAction('create_user', { email: userData.email });
+      await projectApi.createPerson(userData);
+      adminLogger.info('User created successfully', { 
+        email: userData.email,
+        event_type: 'user_created'
+      });
+      await fetchAdminData(); // Refresh people list
+      setCurrentView('users');
+    } catch (err) {
+      adminLogger.error('Error creating user', { error: err.message }, err);
+      setError(err instanceof Error ? err.message : 'Failed to create user');
     }
   };
 
@@ -611,6 +627,15 @@ export default function EnhancedAdminDashboard() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+              <button
+                onClick={() => setCurrentView('create-user')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create New User
+              </button>
             </div>
             <PersonList
               people={people}
@@ -772,6 +797,32 @@ export default function EnhancedAdminDashboard() {
             </div>
           </div>
         ) : null;
+      
+      case 'create-user':
+        return (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Create New User
+                </h3>
+                <button
+                  onClick={() => setCurrentView('users')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <PersonForm
+                onSubmit={handleUserCreate}
+                onCancel={() => setCurrentView('users')}
+                isLoading={false}
+              />
+            </div>
+          </div>
+        );
       
       default:
         return renderDashboardOverview();
