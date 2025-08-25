@@ -6,8 +6,8 @@
  */
 
 import { API_CONFIG } from '../config/api';
-import { authService } from './authService';
 import { getServiceLogger } from '../utils/logger';
+import { authService } from './authService';
 
 export interface HttpClientOptions {
   skipAuth?: boolean;

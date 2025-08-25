@@ -9,8 +9,8 @@ import type {
   EndpointMetric,
   HealthStatus
 } from '../types/performance';
-import { httpClient, getApiUrl } from './httpClient';
 import { getServiceLogger } from '../utils/logger';
+import { httpClient, getApiUrl } from './httpClient';
 
 const logger = getServiceLogger('PerformanceService');
 

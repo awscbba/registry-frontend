@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { 
   PerformanceMetrics, 
   PerformanceAnalytics,

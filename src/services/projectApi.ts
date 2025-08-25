@@ -9,10 +9,10 @@ import type {
 } from '../types/project';
 import type { Person } from '../types/person';
 import { API_CONFIG, getApiUrl } from '../config/api';
+import { getApiLogger } from '../utils/logger';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
-import { getApiLogger } from '../utils/logger';
 
 export { ApiError };
 

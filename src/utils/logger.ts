@@ -64,15 +64,19 @@ class FrontendLogger {
     
     switch (level) {
       case LogLevel.DEBUG:
+        // eslint-disable-next-line no-console
         console.debug(formattedEntry);
         break;
       case LogLevel.INFO:
+        // eslint-disable-next-line no-console
         console.info(formattedEntry);
         break;
       case LogLevel.WARN:
+        // eslint-disable-next-line no-console
         console.warn(formattedEntry);
         break;
       case LogLevel.ERROR:
+        // eslint-disable-next-line no-console
         console.error(formattedEntry);
         break;
     }

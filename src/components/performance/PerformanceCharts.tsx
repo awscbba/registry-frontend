@@ -1,5 +1,5 @@
-/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { PerformanceHistory, PerformanceChartsProps } from '../../types/performance';
 import performanceService from '../../services/performanceService';
 

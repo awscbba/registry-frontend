@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getComponentLogger } from '../utils/logger';
 import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project, SubscriptionCreate } from '../types/project';
