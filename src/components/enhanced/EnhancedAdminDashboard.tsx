@@ -9,6 +9,7 @@ import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
 import ProjectForm from '../ProjectForm';
 import ProjectSubscriptionManager from '../ProjectSubscriptionManager';
+import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
 import SystemHealthOverview from '../performance/SystemHealthOverview';
@@ -614,10 +615,7 @@ export default function EnhancedAdminDashboard() {
             </div>
             <div className="bg-white shadow rounded-lg p-6">
               <p className="text-gray-600 mb-4">{selectedProject.description}</p>
-              <ProjectSubscriptionManager
-                personId={undefined}
-                isEditing={false}
-              />
+              <ProjectSubscribersList project={selectedProject} />
             </div>
           </div>
         ) : null;
