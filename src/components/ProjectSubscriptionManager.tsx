@@ -40,15 +40,15 @@ export default function ProjectSubscriptionManager({
           const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
           setSubscriptions(personSubscriptions);
           
-          // Set initially selected project IDs (only active subscriptions)
-          const activeSubscriptionProjectIds = personSubscriptions
-            .filter(sub => sub.status === 'active')
+          // Set initially selected project IDs (active and pending subscriptions)
+          const currentSubscriptionProjectIds = personSubscriptions
+            .filter(sub => sub.status === 'active' || sub.status === 'pending')
             .map(sub => sub.projectId);
-          setSelectedProjectIds(activeSubscriptionProjectIds);
+          setSelectedProjectIds(currentSubscriptionProjectIds);
           
           // Notify parent component
           if (onSubscriptionsChange) {
-            onSubscriptionsChange(activeSubscriptionProjectIds);
+            onSubscriptionsChange(currentSubscriptionProjectIds);
           }
         }
       } catch (err) {

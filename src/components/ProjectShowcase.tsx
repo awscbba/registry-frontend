@@ -7,6 +7,7 @@ import LoginForm from './LoginForm';
 
 export default function ProjectShowcase() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [ongoingProjects, setOngoingProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,12 +39,18 @@ export default function ProjectShowcase() {
     try {
       const allProjects = await projectApi.getPublicProjects();
       
-      // Filter only active projects for public display (simplified)
-      const activeProjects = allProjects.filter(project => {
-        return project.status === 'active';
+      // Filter projects: pending and active are available for subscription
+      const availableProjects = allProjects.filter(project => {
+        return project.status === 'pending' || project.status === 'active';
       });
       
-      setProjects(activeProjects);
+      // Filter ongoing projects: display separately as unavailable for subscription
+      const ongoingProjectsList = allProjects.filter(project => {
+        return project.status === 'ongoing';
+      });
+      
+      setProjects(availableProjects);
+      setOngoingProjects(ongoingProjectsList);
     } catch (err) {
       if (err instanceof ApiError) {
         // Handle authentication errors gracefully
@@ -299,75 +306,144 @@ export default function ProjectShowcase() {
         </div>
 
         {/* Projects Section */}
-        {projects.length === 0 ? (
+        {projects.length === 0 && ongoingProjects.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
               <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3>No hay proyectos activos</h3>
+            <h3>No hay proyectos disponibles</h3>
             <p>Actualmente no hay proyectos disponibles para registro.</p>
           </div>
         ) : (
-          <div className="projects-section">
-            <div className="projects-header">
-              <h2>Proyectos Disponibles ({projects.length})</h2>
-              <p>Selecciona un proyecto para ver más detalles y suscribirte</p>
-            </div>
-            
-            <div className="projects-container">
-              <div className="projects-grid">
-                {projects.map((project) => (
-                  <div key={project.id} className="project-card">
-                    <div className="project-header">
-                      <h3>{project.name}</h3>
-                      <span className="project-status active">Activo</span>
-                    </div>
-                    
-                    <div className="project-content">
-                      <p className="project-description">{project.description}</p>
-                      
-                      <div className="project-details">
-                        {project.maxParticipants && (
-                          <div className="detail-item">
-                            <span className="detail-label">Participantes máximos:</span>
-                            <span className="detail-value">{project.maxParticipants}</span>
-                          </div>
-                        )}
+          <>
+            {/* Available Projects Section */}
+            {projects.length > 0 && (
+              <div className="projects-section">
+                <div className="projects-header">
+                  <h2>Proyectos Disponibles para Suscripción ({projects.length})</h2>
+                  <p>Selecciona un proyecto para ver más detalles y suscribirte</p>
+                </div>
+                
+                <div className="projects-container">
+                  <div className="projects-grid">
+                    {projects.map((project) => (
+                      <div key={project.id} className="project-card available">
+                        <div className="project-header">
+                          <h3>{project.name}</h3>
+                          <span className={`project-status ${project.status}`}>
+                            {project.status === 'pending' ? 'Próximo' : 'Activo'}
+                          </span>
+                        </div>
                         
-                        {project.startDate && (
-                          <div className="detail-item">
-                            <span className="detail-label">Fecha de inicio:</span>
-                            <span className="detail-value">{formatDate(project.startDate)}</span>
+                        <div className="project-content">
+                          <p className="project-description">{project.description}</p>
+                          
+                          <div className="project-details">
+                            {project.maxParticipants && (
+                              <div className="detail-item">
+                                <span className="detail-label">Participantes máximos:</span>
+                                <span className="detail-value">{project.maxParticipants}</span>
+                              </div>
+                            )}
+                            
+                            {project.startDate && (
+                              <div className="detail-item">
+                                <span className="detail-label">Fecha de inicio:</span>
+                                <span className="detail-value">{formatDate(project.startDate)}</span>
+                              </div>
+                            )}
+                            
+                            {project.endDate && (
+                              <div className="detail-item">
+                                <span className="detail-label">Fecha de fin:</span>
+                                <span className="detail-value">{formatDate(project.endDate)}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                         
-                        {project.endDate && (
-                          <div className="detail-item">
-                            <span className="detail-label">Fecha de fin:</span>
-                            <span className="detail-value">{formatDate(project.endDate)}</span>
-                          </div>
-                        )}
+                        <div className="project-actions">
+                          <button 
+                            onClick={() => handleSubscribeClick(project)}
+                            className={BUTTON_CLASSES.SUBSCRIBE}
+                          >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Suscribirse al Proyecto
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="project-actions">
-                      <button 
-                        onClick={() => handleSubscribeClick(project)}
-                        className={BUTTON_CLASSES.SUBSCRIBE}
-                      >
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Suscribirse al Proyecto
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+
+            {/* Ongoing Projects Section */}
+            {ongoingProjects.length > 0 && (
+              <div className="projects-section ongoing-section">
+                <div className="projects-header">
+                  <h2>Proyectos en Curso ({ongoingProjects.length})</h2>
+                  <p>Estos proyectos están actualmente en desarrollo y no aceptan nuevas suscripciones</p>
+                </div>
+                
+                <div className="projects-container ongoing-container">
+                  <div className="projects-grid">
+                    {ongoingProjects.map((project) => (
+                      <div key={project.id} className="project-card ongoing">
+                        <div className="project-header">
+                          <h3>{project.name}</h3>
+                          <span className="project-status ongoing">En Curso</span>
+                        </div>
+                        
+                        <div className="project-content">
+                          <p className="project-description">{project.description}</p>
+                          
+                          <div className="project-details">
+                            {project.maxParticipants && (
+                              <div className="detail-item">
+                                <span className="detail-label">Participantes máximos:</span>
+                                <span className="detail-value">{project.maxParticipants}</span>
+                              </div>
+                            )}
+                            
+                            {project.startDate && (
+                              <div className="detail-item">
+                                <span className="detail-label">Fecha de inicio:</span>
+                                <span className="detail-value">{formatDate(project.startDate)}</span>
+                              </div>
+                            )}
+                            
+                            {project.endDate && (
+                              <div className="detail-item">
+                                <span className="detail-label">Fecha de fin:</span>
+                                <span className="detail-value">{formatDate(project.endDate)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="project-actions">
+                          <button 
+                            disabled
+                            className="btn-unavailable"
+                          >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                            No Disponible para Suscripción
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -599,6 +675,52 @@ export default function ProjectShowcase() {
         .project-status.active {
           background: #FF9900;
           color: white;
+        }
+
+        .project-status.pending {
+          background: #3b82f6;
+          color: white;
+        }
+
+        .project-status.ongoing {
+          background: #6b7280;
+          color: white;
+        }
+
+        .ongoing-section {
+          margin-top: 3rem;
+        }
+
+        .ongoing-container {
+          border-color: #d1d5db;
+          background: #f9fafb;
+        }
+
+        .project-card.ongoing {
+          border-color: #d1d5db;
+          opacity: 0.8;
+        }
+
+        .project-card.ongoing:hover {
+          border-color: #6b7280;
+          transform: none;
+        }
+
+        .btn-unavailable {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #6b7280;
+          color: white;
+          border: none;
+          padding: 1rem 2rem;
+          border-radius: 0.5rem;
+          cursor: not-allowed;
+          font-weight: 600;
+          font-size: 1rem;
+          width: 100%;
+          justify-content: center;
+          opacity: 0.7;
         }
 
         .project-content {
