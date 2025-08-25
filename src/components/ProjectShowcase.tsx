@@ -7,8 +7,6 @@ import LoginForm from './LoginForm';
 
 type ViewMode = 'cards' | 'list' | 'icons';
 
-type ViewMode = 'cards' | 'list' | 'icons';
-
 export default function ProjectShowcase() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [ongoingProjects, setOngoingProjects] = useState<Project[]>([]);
@@ -20,13 +18,6 @@ export default function ProjectShowcase() {
   const [currentPage, setCurrentPage] = useState(1);
   const [ongoingCurrentPage, setOngoingCurrentPage] = useState(1);
   const projectsPerPage = 6;
-  
-  // Pagination and view state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [ongoingCurrentPage, setOngoingCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>('cards');
-  const [ongoingViewMode, setOngoingViewMode] = useState<ViewMode>('cards');
-  const itemsPerPage = 6;
 
   useEffect(() => {
     // Check if user is already authenticated
