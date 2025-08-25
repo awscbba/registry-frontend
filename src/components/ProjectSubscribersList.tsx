@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import type { Project, Subscription } from '../types/project';
+import type { Project } from '../types/project';
 import type { Person } from '../types/person';
 
 interface ProjectSubscribersListProps {

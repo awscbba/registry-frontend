@@ -8,7 +8,6 @@ import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
 import ProjectForm from '../ProjectForm';
-import ProjectSubscriptionManager from '../ProjectSubscriptionManager';
 import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
