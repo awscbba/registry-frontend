@@ -486,13 +486,20 @@ export const projectApi = {
   // Person Subscription Management
   async getPersonSubscriptions(personId: string): Promise<Subscription[]> {
     // Since there's no direct endpoint, we'll get all subscriptions and filter
-    console.log('🔍 getPersonSubscriptions: Fetching all subscriptions for personId:', personId);
+    logger.debug('Fetching all subscriptions to filter for person', { personId });
     const allSubscriptions = await this.getAllSubscriptions();
-    console.log('📋 getPersonSubscriptions: All subscriptions:', allSubscriptions);
-    console.log('🔍 getPersonSubscriptions: Sample subscription structure:', allSubscriptions[0]);
+    logger.debug('Retrieved all subscriptions from API', { 
+      totalCount: allSubscriptions.length,
+      sampleStructure: allSubscriptions[0] || null
+    });
     
     const filtered = allSubscriptions.filter(sub => sub.personId === personId);
-    console.log('✅ getPersonSubscriptions: Filtered subscriptions for person:', filtered);
+    logger.debug('Filtered subscriptions for person', { 
+      personId,
+      filteredCount: filtered.length,
+      totalCount: allSubscriptions.length,
+      filteredSubscriptions: filtered
+    });
     
     return filtered;
   },
