@@ -37,19 +37,24 @@ export default function ProjectSubscriptionManager({
         
         // Load person's subscriptions if personId is provided
         if (personId) {
+          console.log('🔍 ProjectSubscriptionManager: Loading subscriptions for personId:', personId);
           const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+          console.log('📋 ProjectSubscriptionManager: Found subscriptions:', personSubscriptions);
           setSubscriptions(personSubscriptions);
           
           // Set initially selected project IDs (active and pending subscriptions)
           const currentSubscriptionProjectIds = personSubscriptions
             .filter(sub => sub.status === 'active' || sub.status === 'pending')
             .map(sub => sub.projectId);
+          console.log('✅ ProjectSubscriptionManager: Setting selected project IDs:', currentSubscriptionProjectIds);
           setSelectedProjectIds(currentSubscriptionProjectIds);
           
           // Notify parent component
           if (onSubscriptionsChange) {
             onSubscriptionsChange(currentSubscriptionProjectIds);
           }
+        } else {
+          console.log('⚠️ ProjectSubscriptionManager: No personId provided');
         }
       } catch (err) {
         if (err instanceof ApiError) {
