@@ -64,7 +64,7 @@ export default function EnhancedAdminDashboard() {
     try {
       const health = await performanceService.getHealthStatus();
       setSystemHealth(health);
-    } catch (err) {
+    } catch {
       // Failed to fetch system health - continue silently
     }
   };
