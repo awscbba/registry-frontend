@@ -298,7 +298,7 @@ export default function ProjectShowcase() {
           </div>
         </div>
 
-        {/* Projects Grid */}
+        {/* Projects Section */}
         {projects.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
@@ -310,54 +310,63 @@ export default function ProjectShowcase() {
             <p>Actualmente no hay proyectos disponibles para registro.</p>
           </div>
         ) : (
-          <div className="projects-grid">
-            {projects.map((project) => (
-              <div key={project.id} className="project-card">
-                <div className="project-header">
-                  <h3>{project.name}</h3>
-                  <span className="project-status active">Activo</span>
-                </div>
-                
-                <div className="project-content">
-                  <p className="project-description">{project.description}</p>
-                  
-                  <div className="project-details">
-                    {project.maxParticipants && (
-                      <div className="detail-item">
-                        <span className="detail-label">Participantes máximos:</span>
-                        <span className="detail-value">{project.maxParticipants}</span>
-                      </div>
-                    )}
+          <div className="projects-section">
+            <div className="projects-header">
+              <h2>Proyectos Disponibles ({projects.length})</h2>
+              <p>Selecciona un proyecto para ver más detalles y suscribirte</p>
+            </div>
+            
+            <div className="projects-container">
+              <div className="projects-grid">
+                {projects.map((project) => (
+                  <div key={project.id} className="project-card">
+                    <div className="project-header">
+                      <h3>{project.name}</h3>
+                      <span className="project-status active">Activo</span>
+                    </div>
                     
-                    {project.startDate && (
-                      <div className="detail-item">
-                        <span className="detail-label">Fecha de inicio:</span>
-                        <span className="detail-value">{formatDate(project.startDate)}</span>
+                    <div className="project-content">
+                      <p className="project-description">{project.description}</p>
+                      
+                      <div className="project-details">
+                        {project.maxParticipants && (
+                          <div className="detail-item">
+                            <span className="detail-label">Participantes máximos:</span>
+                            <span className="detail-value">{project.maxParticipants}</span>
+                          </div>
+                        )}
+                        
+                        {project.startDate && (
+                          <div className="detail-item">
+                            <span className="detail-label">Fecha de inicio:</span>
+                            <span className="detail-value">{formatDate(project.startDate)}</span>
+                          </div>
+                        )}
+                        
+                        {project.endDate && (
+                          <div className="detail-item">
+                            <span className="detail-label">Fecha de fin:</span>
+                            <span className="detail-value">{formatDate(project.endDate)}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                     
-                    {project.endDate && (
-                      <div className="detail-item">
-                        <span className="detail-label">Fecha de fin:</span>
-                        <span className="detail-value">{formatDate(project.endDate)}</span>
-                      </div>
-                    )}
+                    <div className="project-actions">
+                      <button 
+                        onClick={() => handleSubscribeClick(project)}
+                        className={BUTTON_CLASSES.SUBSCRIBE}
+                      >
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Suscribirse al Proyecto
+                      </button>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="project-actions">
-                  <button 
-                    onClick={() => handleSubscribeClick(project)}
-                    className={BUTTON_CLASSES.SUBSCRIBE}
-                  >
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Suscribirse al Proyecto
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
@@ -481,11 +490,59 @@ export default function ProjectShowcase() {
           box-shadow: 0 4px 8px rgba(255, 153, 0, 0.3);
         }
 
+        .projects-section {
+          margin-bottom: 2rem;
+        }
+
+        .projects-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .projects-header h2 {
+          font-size: 2rem;
+          font-weight: 600;
+          color: #232F3E;
+          margin-bottom: 0.5rem;
+        }
+
+        .projects-header p {
+          color: #666;
+          font-size: 1.1rem;
+        }
+
+        .projects-container {
+          max-height: 80vh;
+          overflow-y: auto;
+          padding: 1rem;
+          border: 2px solid #f0f0f0;
+          border-radius: 12px;
+          background: #fafafa;
+        }
+
+        .projects-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .projects-container::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+
+        .projects-container::-webkit-scrollbar-thumb {
+          background: #FF9900;
+          border-radius: 4px;
+        }
+
+        .projects-container::-webkit-scrollbar-thumb:hover {
+          background: #E88B00;
+        }
+
         .projects-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
           gap: 2rem;
-          margin-bottom: 2rem;
+          padding: 1rem;
         }
 
         .project-card {
@@ -645,8 +702,19 @@ export default function ProjectShowcase() {
             justify-content: center;
           }
 
+          .projects-header h2 {
+            font-size: 1.5rem;
+          }
+
+          .projects-container {
+            max-height: 70vh;
+            padding: 0.5rem;
+          }
+
           .projects-grid {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 0.5rem;
           }
         }
       `}</style>

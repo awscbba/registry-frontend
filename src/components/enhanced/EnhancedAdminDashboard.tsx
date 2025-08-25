@@ -463,6 +463,114 @@ export default function EnhancedAdminDashboard() {
           </div>
         );
       
+      case 'view-user':
+        return selectedUser ? (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  User Details: {selectedUser.firstName} {selectedUser.lastName}
+                </h3>
+                <button
+                  onClick={() => setCurrentView('users')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.firstName}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.lastName}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.email}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.phone || 'Not provided'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.dateOfBirth || 'Not provided'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedUser.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedUser.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {selectedUser.isAdmin ? 'Admin' : 'User'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Created At</label>
+                    <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      {new Date(selectedUser.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedUser.address && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <div className="p-3 bg-gray-50 border border-gray-300 rounded-md">
+                      <div className="space-y-1">
+                        <div><strong>Street:</strong> {selectedUser.address.street || 'Not provided'}</div>
+                        <div><strong>City:</strong> {selectedUser.address.city || 'Not provided'}</div>
+                        <div><strong>State:</strong> {selectedUser.address.state || 'Not provided'}</div>
+                        <div><strong>Country:</strong> {selectedUser.address.country || 'Not provided'}</div>
+                        <div><strong>Postal Code:</strong> {selectedUser.address.postalCode || 'Not provided'}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => handleUserEdit(selectedUser)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Edit User
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('users')}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Back to Users
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null;
+      
       case 'edit-user':
         return selectedUser ? (
           <div className="bg-white shadow rounded-lg">
@@ -481,7 +589,8 @@ export default function EnhancedAdminDashboard() {
                 </button>
               </div>
               <PersonForm
-                initialData={{
+                person={{
+                  id: selectedUser.id,
                   firstName: selectedUser.firstName,
                   lastName: selectedUser.lastName,
                   email: selectedUser.email,
@@ -493,11 +602,14 @@ export default function EnhancedAdminDashboard() {
                     state: '',
                     country: '',
                     postalCode: ''
-                  }
+                  },
+                  isActive: selectedUser.isActive,
+                  createdAt: selectedUser.createdAt,
+                  updatedAt: selectedUser.updatedAt || ''
                 }}
                 onSubmit={handleUserUpdate}
                 onCancel={() => setCurrentView('users')}
-                isEditing={true}
+                isLoading={false}
               />
             </div>
           </div>
