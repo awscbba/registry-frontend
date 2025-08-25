@@ -26,11 +26,12 @@ export default function ProjectSubscriptionManager({
       setError(null);
       
       try {
-        // Load all projects and filter for pending/active only (projects that accept subscriptions)
+        // Load all projects and filter for pending/active/ongoing (projects available for admin assignment)
         const allProjects = await projectApi.getAllProjects();
         const filteredProjects = allProjects.filter(project => 
           project.status === 'pending' || 
-          project.status === 'active'
+          project.status === 'active' ||
+          project.status === 'ongoing'
         );
         setProjects(filteredProjects);
         
@@ -112,7 +113,7 @@ export default function ProjectSubscriptionManager({
       <div className="header-section">
         <h3>Suscripciones a Proyectos</h3>
         <p className="projects-count">
-          Mostrando {projects.length} proyectos disponibles para suscripción
+          Mostrando {projects.length} proyectos disponibles para asignación
         </p>
       </div>
       
