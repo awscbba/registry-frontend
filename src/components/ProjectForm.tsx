@@ -11,9 +11,13 @@ interface ProjectFormProps {
 export default function ProjectForm({ project, onSubmit, onCancel, isLoading = false }: ProjectFormProps) {
   // Helper function to format date for HTML date input (YYYY-MM-DD)
   const formatDateForInput = (dateString?: string): string => {
-    if (!dateString) return '';
+    if (!dateString) {
+      return '';
+    }
     // If it's already in YYYY-MM-DD format, return as is
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
     // If it's a datetime string, extract just the date part
     return dateString.split('T')[0];
   };
