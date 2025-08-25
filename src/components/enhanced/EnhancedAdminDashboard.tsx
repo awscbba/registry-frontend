@@ -111,10 +111,12 @@ export default function EnhancedAdminDashboard() {
 
       // Fetch projects list
       const projectsList = await projectApi.getAllProjects();
+      console.log('Fetched projects:', projectsList.length, 'projects');
       setProjects(projectsList);
 
       // Fetch people list for PersonList component
       const peopleList = await projectApi.getAllPeople();
+      console.log('Fetched people:', peopleList.length, 'people');
       setPeople(peopleList);
 
     } catch (err) {
@@ -166,9 +168,12 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
+      console.log('Deleting project:', projectId);
       await projectApi.deleteProject(projectId);
+      console.log('Project deleted successfully');
       await fetchAdminData(); // Refresh projects list
     } catch (err) {
+      console.error('Error deleting project:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete project');
     }
   };
@@ -236,9 +241,12 @@ export default function EnhancedAdminDashboard() {
     }
 
     try {
+      console.log('Deleting person:', personId);
       await projectApi.deletePerson(personId);
+      console.log('Person deleted successfully');
       await fetchAdminData(); // Refresh people list
     } catch (err) {
+      console.error('Error deleting person:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
     }
   };

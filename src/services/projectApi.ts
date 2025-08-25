@@ -88,7 +88,7 @@ export const projectApi = {
     const response = await fetch(getApiUrl('/v2/projects'), {
       method: 'POST',
       headers: {
-        ...addAuthHeaders(),
+        ...addRequiredAuthHeaders(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(project)
@@ -110,7 +110,7 @@ export const projectApi = {
     const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
       method: 'PUT',
       headers: {
-        ...addAuthHeaders(),
+        ...addRequiredAuthHeaders(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(project)
@@ -131,16 +131,24 @@ export const projectApi = {
   async deleteProject(id: string): Promise<void> {
     const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
       method: 'DELETE',
-      headers: addAuthHeaders()
+      headers: addRequiredAuthHeaders()
     });
 
-    const data = await handleApiResponse(response);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new ApiError(response.status, `Failed to delete project: ${errorText}`);
+    }
 
-    // Handle v2 response format - should return success confirmation
-    if (data && data.success && data.data && data.data.deleted) {
-      return; // Successfully deleted
-    } else {
-      throw new ApiError(500, 'Failed to delete project');
+    // For DELETE operations, we might get an empty response or a success message
+    try {
+      const data = await handleApiResponse(response);
+      // Handle v2 response format - should return success confirmation
+      if (data && data.success !== false) {
+        return; // Successfully deleted
+      }
+    } catch {
+      // If there's no JSON response, that's often OK for DELETE operations
+      return;
     }
   },
 
@@ -353,19 +361,42 @@ export const projectApi = {
 
   // People Management
   async getAllPeople(): Promise<Person[]> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_PEOPLE), {
-      headers: addAuthHeaders()
-    });
-    const data = await handleApiResponse(response);
+    try {
+      // Try the admin users endpoint first (this is what was working before)
+      const response = await fetch(getApiUrl('/v2/admin/users'), {
+        headers: addRequiredAuthHeaders()
+      });
+      const data = await handleApiResponse(response);
 
-    // Handle v2 API response format: {success: true, data: [...], version: "v2"}
-    if (data && data.data && Array.isArray(data.data)) {
-      return data.data; // v2 format
-    } else if (Array.isArray(data)) {
-      return data; // Legacy format (backward compatibility)
-    } else {
-      console.error('Unexpected people API response format:', data);
+      // Handle v2 API response format: {success: true, data: [...], version: "v2"}
+      if (data && data.success && data.data) {
+        // Check if it's users array or nested users
+        const users = data.data.users || data.data;
+        if (Array.isArray(users)) {
+          return users; // v2 format
+        }
+      } else if (data && data.data && Array.isArray(data.data)) {
+        return data.data; // v2 format
+      } else if (Array.isArray(data)) {
+        return data; // Legacy format (backward compatibility)
+      }
+      
+      // If admin users doesn't work, try the people endpoint
+      const peopleResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN_PEOPLE), {
+        headers: addAuthHeaders()
+      });
+      const peopleData = await handleApiResponse(peopleResponse);
+      
+      if (peopleData && peopleData.data && Array.isArray(peopleData.data)) {
+        return peopleData.data;
+      } else if (Array.isArray(peopleData)) {
+        return peopleData;
+      }
+      
       return []; // Fallback to empty array
+    } catch (error) {
+      console.error('Error fetching people:', error);
+      return []; // Return empty array on error
     }
   },
 
@@ -422,12 +453,30 @@ export const projectApi = {
   },
 
   async deletePerson(id: string): Promise<void> {
-    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
-      method: 'DELETE',
-      headers: addAuthHeaders()
-    });
-    if (!response.ok) {
-      throw new ApiError(response.status, 'Error al eliminar persona');
+    try {
+      // Try deleting via admin users endpoint first
+      const response = await fetch(getApiUrl(`/v2/admin/users/${id}`), {
+        method: 'DELETE',
+        headers: addRequiredAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        // If admin users endpoint doesn't work, try the people endpoint
+        const peopleResponse = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PERSON_BY_ID(id)), {
+          method: 'DELETE',
+          headers: addRequiredAuthHeaders()
+        });
+        
+        if (!peopleResponse.ok) {
+          const errorText = await peopleResponse.text();
+          throw new ApiError(peopleResponse.status, `Error al eliminar persona: ${errorText}`);
+        }
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(500, `Error al eliminar persona: ${error}`);
     }
   },
 
