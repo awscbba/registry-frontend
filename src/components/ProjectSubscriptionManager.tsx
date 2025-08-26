@@ -22,6 +22,22 @@ export default function ProjectSubscriptionManager({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Debug log to track component mounting and personId value
+  logger.info('ProjectSubscriptionManager mounted', { 
+    personId, 
+    personIdType: typeof personId,
+    isEditing,
+    hasPersonId: !!personId 
+  });
+  
+  // Fallback console log to ensure visibility
+  console.log('🔍 ProjectSubscriptionManager DEBUG:', {
+    personId,
+    personIdType: typeof personId,
+    isEditing,
+    hasPersonId: !!personId
+  });
+
   // Load projects and subscriptions
   useEffect(() => {
     const loadData = async () => {

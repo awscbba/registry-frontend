@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
 import ProjectSubscriptionManager from './ProjectSubscriptionManager';
+import { getComponentLogger } from '../utils/logger';
+
+const logger = getComponentLogger('PersonForm');
 
 interface PersonFormProps {
   person?: Person;
@@ -10,6 +13,24 @@ interface PersonFormProps {
 }
 
 export default function PersonForm({ person, onSubmit, onCancel, isLoading = false }: PersonFormProps) {
+  // Debug log to track PersonForm rendering and person prop
+  logger.info('PersonForm rendered', { 
+    hasPerson: !!person,
+    personId: person?.id,
+    personIdType: typeof person?.id,
+    isLoading,
+    personData: person ? { id: person.id, firstName: person.firstName, lastName: person.lastName } : null
+  });
+  
+  // Fallback console log to ensure visibility
+  console.log('🔍 PersonForm DEBUG:', {
+    hasPerson: !!person,
+    personId: person?.id,
+    personIdType: typeof person?.id,
+    isLoading,
+    personData: person ? { id: person.id, firstName: person.firstName, lastName: person.lastName } : null
+  });
+
   // Helper function to format date for HTML date input (YYYY-MM-DD)
   const formatDateForInput = (dateString?: string): string => {
     if (!dateString) {
