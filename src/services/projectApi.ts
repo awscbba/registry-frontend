@@ -11,7 +11,7 @@ import type { Person } from '../types/person';
 import { API_CONFIG, getApiUrl } from '../config/api';
 import { getApiLogger } from '../utils/logger';
 import { ApiError, handleApiResponse } from '../types/api';
-import { transformSubscriptions, transformSubscription, transformPeople, transformPerson } from '../utils/fieldMapping';
+import { transformSubscriptions, transformSubscription, transformPeople, transformPerson, transformProjects, transformProject } from '../utils/fieldMapping';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
 
@@ -36,11 +36,11 @@ export const projectApi = {
 
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
-      return data.data; // v2 format
+      return transformProjects(data.data); // v2 format with field transformation
     } else if (Array.isArray(data)) {
-      return data; // Legacy array format (backward compatibility)
+      return transformProjects(data); // Legacy array format with field transformation
     } else if (data && data.projects && Array.isArray(data.projects)) {
-      return data.projects; // Legacy object format (backward compatibility)
+      return transformProjects(data.projects); // Legacy object format with field transformation
     } else {
       logger.error('Unexpected API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
@@ -63,13 +63,13 @@ export const projectApi = {
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
       logger.debug('Using v2 API response format', { count: data.data.length });
-      return data.data; // v2 format
+      return transformProjects(data.data); // v2 format with field transformation
     } else if (Array.isArray(data)) {
       logger.debug('Using legacy array format', { count: data.length });
-      return data; // Legacy array format (backward compatibility)
+      return transformProjects(data); // Legacy array format with field transformation
     } else if (data && data.projects && Array.isArray(data.projects)) {
       logger.debug('Using legacy object format', { count: data.projects.length });
-      return data.projects; // Legacy object format (backward compatibility)
+      return transformProjects(data.projects); // Legacy object format with field transformation
     } else {
       logger.error('Unexpected public projects API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
@@ -86,9 +86,9 @@ export const projectApi = {
 
     // Handle v2 response format
     if (data && data.success && data.data) {
-      return data.data;
+      return transformProject(data.data); // v2 format with field transformation
     } else if (data && typeof data === 'object' && data.id) {
-      return data; // Legacy format fallback
+      return transformProject(data); // Legacy format fallback with field transformation
     } else {
       throw new ApiError(404, 'Project not found');
     }
@@ -108,9 +108,9 @@ export const projectApi = {
 
     // Handle v2 response format
     if (data && data.success && data.data) {
-      return data.data;
+      return transformProject(data.data); // v2 format with field transformation
     } else if (data && typeof data === 'object' && data.id) {
-      return data; // Legacy format fallback
+      return transformProject(data); // Legacy format fallback with field transformation
     } else {
       throw new ApiError(500, 'Failed to create project');
     }
@@ -130,9 +130,9 @@ export const projectApi = {
 
     // Handle v2 response format
     if (data && data.success && data.data) {
-      return data.data;
+      return transformProject(data.data); // v2 format with field transformation
     } else if (data && typeof data === 'object' && data.id) {
-      return data; // Legacy format fallback
+      return transformProject(data); // Legacy format fallback with field transformation
     } else {
       throw new ApiError(500, 'Failed to update project');
     }
@@ -290,9 +290,9 @@ export const projectApi = {
 
     // Handle v2 API response format
     if (result && result.data) {
-      return result.data; // v2 format
+      return transformSubscription(result.data); // v2 format with field transformation
     } else {
-      return result; // Fallback
+      return transformSubscription(result); // Fallback with field transformation
     }
   },
 

@@ -7,6 +7,7 @@
 
 import { API_CONFIG } from '../config/api';
 import { authLogger } from '../utils/logger';
+import { transformSubscriptions } from '../utils/fieldMapping';
 
 export interface User {
   id: string;
@@ -435,7 +436,8 @@ class AuthService {
       const { httpClient } = await import('./httpClient');
       const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
 
-      return data.subscriptions || [];
+      const subscriptions = data.subscriptions || [];
+      return transformSubscriptions(subscriptions);
     } catch (error) {
       authLogger.error('Error fetching subscriptions', { error: error.message }, error);
       throw error;

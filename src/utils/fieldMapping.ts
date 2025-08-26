@@ -34,6 +34,16 @@ const PERSON_FIELD_MAP: Record<string, string> = {
   'updated_at': 'updatedAt'
 } as const;
 
+const PROJECT_FIELD_MAP: Record<string, string> = {
+  'start_date': 'startDate',
+  'end_date': 'endDate',
+  'max_participants': 'maxParticipants',
+  'created_at': 'createdAt',
+  'updated_at': 'updatedAt',
+  'created_by': 'createdBy',
+  'updated_by': 'updatedBy'
+} as const;
+
 /**
  * Transform field names from snake_case to camelCase
  */
@@ -95,6 +105,19 @@ export function transformPerson(person: any): any {
 
 export function transformPeople(people: any[]): any[] {
   return transformFieldNamesArray(people, PERSON_FIELD_MAP);
+}
+
+/**
+ * Transform project field names from snake_case to camelCase
+ * @param project - Project object with snake_case fields
+ * @returns Transformed project with camelCase fields
+ */
+export function transformProject(project: any): any {
+  return transformFieldNames(project, PROJECT_FIELD_MAP);
+}
+
+export function transformProjects(projects: any[]): any[] {
+  return transformFieldNamesArray(projects, PROJECT_FIELD_MAP);
 }
 
 /**
