@@ -11,7 +11,7 @@ import type { Person } from '../types/person';
 import { API_CONFIG, getApiUrl } from '../config/api';
 import { getApiLogger } from '../utils/logger';
 import { ApiError, handleApiResponse } from '../types/api';
-import { transformSubscriptions, transformSubscription } from '../utils/fieldMapping';
+import { transformSubscriptions, transformSubscription, transformPeople, transformPerson } from '../utils/fieldMapping';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
 
@@ -407,12 +407,12 @@ export const projectApi = {
         // Check if it's users array or nested users
         const users = data.data.users || data.data;
         if (Array.isArray(users)) {
-          return users; // v2 format
+          return transformPeople(users); // v2 format with field transformation
         }
       } else if (data && data.data && Array.isArray(data.data)) {
-        return data.data; // v2 format
+        return transformPeople(data.data); // v2 format with field transformation
       } else if (Array.isArray(data)) {
-        return data; // Legacy format (backward compatibility)
+        return transformPeople(data); // Legacy format with field transformation
       }
       
       // If admin users doesn't work, try the people endpoint
@@ -429,9 +429,9 @@ export const projectApi = {
       });
       
       if (peopleData && peopleData.data && Array.isArray(peopleData.data)) {
-        return peopleData.data;
+        return transformPeople(peopleData.data);
       } else if (Array.isArray(peopleData)) {
-        return peopleData;
+        return transformPeople(peopleData);
       }
       
       return []; // Fallback to empty array
@@ -449,9 +449,9 @@ export const projectApi = {
 
     // Handle v2 API response format
     if (data && data.data) {
-      return data.data; // v2 format
+      return transformPerson(data.data); // v2 format with field transformation
     } else {
-      return data; // Legacy format (backward compatibility)
+      return transformPerson(data); // Legacy format with field transformation
     }
   },
 
@@ -466,7 +466,7 @@ export const projectApi = {
     });
 
     const data = await handleApiResponse(response);
-    return data.data; // v2 responses have data wrapped in a data field
+    return transformPerson(data.data); // v2 responses have data wrapped in a data field with field transformation
   },
 
   async updatePerson(id: string, person: Partial<Person>): Promise<Person> {
@@ -487,9 +487,9 @@ export const projectApi = {
 
     // Handle v2 API response format
     if (data && data.data) {
-      return data.data; // v2 format
+      return transformPerson(data.data); // v2 format with field transformation
     } else {
-      return data; // Legacy format (backward compatibility)
+      return transformPerson(data); // Legacy format with field transformation
     }
   },
 
