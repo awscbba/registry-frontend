@@ -118,7 +118,7 @@ describe('ProjectAPI Critical Tests', () => {
       try {
         await projectApi.updatePerson(undefined as any, { firstName: 'Jane' });
         expect(true).toBe(false); // Should not reach here
-      } catch (error) {
+      } catch {
         // Should fail gracefully, not make API call with undefined
         expect(mockFetch).not.toHaveBeenCalled();
       }

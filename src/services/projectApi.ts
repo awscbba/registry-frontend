@@ -11,9 +11,9 @@ import type { Person } from '../types/person';
 import { API_CONFIG, getApiUrl } from '../config/api';
 import { getApiLogger } from '../utils/logger';
 import { ApiError, handleApiResponse } from '../types/api';
+import { transformSubscriptions, transformSubscription } from '../utils/fieldMapping';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
-import { transformSubscriptions, transformSubscription } from '../utils/fieldMapping';
 
 export { ApiError };
 

@@ -7,10 +7,6 @@
  * to camelCase in frontend to avoid risky backend migrations.
  */
 
-import { getApiLogger } from './logger';
-
-const logger = getApiLogger('fieldMapping');
-
 // Field mapping configurations
 const SUBSCRIPTION_FIELD_MAP: Record<string, string> = {
   'person_id': 'personId',
@@ -50,18 +46,11 @@ function transformFieldNames<T>(
 
   const transformed: any = {};
   
-  try {
-    for (const [key, value] of Object.entries(obj)) {
-      const mappedKey = fieldMap[key] || key;
-      transformed[mappedKey] = value;
-    }
-    return transformed as T;
-  } catch (error) {
-    logger.error('Error transforming field names', {
-      error: error instanceof Error ? error.message : String(error)
-    });
-    return obj; // Return original on error
+  for (const [key, value] of Object.entries(obj)) {
+    const mappedKey = fieldMap[key] || key;
+    transformed[mappedKey] = value;
   }
+  return transformed as T;
 }
 
 /**
@@ -78,7 +67,7 @@ function transformFieldNamesArray<T>(
   try {
     return array.map(obj => transformFieldNames<T>(obj, fieldMap));
   } catch (error) {
-    logger.error('Error transforming array field names', {
+    console.error('Error transforming array field names', {
       error: error instanceof Error ? error.message : String(error)
     });
     return array; // Return original array on error

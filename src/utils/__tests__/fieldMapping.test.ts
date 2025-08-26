@@ -14,13 +14,16 @@ import {
 } from '../fieldMapping';
 
 // Mock logger to avoid console output during tests
+ 
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn()
+};
+
 jest.mock('../logger', () => ({
-  getApiLogger: () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn()
-  })
+  getApiLogger: () => mockLogger
 }));
 
 describe('Field Mapping Utilities', () => {

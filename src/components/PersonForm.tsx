@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
-import ProjectSubscriptionManager from './ProjectSubscriptionManager';
 import { getComponentLogger } from '../utils/logger';
+import ProjectSubscriptionManager from './ProjectSubscriptionManager';
 
 const logger = getComponentLogger('PersonForm');
 

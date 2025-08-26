@@ -135,7 +135,7 @@ describe('EnhancedAdminDashboard', () => {
     // The key test: updatePerson should be called with a valid ID
     // This would have caught the undefined ID bug
     if (mockProjectApi.updatePerson.mock.calls.length > 0) {
-      const [personId, updateData] = mockProjectApi.updatePerson.mock.calls[0];
+      const [personId] = mockProjectApi.updatePerson.mock.calls[0];
       expect(personId).toBeDefined();
       expect(personId).not.toBe('undefined');
       expect(typeof personId).toBe('string');
