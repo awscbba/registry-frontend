@@ -487,18 +487,39 @@ export const projectApi = {
   async getPersonSubscriptions(personId: string): Promise<Subscription[]> {
     // Since there's no direct endpoint, we'll get all subscriptions and filter
     logger.debug('Fetching all subscriptions to filter for person', { personId });
+    console.log('🔍 SUBSCRIPTION DEBUG: Fetching all subscriptions for personId:', personId);
+    
     const allSubscriptions = await this.getAllSubscriptions();
     logger.debug('Retrieved all subscriptions from API', { 
       totalCount: allSubscriptions.length,
       sampleStructure: allSubscriptions[0] || null
     });
+    console.log('🔍 SUBSCRIPTION DEBUG: All subscriptions from API:', {
+      totalCount: allSubscriptions.length,
+      sampleSubscriptions: allSubscriptions.slice(0, 3), // First 3 for structure analysis
+      allSubscriptions: allSubscriptions
+    });
     
-    const filtered = allSubscriptions.filter(sub => sub.personId === personId);
+    // Try multiple field name variations for person ID
+    const filtered = allSubscriptions.filter(sub => 
+      sub.personId === personId || 
+      sub.person_id === personId ||
+      sub.userId === personId ||
+      sub.user_id === personId
+    );
+    
     logger.debug('Filtered subscriptions for person', { 
       personId,
       filteredCount: filtered.length,
       totalCount: allSubscriptions.length,
       filteredSubscriptions: filtered
+    });
+    console.log('🔍 SUBSCRIPTION DEBUG: Filtering results:', {
+      personId,
+      filteredCount: filtered.length,
+      totalCount: allSubscriptions.length,
+      filteredSubscriptions: filtered,
+      filteringLogic: 'Checking personId, person_id, userId, user_id fields'
     });
     
     return filtered;
