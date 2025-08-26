@@ -42,8 +42,8 @@ export interface ProjectUpdate {
 
 export interface Subscription {
   id: string;
-  project_id: string;  // Backend uses snake_case
-  person_id: string;   // Backend uses snake_case
+  project_id: string;
+  person_id: string;
   status: 'active' | 'cancelled' | 'pending';
   person_email?: string;
   person_name?: string;
@@ -51,11 +51,6 @@ export interface Subscription {
   created_at?: string | null;
   updated_at?: string | null;
   notes?: string | null;
-  // Legacy support for camelCase (if needed)
-  projectId?: string;
-  personId?: string;
-  subscribedAt?: string;
-  subscribedBy?: string;
 }
 
 export interface SubscriptionCreate {

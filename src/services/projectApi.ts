@@ -500,12 +500,9 @@ export const projectApi = {
       allSubscriptions: allSubscriptions
     });
     
-    // Backend uses person_id (snake_case), not personId (camelCase)
+    // Backend uses person_id (snake_case)
     const filtered = allSubscriptions.filter(sub => 
-      sub.person_id === personId || 
-      sub.personId === personId ||
-      sub.userId === personId ||
-      sub.user_id === personId
+      sub.person_id === personId
     );
     
     logger.debug('Filtered subscriptions for person', { 
@@ -528,13 +525,13 @@ export const projectApi = {
   async updatePersonSubscriptions(personId: string, projectIds: string[]): Promise<void> {
     // Get current subscriptions for the person
     const currentSubscriptions = await this.getPersonSubscriptions(personId);
-    const currentProjectIds = currentSubscriptions.map(sub => sub.projectId);
+    const currentProjectIds = currentSubscriptions.map(sub => sub.project_id);
 
     // Find projects to subscribe to (new ones)
     const toSubscribe = projectIds.filter(projectId => !currentProjectIds.includes(projectId));
 
     // Find projects to unsubscribe from (removed ones)
-    const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.projectId));
+    const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.project_id));
 
     // Subscribe to new projects
     for (const projectId of toSubscribe) {
@@ -557,11 +554,11 @@ export const projectApi = {
     // Unsubscribe from removed projects
     for (const subscription of toUnsubscribe) {
       try {
-        await this.unsubscribePersonFromProject(subscription.projectId, subscription.id);
+        await this.unsubscribePersonFromProject(subscription.project_id, subscription.id);
       } catch (error) {
         logger.error('Failed to unsubscribe person from project', { 
           person_id: personId, 
-          project_id: subscription.projectId, 
+          project_id: subscription.project_id, 
           error: error.message 
         }, error);
         // Continue with other unsubscriptions even if one fails
