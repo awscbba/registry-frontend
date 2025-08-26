@@ -500,10 +500,10 @@ export const projectApi = {
       allSubscriptions: allSubscriptions
     });
     
-    // Try multiple field name variations for person ID
+    // Backend uses person_id (snake_case), not personId (camelCase)
     const filtered = allSubscriptions.filter(sub => 
-      sub.personId === personId || 
-      sub.person_id === personId ||
+      sub.person_id === personId || 
+      sub.personId === personId ||
       sub.userId === personId ||
       sub.user_id === personId
     );
