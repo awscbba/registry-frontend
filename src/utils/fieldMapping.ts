@@ -14,6 +14,7 @@ const SUBSCRIPTION_FIELD_MAP: Record<string, string> = {
   'person_name': 'personName',
   'person_email': 'personEmail',
   'email_sent': 'emailSent',
+  'person_created': 'personCreated',
   'created_at': 'createdAt',
   'updated_at': 'updatedAt'
 } as const;

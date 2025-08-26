@@ -132,9 +132,9 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       const result = await projectApi.createSubscription(subscriptionData);
       
       // Handle success based on API response
-      if (result && typeof result === 'object' && 'person_created' in result) {
-        if (result.person_created) {
-          if (result.email_sent) {
+      if (result && typeof result === 'object' && 'personCreated' in result) {
+        if (result.personCreated) {
+          if (result.emailSent) {
             setSuccess('¡Suscripción enviada exitosamente! 🎉\n\nTu cuenta ha sido creada y se ha enviado un email de bienvenida con tus credenciales de acceso. Revisa tu bandeja de entrada (y la carpeta de spam) para encontrar tus datos de inicio de sesión.\n\nUna vez que recibas el email, podrás iniciar sesión y cambiar tu contraseña temporal por una de tu elección.');
           } else {
             setSuccess('¡Suscripción enviada exitosamente! 🎉\n\nTu cuenta ha sido creada, pero no pudimos enviar el email de bienvenida. Por favor contacta al administrador para obtener tus credenciales de acceso.\n\nTu solicitud está pendiente de aprobación por un administrador.');

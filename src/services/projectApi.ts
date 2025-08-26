@@ -178,20 +178,21 @@ export const projectApi = {
 
       // Handle v2 API response format - backend returns subscriptions, we need to map to subscribers
       if (data && data.data && Array.isArray(data.data)) {
-        // Map subscription data to subscriber format
-        return data.data.map((subscription: any) => ({
+        // Transform subscriptions using field mapping, then map to subscriber format
+        const transformedSubscriptions = transformSubscriptions(data.data);
+        return transformedSubscriptions.map((subscription: any) => ({
           id: subscription.id,
-          personId: subscription.person_id || subscription.personId,
-          projectId: subscription.project_id || subscription.projectId,
+          personId: subscription.personId,
+          projectId: subscription.projectId,
           status: subscription.status,
           notes: subscription.notes || '',
-          subscribedAt: subscription.created_at || subscription.subscribedAt,
-          subscribedBy: subscription.subscribed_by || subscription.subscribedBy,
+          subscribedAt: subscription.createdAt || subscription.subscribedAt,
+          subscribedBy: subscription.subscribedBy,
           person: {
-            id: subscription.person_id || subscription.personId,
-            firstName: subscription.person_name ? subscription.person_name.split(' ')[0] : 'Unknown',
-            lastName: subscription.person_name ? subscription.person_name.split(' ').slice(1).join(' ') : '',
-            email: subscription.person_email || subscription.personEmail || 'unknown@example.com'
+            id: subscription.personId,
+            firstName: subscription.personName ? subscription.personName.split(' ')[0] : 'Unknown',
+            lastName: subscription.personName ? subscription.personName.split(' ').slice(1).join(' ') : '',
+            email: subscription.personEmail || 'unknown@example.com'
           }
         }));
       } else if (Array.isArray(data)) {
