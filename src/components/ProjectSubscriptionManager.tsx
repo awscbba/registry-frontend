@@ -57,11 +57,20 @@ export default function ProjectSubscriptionManager({
         // Load person's subscriptions if personId is provided
         if (personId) {
           logger.debug('Loading subscriptions for person', { personId });
+          console.log('🔍 API CALL: getPersonSubscriptions for personId:', personId);
+          
           const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+          
           logger.debug('Found subscriptions for person', { 
             personId, 
             subscriptionCount: personSubscriptions.length,
             subscriptions: personSubscriptions 
+          });
+          console.log('🔍 API RESPONSE: getPersonSubscriptions result:', {
+            personId,
+            subscriptionCount: personSubscriptions.length,
+            subscriptions: personSubscriptions,
+            rawData: personSubscriptions
           });
           setSubscriptions(personSubscriptions);
           
@@ -69,8 +78,16 @@ export default function ProjectSubscriptionManager({
           const currentSubscriptionProjectIds = personSubscriptions
             .filter(sub => sub.status === 'active' || sub.status === 'pending')
             .map(sub => sub.projectId);
+          
           logger.debug('Setting selected project IDs', { 
             personId,
+            selectedProjectIds: currentSubscriptionProjectIds,
+            totalSubscriptions: personSubscriptions.length
+          });
+          console.log('🔍 CHECKBOX LOGIC: Setting selected project IDs:', {
+            personId,
+            allSubscriptions: personSubscriptions,
+            filteredSubscriptions: personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending'),
             selectedProjectIds: currentSubscriptionProjectIds,
             totalSubscriptions: personSubscriptions.length
           });
