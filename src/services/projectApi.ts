@@ -26,6 +26,13 @@ export const projectApi = {
     });
     const data = await handleApiResponse(response);
 
+    // Debug: Check actual field names from backend
+    console.log('🔍 PROJECTS API RESPONSE:', {
+      totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
+      sampleProject: data?.data?.[0] || data?.[0] || null,
+      projectFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
+    });
+
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
       return data.data; // v2 format
@@ -371,6 +378,13 @@ export const projectApi = {
       });
       const data = await handleApiResponse(response);
 
+      // Debug: Check actual field names from backend
+      console.log('🔍 PEOPLE API RESPONSE:', {
+        totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
+        samplePerson: data?.data?.[0] || data?.[0] || null,
+        personFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
+      });
+
       // Handle v2 API response format: {success: true, data: [...], version: "v2"}
       if (data && data.success && data.data) {
         // Check if it's users array or nested users
@@ -389,6 +403,13 @@ export const projectApi = {
         headers: addAuthHeaders()
       });
       const peopleData = await handleApiResponse(peopleResponse);
+      
+      // Debug: Check people endpoint response too
+      console.log('🔍 PEOPLE ENDPOINT RESPONSE:', {
+        totalCount: peopleData?.data?.length || (Array.isArray(peopleData) ? peopleData.length : 0),
+        samplePerson: peopleData?.data?.[0] || peopleData?.[0] || null,
+        personFields: peopleData?.data?.[0] ? Object.keys(peopleData.data[0]) : (peopleData?.[0] ? Object.keys(peopleData[0]) : [])
+      });
       
       if (peopleData && peopleData.data && Array.isArray(peopleData.data)) {
         return peopleData.data;
