@@ -86,11 +86,11 @@ export default function ProjectSubscriptionManager({
           const currentSubscriptionProjectIds = activeSubscriptions.map(sub => {
             console.log('🔍 MAPPING PROJECT ID:', {
               subscription: sub,
-              project_id: sub.project_id,
+              projectId: sub.projectId,
               allFields: Object.keys(sub)
             });
-            // Backend uses project_id (snake_case)
-            return sub.project_id;
+            // Field mapping transforms project_id to projectId (camelCase)
+            return sub.projectId;
           });
           
           logger.debug('Setting selected project IDs', { 
