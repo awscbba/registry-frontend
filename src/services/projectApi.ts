@@ -13,6 +13,7 @@ import { getApiLogger } from '../utils/logger';
 import { ApiError, handleApiResponse } from '../types/api';
 import { addAuthHeaders, addRequiredAuthHeaders } from './authService';
 import { httpClient } from './httpClient';
+import { transformSubscriptions, transformSubscription } from '../utils/fieldMapping';
 
 export { ApiError };
 
@@ -240,20 +241,25 @@ export const projectApi = {
     });
     const result = await handleApiResponse(response);
 
+    let subscriptionData: any;
+    
     // Handle v2 API response format
     if (result && result.data) {
-      return result.data; // v2 format
+      subscriptionData = result.data; // v2 format
     } else {
-      return result; // Fallback
+      subscriptionData = result; // Fallback
     }
+
+    // Transform snake_case fields to camelCase
+    return transformSubscription(subscriptionData);
   },
 
   async updateProjectSubscription(projectId: string, subscriptionId: string, data: { status?: string; notes?: string }): Promise<Subscription> {
     const url = getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIPTION_UPDATE(projectId, subscriptionId));
     logger.logApiRequest('PUT', url, { 
-      project_id: projectId, 
-      subscription_id: subscriptionId,
-      update_data: data
+      projectId: projectId, 
+      subscriptionId: subscriptionId,
+      updateData: data
     });
 
     const response = await fetch(url, {
@@ -306,15 +312,20 @@ export const projectApi = {
     });
     const data = await handleApiResponse(response);
 
+    let subscriptions: any[] = [];
+    
     // Handle v2 API response format: {success: true, data: [...], version: "v2"}
     if (data && data.data && Array.isArray(data.data)) {
-      return data.data; // v2 format
+      subscriptions = data.data; // v2 format
     } else if (Array.isArray(data)) {
-      return data; // Legacy format (backward compatibility)
+      subscriptions = data; // Legacy format (backward compatibility)
     } else {
       logger.error('Unexpected subscriptions API response format', { data_type: typeof data, data });
       return []; // Fallback to empty array
     }
+
+    // Transform snake_case fields to camelCase
+    return transformSubscriptions(subscriptions);
   },
 
   async createSubscription(subscription: SubscriptionCreate): Promise<Subscription> {
@@ -327,12 +338,17 @@ export const projectApi = {
     });
     const data = await handleApiResponse(response);
 
+    let subscriptionData: any;
+    
     // Handle v2 API response format
     if (data && data.subscription) {
-      return data.subscription; // v2 format
+      subscriptionData = data.subscription; // v2 format
     } else {
-      return data; // Legacy format (backward compatibility)
+      subscriptionData = data; // Legacy format (backward compatibility)
     }
+
+    // Transform snake_case fields to camelCase
+    return transformSubscription(subscriptionData);
   },
 
   async deleteSubscription(id: string): Promise<void> {
@@ -521,9 +537,9 @@ export const projectApi = {
       allSubscriptions: allSubscriptions
     });
     
-    // Backend uses person_id (snake_case)
+    // Filter subscriptions for the specific person (now using camelCase after transformation)
     const filtered = allSubscriptions.filter(sub => 
-      sub.person_id === personId
+      sub.personId === personId
     );
     
     logger.debug('Filtered subscriptions for person', { 
@@ -537,7 +553,7 @@ export const projectApi = {
       filteredCount: filtered.length,
       totalCount: allSubscriptions.length,
       filteredSubscriptions: filtered,
-      filteringLogic: 'Checking personId, person_id, userId, user_id fields'
+      filteringLogic: 'Checking personId field (transformed from person_id)'
     });
     
     return filtered;
@@ -546,13 +562,13 @@ export const projectApi = {
   async updatePersonSubscriptions(personId: string, projectIds: string[]): Promise<void> {
     // Get current subscriptions for the person
     const currentSubscriptions = await this.getPersonSubscriptions(personId);
-    const currentProjectIds = currentSubscriptions.map(sub => sub.project_id);
+    const currentProjectIds = currentSubscriptions.map(sub => sub.projectId);
 
     // Find projects to subscribe to (new ones)
     const toSubscribe = projectIds.filter(projectId => !currentProjectIds.includes(projectId));
 
     // Find projects to unsubscribe from (removed ones)
-    const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.project_id));
+    const toUnsubscribe = currentSubscriptions.filter(sub => !projectIds.includes(sub.projectId));
 
     // Subscribe to new projects
     for (const projectId of toSubscribe) {
@@ -564,8 +580,8 @@ export const projectApi = {
         });
       } catch (error) {
         logger.error('Failed to subscribe person to project', { 
-          person_id: personId, 
-          project_id: projectId, 
+          personId: personId, 
+          projectId: projectId, 
           error: error.message 
         }, error);
         // Continue with other subscriptions even if one fails
@@ -575,11 +591,11 @@ export const projectApi = {
     // Unsubscribe from removed projects
     for (const subscription of toUnsubscribe) {
       try {
-        await this.unsubscribePersonFromProject(subscription.project_id, subscription.id);
+        await this.unsubscribePersonFromProject(subscription.projectId, subscription.id);
       } catch (error) {
         logger.error('Failed to unsubscribe person from project', { 
-          person_id: personId, 
-          project_id: subscription.project_id, 
+          personId: personId, 
+          projectId: subscription.projectId, 
           error: error.message 
         }, error);
         // Continue with other unsubscriptions even if one fails

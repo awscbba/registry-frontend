@@ -42,14 +42,14 @@ export interface ProjectUpdate {
 
 export interface Subscription {
   id: string;
-  project_id: string;
-  person_id: string;
+  projectId: string;    // Changed from project_id
+  personId: string;     // Changed from person_id
   status: 'active' | 'cancelled' | 'pending';
-  person_email?: string;
-  person_name?: string;
-  email_sent?: boolean;
-  created_at?: string | null;
-  updated_at?: string | null;
+  personEmail?: string; // Changed from person_email
+  personName?: string;  // Changed from person_name
+  emailSent?: boolean;  // Changed from email_sent
+  createdAt?: string | null; // Changed from created_at
+  updatedAt?: string | null; // Changed from updated_at
   notes?: string | null;
 }
 
