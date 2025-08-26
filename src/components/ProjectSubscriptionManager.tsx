@@ -75,9 +75,23 @@ export default function ProjectSubscriptionManager({
           setSubscriptions(personSubscriptions);
           
           // Set initially selected project IDs (active and pending subscriptions)
-          const currentSubscriptionProjectIds = personSubscriptions
-            .filter(sub => sub.status === 'active' || sub.status === 'pending')
-            .map(sub => sub.projectId);
+          const activeSubscriptions = personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending');
+          console.log('🔍 ACTIVE SUBSCRIPTIONS DEBUG:', {
+            personId,
+            activeSubscriptions,
+            subscriptionStructure: activeSubscriptions[0] || null,
+            allFieldsInFirstSub: activeSubscriptions[0] ? Object.keys(activeSubscriptions[0]) : []
+          });
+          
+          const currentSubscriptionProjectIds = activeSubscriptions.map(sub => {
+            console.log('🔍 MAPPING PROJECT ID:', {
+              subscription: sub,
+              projectId: sub.projectId,
+              project_id: sub.project_id,
+              allFields: Object.keys(sub)
+            });
+            return sub.projectId || sub.project_id || sub.projectID || sub.project_ID;
+          });
           
           logger.debug('Setting selected project IDs', { 
             personId,
@@ -89,6 +103,7 @@ export default function ProjectSubscriptionManager({
             allSubscriptions: personSubscriptions,
             filteredSubscriptions: personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending'),
             selectedProjectIds: currentSubscriptionProjectIds,
+            selectedProjectIdsDetailed: currentSubscriptionProjectIds.map(id => ({ projectId: id })),
             totalSubscriptions: personSubscriptions.length
           });
           setSelectedProjectIds(currentSubscriptionProjectIds);
