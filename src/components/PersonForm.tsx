@@ -22,8 +22,8 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     personData: person ? { id: person.id, firstName: person.firstName, lastName: person.lastName } : null
   });
   
-  // Fallback console log to ensure visibility
-  console.log('🔍 PersonForm DEBUG:', {
+  // Component initialization debug
+  logger.debug('PersonForm initialized', {
     hasPerson: !!person,
     personId: person?.id,
     personIdType: typeof person?.id,

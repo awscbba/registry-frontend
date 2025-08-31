@@ -28,7 +28,7 @@ export const projectApi = {
     const data = await handleApiResponse(response);
 
     // Debug: Check API response structure (no sensitive data)
-    console.log('🔍 PROJECTS API RESPONSE:', {
+    logger.debug('Projects API response received', {
       totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
       hasProjects: !!(data?.data?.[0] || data?.[0]),
       projectFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
@@ -396,7 +396,7 @@ export const projectApi = {
       const data = await handleApiResponse(response);
 
       // Debug: Check API response structure (no sensitive data)
-      console.log('🔍 PEOPLE API RESPONSE:', {
+      logger.debug('People API response received', {
         totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
         hasPeople: !!(data?.data?.[0] || data?.[0]),
         personFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
@@ -422,7 +422,7 @@ export const projectApi = {
       const peopleData = await handleApiResponse(peopleResponse);
       
       // Debug: Check people endpoint response structure (no sensitive data)
-      console.log('🔍 PEOPLE ENDPOINT RESPONSE:', {
+      logger.debug('People endpoint response received', {
         totalCount: peopleData?.data?.length || (Array.isArray(peopleData) ? peopleData.length : 0),
         hasPeople: !!(peopleData?.data?.[0] || peopleData?.[0]),
         personFields: peopleData?.data?.[0] ? Object.keys(peopleData.data[0]) : (peopleData?.[0] ? Object.keys(peopleData[0]) : [])
@@ -525,17 +525,12 @@ export const projectApi = {
   async getPersonSubscriptions(personId: string): Promise<Subscription[]> {
     // Since there's no direct endpoint, we'll get all subscriptions and filter
     logger.debug('Fetching all subscriptions to filter for person', { personId });
-    console.log('🔍 SUBSCRIPTION DEBUG: Fetching all subscriptions for personId:', personId);
     
     const allSubscriptions = await this.getAllSubscriptions();
     logger.debug('Retrieved all subscriptions from API', { 
       totalCount: allSubscriptions.length,
-      sampleStructure: allSubscriptions[0] || null
-    });
-    console.log('🔍 SUBSCRIPTION DEBUG: All subscriptions from API:', {
-      totalCount: allSubscriptions.length,
-      sampleSubscriptions: allSubscriptions.slice(0, 3), // First 3 for structure analysis
-      allSubscriptions: allSubscriptions
+      sampleStructure: allSubscriptions[0] || null,
+      sampleSubscriptions: allSubscriptions.slice(0, 3) // First 3 for structure analysis
     });
     
     // Filter subscriptions for the specific person (now using camelCase after transformation)
@@ -544,12 +539,6 @@ export const projectApi = {
     );
     
     logger.debug('Filtered subscriptions for person', { 
-      personId,
-      filteredCount: filtered.length,
-      totalCount: allSubscriptions.length,
-      filteredSubscriptions: filtered
-    });
-    console.log('🔍 SUBSCRIPTION DEBUG: Filtering results:', {
       personId,
       filteredCount: filtered.length,
       totalCount: allSubscriptions.length,

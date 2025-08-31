@@ -194,10 +194,11 @@
     </div>
 
     <script type="module">
-        console.log('Unified login page loaded');
-        
-        // Import authService
+        // Import logger and authService
+        import { getLogger } from '../utils/logger.ts';
         import { authService } from '/assets/authService.CFcKI7c1.js';
+        
+        const logger = getLogger('login-unified');
         
         // Make authService globally available
         window.authService = authService;
@@ -236,11 +237,11 @@
             showMessage('Iniciando sesión...', 'loading');
             
             try {
-                console.log('Attempting login with AuthService...');
+                logger.info('Attempting login with AuthService');
                 const result = await authService.login({ email, password });
                 
                 if (result.success) {
-                    console.log('Login successful - user:', result.user?.email);
+                    logger.info('Login successful', { userEmail: result.user?.email });
                     showMessage('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
                     
                     // Redirect after short delay
@@ -259,7 +260,7 @@
             }
         });
         
-        console.log('Unified login form initialized');
+        logger.info('Unified login form initialized');
     </script>
 </body>
 </html>

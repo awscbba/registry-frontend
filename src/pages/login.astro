@@ -119,8 +119,12 @@
         </div>
     </div>
 
-    <script>
-        console.log('Login page loaded, setting up form...');
+    <script type="module">
+        // Import logger
+        import { getLogger } from '../utils/logger.ts';
+        const logger = getLogger('login');
+        
+        logger.info('Login page loaded, setting up form');
         
         // API Configuration
         const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
@@ -153,29 +157,28 @@
         `;
 
         // Set up the form handler immediately after creating the form
-        console.log('Form created, setting up event handler...');
+        logger.debug('Form created, setting up event handler');
         
         // Get form elements
         const form = document.getElementById('simple-login-form');
         const messageDiv = document.getElementById('login-message');
         
         if (!form) {
-            console.error('Login form not found');
+            logger.error('Login form not found');
         } else if (!messageDiv) {
-            console.error('Message div not found');
+            logger.error('Message div not found');
         } else {
-            console.log('Form and message div found, attaching event listener...');
+            logger.debug('Form and message div found, attaching event listener');
             
             // Add form submission handler
             form.addEventListener('submit', async function(e) {
-                console.log('Form submitted!');
+                logger.info('Form submitted');
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
-                console.log('Email:', email);
-                console.log('Password length:', password.length);
+                logger.debug('Login attempt', { email, passwordLength: password.length });
                 
                 if (!email || !password) {
                     messageDiv.style.display = 'block';
@@ -188,7 +191,7 @@
                 
                 try {
                     const loginUrl = `${API_BASE_URL}${LOGIN_ENDPOINT}`;
-                    console.log('Making request to:', loginUrl);
+                    logger.debug('Making login request', { loginUrl });
                     
                     const response = await fetch(loginUrl, {
                         method: 'POST',
@@ -198,12 +201,10 @@
                         body: JSON.stringify({ email, password }),
                     });
                     
-                    console.log('Response status:', response.status);
-                    console.log('Response ok:', response.ok);
-                    
                     const data = await response.json();
-                    console.log('Response status:', response.status);
-                    console.log('Login response summary:', {
+                    logger.debug('Login response received', {
+                        status: response.status,
+                        ok: response.ok,
                         success: response.ok,
                         hasToken: !!data.access_token,
                         hasUser: !!data.user,
@@ -211,45 +212,47 @@
                     });
                     
                     if (response.ok && data.access_token) {
-                        console.log('Login successful - user:', data.user?.email);
+                        logger.info('Login successful', { userEmail: data.user?.email });
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
                         // Store auth data with correct keys to match dashboard
                         if (data.access_token) {
                             localStorage.setItem('userAuthToken', data.access_token);
-                            console.log('Token stored as userAuthToken');
+                            logger.debug('Token stored as userAuthToken');
                         } else {
-                            console.warn('No access_token received in response');
+                            logger.warn('No access_token received in response');
                         }
                         if (data.user) {
                             localStorage.setItem('userData', JSON.stringify(data.user));
-                            console.log('User data stored:', data.user.email);
+                            logger.debug('User data stored', { userEmail: data.user.email });
                         } else {
-                            console.warn('No user data received in response');
+                            logger.warn('No user data received in response');
                         }
                         
                         // Debug: Verify what was stored
-                        console.log('Verification - userAuthToken stored:', !!localStorage.getItem('userAuthToken'));
-                        console.log('Verification - userData stored:', !!localStorage.getItem('userData'));
+                        logger.debug('Storage verification', {
+                            hasToken: !!localStorage.getItem('userAuthToken'),
+                            hasUserData: !!localStorage.getItem('userData')
+                        });
                         
                         // Redirect to user dashboard
                         setTimeout(() => {
-                            console.log('Redirecting to dashboard...');
+                            logger.info('Redirecting to dashboard');
                             window.location.href = '/dashboard';
                         }, 1500);
                     } else {
-                        console.error('Login failed:', data);
+                        logger.error('Login failed', { responseData: data });
                         const errorMessage = data.message || data.detail || 'Credenciales incorrectas';
                         messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + errorMessage + '</div>';
                     }
                 } catch (error) {
-                    console.error('Network error:', error);
+                    logger.error('Network error during login', {}, error);
                     messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
                 }
             });
             
-            console.log('Event listener attached successfully');
+            logger.debug('Event listener attached successfully');
         }
     </script>
 </body>

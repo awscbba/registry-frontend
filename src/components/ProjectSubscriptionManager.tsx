@@ -30,8 +30,8 @@ export default function ProjectSubscriptionManager({
     hasPersonId: !!personId 
   });
   
-  // Fallback console log to ensure visibility
-  console.log('🔍 ProjectSubscriptionManager DEBUG:', {
+  // Component initialization debug
+  logger.debug('ProjectSubscriptionManager initialized', {
     personId,
     personIdType: typeof personId,
     isEditing,
@@ -57,17 +57,11 @@ export default function ProjectSubscriptionManager({
         // Load person's subscriptions if personId is provided
         if (personId) {
           logger.debug('Loading subscriptions for person', { personId });
-          console.log('🔍 API CALL: getPersonSubscriptions for personId:', personId);
           
           const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
           
           logger.debug('Found subscriptions for person', { 
             personId, 
-            subscriptionCount: personSubscriptions.length,
-            subscriptions: personSubscriptions 
-          });
-          console.log('🔍 API RESPONSE: getPersonSubscriptions result:', {
-            personId,
             subscriptionCount: personSubscriptions.length,
             subscriptions: personSubscriptions,
             rawData: personSubscriptions
@@ -76,7 +70,7 @@ export default function ProjectSubscriptionManager({
           
           // Set initially selected project IDs (active and pending subscriptions)
           const activeSubscriptions = personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending');
-          console.log('🔍 ACTIVE SUBSCRIPTIONS DEBUG:', {
+          logger.debug('Active subscriptions filtered', {
             personId,
             activeSubscriptions,
             subscriptionStructure: activeSubscriptions[0] || null,
@@ -84,7 +78,7 @@ export default function ProjectSubscriptionManager({
           });
           
           const currentSubscriptionProjectIds = activeSubscriptions.map(sub => {
-            console.log('🔍 MAPPING PROJECT ID:', {
+            logger.debug('Mapping project ID from subscription', {
               subscription: sub,
               projectId: sub.projectId,
               allFields: Object.keys(sub)
@@ -94,11 +88,6 @@ export default function ProjectSubscriptionManager({
           });
           
           logger.debug('Setting selected project IDs', { 
-            personId,
-            selectedProjectIds: currentSubscriptionProjectIds,
-            totalSubscriptions: personSubscriptions.length
-          });
-          console.log('🔍 CHECKBOX LOGIC: Setting selected project IDs:', {
             personId,
             allSubscriptions: personSubscriptions,
             filteredSubscriptions: personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending'),
