@@ -240,7 +240,7 @@
                 const result = await authService.login({ email, password });
                 
                 if (result.success) {
-                    console.log('Login successful:', result);
+                    console.log('Login successful - user:', result.user?.email);
                     showMessage('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
                     
                     // Redirect after short delay
@@ -248,7 +248,7 @@
                         window.location.href = '/dashboard';
                     }, 1500);
                 } else {
-                    console.error('Login failed:', result);
+                    console.error('Login failed - message:', result.message);
                     showMessage(result.message || 'Credenciales incorrectas', 'error');
                 }
             } catch (error) {

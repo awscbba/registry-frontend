@@ -202,12 +202,16 @@
                     console.log('Response ok:', response.ok);
                     
                     const data = await response.json();
-                    console.log('Response data:', data);
-                    console.log('Token field present:', !!data.token);
-                    console.log('User field present:', !!data.user);
+                    console.log('Response status:', response.status);
+                    console.log('Login response summary:', {
+                        success: response.ok,
+                        hasToken: !!data.access_token,
+                        hasUser: !!data.user,
+                        userEmail: data.user?.email
+                    });
                     
                     if (response.ok && data.access_token) {
-                        console.log('Login successful:', data);
+                        console.log('Login successful - user:', data.user?.email);
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         

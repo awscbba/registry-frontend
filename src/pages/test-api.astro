@@ -27,6 +27,7 @@ import Layout from '../layouts/Layout.astro';
         console.log('Response ok:', response.ok);
         
         const data = await response.json();
+        // WARNING: This test page logs full response data - do not use with sensitive endpoints
         console.log('Response data:', data);
         
         resultDiv.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;

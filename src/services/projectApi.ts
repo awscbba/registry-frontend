@@ -27,10 +27,10 @@ export const projectApi = {
     });
     const data = await handleApiResponse(response);
 
-    // Debug: Check actual field names from backend
+    // Debug: Check API response structure (no sensitive data)
     console.log('🔍 PROJECTS API RESPONSE:', {
       totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
-      sampleProject: data?.data?.[0] || data?.[0] || null,
+      hasProjects: !!(data?.data?.[0] || data?.[0]),
       projectFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
     });
 
@@ -395,10 +395,10 @@ export const projectApi = {
       });
       const data = await handleApiResponse(response);
 
-      // Debug: Check actual field names from backend
+      // Debug: Check API response structure (no sensitive data)
       console.log('🔍 PEOPLE API RESPONSE:', {
         totalCount: data?.data?.length || (Array.isArray(data) ? data.length : 0),
-        samplePerson: data?.data?.[0] || data?.[0] || null,
+        hasPeople: !!(data?.data?.[0] || data?.[0]),
         personFields: data?.data?.[0] ? Object.keys(data.data[0]) : (data?.[0] ? Object.keys(data[0]) : [])
       });
 
@@ -421,10 +421,10 @@ export const projectApi = {
       });
       const peopleData = await handleApiResponse(peopleResponse);
       
-      // Debug: Check people endpoint response too
+      // Debug: Check people endpoint response structure (no sensitive data)
       console.log('🔍 PEOPLE ENDPOINT RESPONSE:', {
         totalCount: peopleData?.data?.length || (Array.isArray(peopleData) ? peopleData.length : 0),
-        samplePerson: peopleData?.data?.[0] || peopleData?.[0] || null,
+        hasPeople: !!(peopleData?.data?.[0] || peopleData?.[0]),
         personFields: peopleData?.data?.[0] ? Object.keys(peopleData.data[0]) : (peopleData?.[0] ? Object.keys(peopleData[0]) : [])
       });
       
