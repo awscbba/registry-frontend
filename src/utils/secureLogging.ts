@@ -165,13 +165,13 @@ export function createApiResponseSummary(response: unknown): Record<string, unkn
  * Override console methods in development to automatically sanitize
  * (Only in development mode to avoid performance impact in production)
  */
+/* eslint-disable no-console */
 export function enableSecureLogging(): void {
   if (import.meta.env.DEV) {
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
     
-    // eslint-disable-next-line no-console
     console.log = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalLog(message, ...args.map(arg => sanitizeObject(arg)));
@@ -180,7 +180,6 @@ export function enableSecureLogging(): void {
       }
     };
     
-    // eslint-disable-next-line no-console
     console.error = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalError(message, ...args.map(arg => sanitizeObject(arg)));
@@ -189,7 +188,6 @@ export function enableSecureLogging(): void {
       }
     };
     
-    // eslint-disable-next-line no-console
     console.warn = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalWarn(message, ...args.map(arg => sanitizeObject(arg)));
@@ -198,7 +196,7 @@ export function enableSecureLogging(): void {
       }
     };
     
-    // eslint-disable-next-line no-console
     console.log('🔒 Secure logging enabled - sensitive data will be automatically redacted');
   }
 }
+/* eslint-enable no-console */
