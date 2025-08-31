@@ -56,7 +56,7 @@ function isSensitiveField(fieldName: string): boolean {
 /**
  * Sanitize an object by replacing sensitive field values with [REDACTED]
  */
-export function sanitizeObject(obj: any, maxDepth: number = 3): any {
+export function sanitizeObject(obj: unknown, maxDepth: number = 3): unknown {
   if (maxDepth <= 0) {
     return '[MAX_DEPTH_REACHED]';
   }
@@ -73,7 +73,7 @@ export function sanitizeObject(obj: any, maxDepth: number = 3): any {
     return obj.map(item => sanitizeObject(item, maxDepth - 1));
   }
   
-  const sanitized: any = {};
+  const sanitized: Record<string, unknown> = {};
   
   for (const [key, value] of Object.entries(obj)) {
     if (isSensitiveField(key)) {
@@ -91,10 +91,12 @@ export function sanitizeObject(obj: any, maxDepth: number = 3): any {
 /**
  * Secure console.log that automatically sanitizes sensitive data
  */
-export function secureLog(message: string, data?: any): void {
+export function secureLog(message: string, data?: unknown): void {
   if (data) {
+    // eslint-disable-next-line no-console
     console.log(message, sanitizeObject(data));
   } else {
+    // eslint-disable-next-line no-console
     console.log(message);
   }
 }
@@ -102,10 +104,12 @@ export function secureLog(message: string, data?: any): void {
 /**
  * Secure console.error that automatically sanitizes sensitive data
  */
-export function secureError(message: string, data?: any): void {
+export function secureError(message: string, data?: unknown): void {
   if (data) {
+    // eslint-disable-next-line no-console
     console.error(message, sanitizeObject(data));
   } else {
+    // eslint-disable-next-line no-console
     console.error(message);
   }
 }
@@ -113,10 +117,12 @@ export function secureError(message: string, data?: any): void {
 /**
  * Secure console.warn that automatically sanitizes sensitive data
  */
-export function secureWarn(message: string, data?: any): void {
+export function secureWarn(message: string, data?: unknown): void {
   if (data) {
+    // eslint-disable-next-line no-console
     console.warn(message, sanitizeObject(data));
   } else {
+    // eslint-disable-next-line no-console
     console.warn(message);
   }
 }
@@ -124,29 +130,34 @@ export function secureWarn(message: string, data?: any): void {
 /**
  * Create a sanitized summary of login response for safe logging
  */
-export function createLoginSummary(loginResponse: any): any {
+export function createLoginSummary(loginResponse: unknown): Record<string, unknown> {
+  const response = loginResponse as Record<string, unknown>;
+  const user = response?.user as Record<string, unknown>;
+  
   return {
-    success: loginResponse?.success,
-    hasToken: !!loginResponse?.token || !!loginResponse?.access_token,
-    hasUser: !!loginResponse?.user,
-    userEmail: loginResponse?.user?.email,
-    isAdmin: loginResponse?.user?.isAdmin,
-    message: loginResponse?.message,
-    errorCode: loginResponse?.error_code
+    success: response?.success,
+    hasToken: !!(response?.token || response?.access_token),
+    hasUser: !!response?.user,
+    userEmail: user?.email,
+    isAdmin: user?.isAdmin,
+    message: response?.message,
+    errorCode: response?.error_code
   };
 }
 
 /**
  * Create a sanitized summary of API response for safe logging
  */
-export function createApiResponseSummary(response: any): any {
+export function createApiResponseSummary(response: unknown): Record<string, unknown> {
+  const resp = response as Record<string, unknown>;
+  
   return {
-    success: response?.success,
-    hasData: !!response?.data,
-    dataLength: Array.isArray(response?.data) ? response.data.length : (response?.data ? 1 : 0),
-    version: response?.version,
-    message: response?.message,
-    error: response?.error
+    success: resp?.success,
+    hasData: !!resp?.data,
+    dataLength: Array.isArray(resp?.data) ? resp.data.length : (resp?.data ? 1 : 0),
+    version: resp?.version,
+    message: resp?.message,
+    error: resp?.error
   };
 }
 
@@ -160,7 +171,8 @@ export function enableSecureLogging(): void {
     const originalError = console.error;
     const originalWarn = console.warn;
     
-    console.log = (message: any, ...args: any[]) => {
+    // eslint-disable-next-line no-console
+    console.log = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalLog(message, ...args.map(arg => sanitizeObject(arg)));
       } else {
@@ -168,7 +180,8 @@ export function enableSecureLogging(): void {
       }
     };
     
-    console.error = (message: any, ...args: any[]) => {
+    // eslint-disable-next-line no-console
+    console.error = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalError(message, ...args.map(arg => sanitizeObject(arg)));
       } else {
@@ -176,7 +189,8 @@ export function enableSecureLogging(): void {
       }
     };
     
-    console.warn = (message: any, ...args: any[]) => {
+    // eslint-disable-next-line no-console
+    console.warn = (message: unknown, ...args: unknown[]) => {
       if (args.length > 0) {
         originalWarn(message, ...args.map(arg => sanitizeObject(arg)));
       } else {
@@ -184,6 +198,7 @@ export function enableSecureLogging(): void {
       }
     };
     
+    // eslint-disable-next-line no-console
     console.log('🔒 Secure logging enabled - sensitive data will be automatically redacted');
   }
 }
