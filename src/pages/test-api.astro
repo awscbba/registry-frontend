@@ -16,7 +16,7 @@ import Layout from '../layouts/Layout.astro';
       
       try {
         // Import logger for test page
-        import { getLogger } from '../utils/logger.ts';
+        const { getLogger } = await import('../utils/logger.ts');
         const logger = getLogger('test-api');
         
         logger.info('Testing API call');
@@ -38,7 +38,7 @@ import Layout from '../layouts/Layout.astro';
         resultDiv.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
       } catch (error) {
         // Import logger for error handling
-        import { getLogger } from '../utils/logger.ts';
+        const { getLogger } = await import('../utils/logger.ts');
         const logger = getLogger('test-api');
         logger.error('API test error', {}, error);
         resultDiv.textContent = `Error: ${error.message}`;

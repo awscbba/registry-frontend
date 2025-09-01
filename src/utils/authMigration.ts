@@ -4,7 +4,7 @@
  * Helps migrate users from old authentication systems to the new unified system.
  */
 
-import { authLogger } from './logger';
+import { authLogger, getErrorMessage } from './logger';
 
 /**
  * Migrate legacy authentication data to new unified format
@@ -56,7 +56,7 @@ export function migrateLegacyAuth(): boolean {
         localStorage.setItem('userData', JSON.stringify(userData));
         authLogger.info('Migrated legacy admin user data', { event_type: 'admin_data_migration' });
       } catch (error) {
-        authLogger.warn('Failed to parse legacy admin user data', { error: error.message }, error);
+        authLogger.warn('Failed to parse legacy admin user data', { error: getErrorMessage(error) });
       }
     }
     

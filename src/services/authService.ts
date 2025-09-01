@@ -6,7 +6,7 @@
  */
 
 import { API_CONFIG } from '../config/api';
-import { authLogger } from '../utils/logger';
+import { authLogger, getErrorMessage, getErrorObject } from '../utils/logger';
 import { transformSubscriptions } from '../utils/fieldMapping';
 
 export interface User {
@@ -77,7 +77,7 @@ class AuthService {
       try {
         this.user = JSON.parse(userDataStr);
       } catch (error) {
-        authLogger.warn('Failed to parse stored user data', { error: error.message }, error);
+        authLogger.warn('Failed to parse stored user data', { error: getErrorMessage(error) });
         this.clearStorage();
       }
     }
@@ -169,7 +169,7 @@ class AuthService {
         };
       }
     } catch (error) {
-      authLogger.error('Login error', { error: error.message }, error);
+      authLogger.error('Login error', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error de conexión. Por favor, intenta nuevamente.',
@@ -226,7 +226,7 @@ class AuthService {
 
     try {
       // Decode JWT token to get expiration time
-      const payload = JSON.parse(atob(this.token.split('.')[1]));
+      const payload = JSON.parse(atob(this.token!.split('.')[1]));
       const exp = payload.exp;
       
       if (!exp) {
@@ -238,7 +238,7 @@ class AuthService {
       
       return Math.max(0, remaining);
     } catch (error) {
-      authLogger.warn('Failed to decode token for time remaining', { error: error.message }, error);
+      authLogger.warn('Failed to decode token for time remaining', { error: getErrorMessage(error) });
       return 0;
     }
   }
@@ -296,7 +296,7 @@ class AuthService {
         return false;
       }
     } catch (error) {
-      authLogger.warn('Failed to refresh user data', { error: error.message }, error);
+      authLogger.warn('Failed to refresh user data', { error: getErrorMessage(error) });
       return false;
     }
     
@@ -373,7 +373,7 @@ class AuthService {
         return null;
       }
     } catch (error) {
-      authLogger.error('Token refresh error', { error: error.message }, error);
+      authLogger.error('Token refresh error', { error: getErrorMessage(error) }, getErrorObject(error));
       // On network error, don't logout but return null
       return null;
     }
@@ -411,13 +411,13 @@ class AuthService {
       const { httpClient } = await import('./httpClient');
       const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/me`, { skipRefresh: true });
       
-      if (data.user) {
-        this.user = data.user;
+      if (data && typeof data === 'object' && 'user' in data) {
+        this.user = (data as any).user;
         this.saveToStorage();
       }
       return true;
     } catch (error) {
-      authLogger.warn('Token validation failed', { error: error.message }, error);
+      authLogger.warn('Token validation failed', { error: getErrorMessage(error) });
       // On network error, don't logout but return false
       return false;
     }
@@ -436,10 +436,10 @@ class AuthService {
       const { httpClient } = await import('./httpClient');
       const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
 
-      const subscriptions = data.subscriptions || [];
+      const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
       return transformSubscriptions(subscriptions);
     } catch (error) {
-      authLogger.error('Error fetching subscriptions', { error: error.message }, error);
+      authLogger.error('Error fetching subscriptions', { error: getErrorMessage(error) }, getErrorObject(error));
       throw error;
     }
   }
@@ -460,7 +460,7 @@ class AuthService {
         notes: notes || undefined
       });
     } catch (error) {
-      authLogger.error('Error subscribing to project', { error: error.message }, error);
+      authLogger.error('Error subscribing to project', { error: getErrorMessage(error) }, getErrorObject(error));
       throw error;
     }
   }
@@ -477,7 +477,7 @@ class AuthService {
       const subscriptions = await this.getUserSubscriptions();
       return subscriptions.find(sub => sub.projectId === projectId) || null;
     } catch (error) {
-      authLogger.warn('Failed to check project subscription', { error: error.message }, error);
+      authLogger.warn('Failed to check project subscription', { error: getErrorMessage(error) });
       return null;
     }
   }
@@ -494,11 +494,11 @@ class AuthService {
         { skipAuth: true }
       );
       return {
-        success: data.success || false,
-        message: data.message,
+        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
+        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Unknown response',
       };
     } catch (error) {
-      authLogger.error('Error requesting password reset', { error: error.message }, error);
+      authLogger.error('Error requesting password reset', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
@@ -517,11 +517,11 @@ class AuthService {
         { skipAuth: true }
       );
       return {
-        valid: data.valid || false,
-        expires_at: data.expires_at,
+        valid: (data && typeof data === 'object' && 'valid' in data) ? (data as any).valid || false : false,
+        expires_at: (data && typeof data === 'object' && 'expires_at' in data) ? (data as any).expires_at : undefined,
       };
     } catch (error) {
-      authLogger.error('Error validating reset token', { error: error.message }, error);
+      authLogger.error('Error validating reset token', { error: getErrorMessage(error) }, getErrorObject(error));
       return { valid: false };
     }
   }
@@ -542,11 +542,11 @@ class AuthService {
       );
       
       return {
-        success: data.success || false,
-        message: data.message,
+        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
+        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Unknown response',
       };
     } catch (error) {
-      authLogger.error('Error resetting password', { error: error.message }, error);
+      authLogger.error('Error resetting password', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',

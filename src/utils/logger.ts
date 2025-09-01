@@ -178,6 +178,24 @@ export function getApiLogger(apiName: string): FrontendLogger {
 const isDevelopment = import.meta.env.DEV;
 export const DEFAULT_LOG_LEVEL = isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
 
+// Utility function to safely handle unknown errors in catch blocks
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error occurred';
+}
+
+export function getErrorObject(error: unknown): Error | undefined {
+  if (error instanceof Error) {
+    return error;
+  }
+  return undefined;
+}
+
 // Pre-configured loggers for common use cases
 export const adminLogger = getLogger('admin', DEFAULT_LOG_LEVEL);
 export const authLogger = getLogger('auth', DEFAULT_LOG_LEVEL);
