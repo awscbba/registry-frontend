@@ -136,26 +136,29 @@ class AuthService {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const responseData = await response.json();
+        
+        // Handle new API response format with nested data
+        const data = responseData.success ? responseData.data : responseData;
         
         // Convert admin login response format to match LoginResponse interface
         const loginResponse: LoginResponse = {
           success: true,
-          token: data.access_token,
+          token: data.accessToken || data.access_token,
           user: {
             id: data.user.id,
             email: data.user.email,
             firstName: data.user.firstName,
             lastName: data.user.lastName,
             isAdmin: data.user.isAdmin,
-            requirePasswordChange: data.require_password_change
+            requirePasswordChange: data.user.requirePasswordChange || data.require_password_change
           },
           message: 'Inicio de sesión exitoso'
         };
 
         // Store token, refresh token, and user data
-        this.token = data.access_token;
-        this.refreshToken = data.refresh_token;
+        this.token = data.accessToken || data.access_token;
+        this.refreshToken = data.refreshToken || data.refresh_token;
         this.user = loginResponse.user!;
         this.saveToStorage();
 
