@@ -51,7 +51,7 @@ export async function handleApiResponse(response: Response): Promise<any> {
               // Redirect to admin page to show login form
               window.location.href = '/admin';
             }
-          } catch (error) {
+          } catch (tokenError) {
             // If token is malformed, clear it
             localStorage.removeItem('auth_token');
             localStorage.removeItem('current_user');
