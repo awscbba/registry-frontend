@@ -250,7 +250,13 @@ class AuthService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return this.token !== null && this.user !== null;
+    if (!this.token || !this.user) {
+      return false;
+    }
+    
+    // Check if token is expired
+    const timeRemaining = this.getTokenTimeRemaining();
+    return timeRemaining > 0;
   }
 
   /**
