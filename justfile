@@ -885,6 +885,114 @@ analyze-fix:
     
     echo "✅ Auto-fix completed - run 'just analyze' to verify"
 
+# Fix TypeScript strict mode issues and logging
+fix-typescript:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Fixing TypeScript strict mode issues..."
+    
+    # Check if we have TypeScript errors
+    echo "🔍 Checking for TypeScript errors..."
+    if npm run type-check 2>/dev/null; then
+        echo "✅ No TypeScript errors found"
+        return 0
+    fi
+    
+    echo "⚠️ TypeScript errors detected, applying common fixes..."
+    
+    # Common fixes for unknown error types in catch blocks
+    echo "🔧 Analyzing error handling patterns..."
+    
+    # Find files with error.message access in catch blocks
+    echo "📋 Files needing error handling fixes:"
+    find src/ -name "*.ts" -o -name "*.tsx" | xargs grep -l "error\.message" | while read file; do
+        count=$(grep -c "error\.message" "$file" || echo "0")
+        echo "  $file: $count error.message occurrences"
+    done
+    
+    # Find files with logger calls using unknown error types
+    echo ""
+    echo "📋 Files needing logger call fixes:"
+    find src/ -name "*.ts" -o -name "*.tsx" | xargs grep -l "}, error)" | while read file; do
+        count=$(grep -c "}, error)" "$file" || echo "0")
+        echo "  $file: $count logger calls with unknown error types"
+    done
+    
+    echo ""
+    echo "📋 Required manual fixes:"
+    echo "  1. Replace 'error.message' with 'getErrorMessage(error)'"
+    echo "  2. Replace '}, error)' with '}, getErrorObject(error))'"
+    echo "  3. Add import: import { getErrorMessage, getErrorObject } from '../utils/logger'"
+    echo "  4. Use type assertions for unknown data: (data as any).property"
+    echo "  5. Add null checks: this.token?.split('.')[1]"
+    echo ""
+    echo "💡 Run 'just type-check' after making fixes to verify"
+
+# Clean up console.log statements and replace with structured logging
+cleanup-logging:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Cleaning up console.log statements..."
+    
+    # Find all console.log statements
+    echo "🔍 Scanning for console.log statements..."
+    CONSOLE_LOGS=$(find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.astro" | xargs grep -n "console\.log" 2>/dev/null | wc -l || echo "0")
+    
+    if [ "$CONSOLE_LOGS" -eq 0 ]; then
+        echo "✅ No console.log statements found"
+        return 0
+    fi
+    
+    echo "⚠️ Found $CONSOLE_LOGS console.log statements"
+    echo ""
+    echo "📋 Files with console.log statements:"
+    find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.astro" | xargs grep -l "console\.log" 2>/dev/null | while read file; do
+        count=$(grep -c "console\.log" "$file" 2>/dev/null || echo "0")
+        echo "  $file: $count occurrences"
+        grep -n "console\.log" "$file" 2>/dev/null | head -3 | sed 's/^/    /' || true
+        total_count=$(grep -c "console\.log" "$file" 2>/dev/null || echo "0")
+        if [ "$total_count" -gt 3 ]; then
+            echo "    ... and $(($total_count - 3)) more"
+        fi
+        echo ""
+    done
+    
+    echo "📋 Recommended replacements:"
+    echo "  console.log('info message') → logger.info('info message')"
+    echo "  console.log('debug info') → logger.debug('debug info')"
+    echo "  console.error('error') → logger.error('error', {}, error)"
+    echo "  console.warn('warning') → logger.warn('warning')"
+    echo ""
+    echo "💡 Add logger import: import { getLogger } from '../utils/logger'"
+    echo "💡 Create logger instance: const logger = getLogger('component-name')"
+
+# Complete logging and TypeScript cleanup
+fix-code-quality:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Complete code quality fixes..."
+    echo "================================"
+    
+    echo "Step 1/4: Cleaning up console.log statements..."
+    just cleanup-logging
+    echo ""
+    
+    echo "Step 2/4: Fixing TypeScript issues..."
+    just fix-typescript
+    echo ""
+    
+    echo "Step 3/4: Running linting fixes..."
+    just lint-fix
+    echo ""
+    
+    echo "Step 4/4: Formatting code..."
+    just format
+    echo ""
+    
+    echo "✅ Code quality fixes completed"
+    echo "💡 Run 'just analyze' to verify all fixes"
+    echo "💡 Run 'just build' to test compilation"
+
 # Security and dependency auditing
 audit:
     #!/usr/bin/env bash

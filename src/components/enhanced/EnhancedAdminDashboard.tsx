@@ -92,7 +92,7 @@ export default function EnhancedAdminDashboard() {
       setError(null);
 
       // Fetch admin statistics
-      const statsResponse = await httpClient.getJson(getApiUrl('/admin/stats')) as {
+      const statsResponse = await httpClient.getJson(getApiUrl('/v2/admin/stats')) as {
         success?: boolean;
         data?: { overview?: Record<string, number> };
         overview?: Record<string, number>;

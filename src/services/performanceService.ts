@@ -25,7 +25,7 @@ class PerformanceService {
    */
   async getMetrics(): Promise<PerformanceMetrics> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/dashboard')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/dashboard')) as any;
       const data = response.success ? response.data : response;
       return {
         responseTime: data?.overview?.average_response_time || 0,
@@ -47,7 +47,7 @@ class PerformanceService {
    */
   async getCacheStats(): Promise<CacheStats> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/cache/stats')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/cache/stats')) as any;
       const data = response.success ? response.data : response;
       return {
         hitRate: data?.hit_rate || 0,
@@ -79,7 +79,7 @@ class PerformanceService {
    */
   async getSlowestEndpoints(): Promise<EndpointMetric[]> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/slowest-endpoints')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/slowest-endpoints')) as any;
       const data = response.success ? response.data : response;
       return data?.endpoints || [];
     } catch (error) {
@@ -94,7 +94,7 @@ class PerformanceService {
    */
   async getHealthStatus(): Promise<HealthStatus> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/health')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
       const data = response.success ? response.data : response;
       return {
         status: data?.status || data?.system_status || 'healthy',
@@ -114,7 +114,7 @@ class PerformanceService {
    */
   async getAnalytics(): Promise<PerformanceAnalytics> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/analytics')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/analytics')) as any;
       const data = response.success ? response.data : response;
       return {
         summary: data?.summary || {
@@ -160,7 +160,7 @@ class PerformanceService {
   async clearCache(cacheType?: string): Promise<{ success: boolean; message: string }> {
     try {
       const body = cacheType ? { cache_type: cacheType } : {};
-      const response = await httpClient.postJson(getApiUrl('/admin/performance/cache/clear'), body) as any;
+      const response = await httpClient.postJson(getApiUrl('/v2/admin/performance/cache/clear'), body) as any;
       return {
         success: response.success || false,
         message: response.message || response.data?.message || 'Cache cleared successfully',
@@ -177,7 +177,7 @@ class PerformanceService {
    */
   async getCacheHealth(): Promise<{ status: string; details: Record<string, unknown> }> {
     try {
-      const response = await httpClient.getJson(getApiUrl('/admin/performance/cache/health')) as any;
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/cache/health')) as any;
       const data = response.success ? response.data : response;
       return {
         status: data?.status || 'healthy',
