@@ -91,16 +91,17 @@ export default function EnhancedAdminDashboard() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch admin statistics
+      // Fetch admin statistics - enterprise services should work correctly
       const statsResponse = await httpClient.getJson(getApiUrl('/v2/admin/stats')) as {
         success?: boolean;
         data?: { overview?: Record<string, number> };
         overview?: Record<string, number>;
       };
-      // Handle v2 response format: {success: true, data: {overview: {...}}}
+      
       const statsOverview = statsResponse.success ? 
         (statsResponse.data?.overview || {}) : 
         (statsResponse.overview || statsResponse.data?.overview || {});
+        
       setStats({
         totalUsers: statsOverview.total_users || 0,
         totalProjects: statsOverview.total_projects || 0,
