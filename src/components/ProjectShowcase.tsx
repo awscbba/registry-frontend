@@ -4,6 +4,7 @@ import { authService } from '../services/authService';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import LoginForm from './LoginForm';
+import { debugToken } from '../utils/tokenDebug';
 
 type ViewMode = 'cards' | 'list' | 'icons';
 
@@ -313,6 +314,9 @@ export default function ProjectShowcase() {
                       Administración
                     </button>
                   )}
+                  <button onClick={() => debugToken()} className="btn-secondary" style={{marginRight: '10px'}}>
+                    🔍 Debug Token
+                  </button>
                   <button onClick={handleLogout} className="btn-logout">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
