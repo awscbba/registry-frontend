@@ -33,15 +33,32 @@ export async function handleApiResponse(response: Response): Promise<any> {
       });
       errorMessage = 'Session expired. Please login again.';
       
-      // Automatically logout user and redirect to login
+      // Only clear localStorage if we actually have a token that's expired
+      // Don't clear on first 401 after login (race condition)
       if (typeof window !== 'undefined') {
-        // Clear localStorage directly to avoid circular dependencies
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('current_user');
-        localStorage.removeItem('token_expiry');
-        
-        // Redirect to admin page to show login form
-        window.location.href = '/admin';
+        const currentToken = localStorage.getItem('auth_token');
+        if (currentToken) {
+          try {
+            const payload = JSON.parse(atob(currentToken.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000);
+            
+            // Only clear if token is actually expired
+            if (payload.exp < now) {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('current_user');
+              localStorage.removeItem('token_expiry');
+              
+              // Redirect to admin page to show login form
+              window.location.href = '/admin';
+            }
+          } catch (error) {
+            // If token is malformed, clear it
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('token_expiry');
+            window.location.href = '/admin';
+          }
+        }
       }
     }
     
