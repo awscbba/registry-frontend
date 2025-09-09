@@ -27,7 +27,8 @@ setup-nodejs:
     echo "Detected Node.js version: $CURRENT_NODE_VERSION"
     
     # Check if current version meets requirements (>=18.20.8 or >=20.0.0)
-    if [ "$NODE_MAJOR" -gt 20 ] || ([ "$NODE_MAJOR" -eq 20 ] && [ "$NODE_MINOR" -ge 0 ]) || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -gt 20 ]) || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -eq 20 ] && [ "$NODE_PATCH" -ge 8 ]); then
+    # Simplified: if major >= 20 OR (major=18 AND minor>=20 AND patch>=8)
+    if [ "$NODE_MAJOR" -ge 20 ] || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -ge 20 ] && [ "$NODE_PATCH" -ge 8 ]); then
         echo "✅ Current Node.js $CURRENT_NODE_VERSION meets requirements (>=18.20.8)"
         echo "🎯 Skipping Node.js installation - using existing version"
         
