@@ -1,50 +1,76 @@
 ---
-// Dynamic subscription page - generates at request time for ANY project
+// Static generation with fallback for dynamic projects
 import Layout from '../../layouts/Layout.astro';
 import ProjectSubscriptionForm from '../../components/ProjectSubscriptionForm';
 
-// Get project ID from URL params
+export async function getStaticPaths() {
+  try {
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+    const response = await fetch(`${API_BASE_URL}/v2/projects`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      const projects = (data && data.data && Array.isArray(data.data)) ? data.data : 
+                      (Array.isArray(data) ? data : data.projects || []);
+      
+      // Generate paths for existing projects
+      const paths = projects.map((project: any) => {
+        const slug = project.name.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        
+        return {
+          params: { projectId: slug },
+          props: { project }
+        };
+      });
+      
+      return paths;
+    }
+  } catch (error) {
+    console.warn('API not available during build, using fallback');
+  }
+
+  // Fallback paths for known projects
+  return [
+    { params: { projectId: 'cloud-fundamentals' }, props: { project: null } },
+    { params: { projectId: 'voluntarios' }, props: { project: null } }
+  ];
+}
+
+// Get project from props or fetch dynamically
+const { project } = Astro.props;
 const { projectId } = Astro.params;
 
-// Fetch project data at request time
-let project = null;
+let projectData = project;
 let error = null;
 
-try {
-  const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-  const response = await fetch(`${API_BASE_URL}/v2/projects`);
-  
-  if (response.ok) {
-    const data = await response.json();
-    const projects = (data && data.data && Array.isArray(data.data)) ? data.data : 
-                    (Array.isArray(data) ? data : data.projects || []);
+// If no project data from static generation, fetch dynamically
+if (!projectData) {
+  try {
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+    const response = await fetch(`${API_BASE_URL}/v2/projects`);
     
-    // Find project by matching slug
-    project = projects.find((p: any) => {
-      // Generate slug from project name
-      const slug = p.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      return slug === projectId;
-    });
-    
-    if (!project) {
-      // Try alternative slug matching for known mappings
-      project = projects.find((p: any) => {
-        const name = p.name.toLowerCase();
-        if (name.includes('test') && projectId === 'cloud-fundamentals') return true;
-        if (name.includes('voluntarios') && projectId === 'voluntarios') return true;
-        if (name.includes('aws workshop') && projectId === 'aws-workshop-2025') return true;
-        return false;
+    if (response.ok) {
+      const data = await response.json();
+      const projects = (data && data.data && Array.isArray(data.data)) ? data.data : 
+                      (Array.isArray(data) ? data : data.projects || []);
+      
+      // Find project by slug
+      projectData = projects.find((p: any) => {
+        const slug = p.name.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        return slug === projectId;
       });
     }
+  } catch (e) {
+    error = `Failed to load project: ${e.message}`;
   }
-} catch (e) {
-  error = `Failed to load project: ${e.message}`;
 }
 ---
 
-<Layout title={`Subscribe to ${project?.name || 'Project'}`}>
+<Layout title={`Subscribe to ${projectData?.name || 'Project'}`}>
   <main class="subscription-page">
     <div class="container">
       {error ? (
@@ -54,23 +80,23 @@ try {
           <p>Please try again later or contact support.</p>
           <a href="/" class="btn-back">← Back to Projects</a>
         </div>
-      ) : project ? (
+      ) : projectData ? (
         <div class="subscription-content">
           <div class="subscription-header">
-            <h1>Subscribe to {project.name}</h1>
-            <p class="project-description">{project.description}</p>
+            <h1>Subscribe to {projectData.name}</h1>
+            <p class="project-description">{projectData.description}</p>
             <div class="project-details">
               <span class="project-dates">
-                {project.startDate} - {project.endDate}
+                {projectData.startDate} - {projectData.endDate}
               </span>
               <span class="project-participants">
-                {project.currentParticipants || 0} / {project.maxParticipants} participants
+                {projectData.currentParticipants || 0} / {projectData.maxParticipants} participants
               </span>
             </div>
           </div>
           
           <ProjectSubscriptionForm 
-            project={project} 
+            project={projectData} 
             client:load 
           />
         </div>

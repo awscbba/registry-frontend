@@ -6,7 +6,7 @@ import tailwind from '@astrojs/tailwind';
 // https://astro.build/config
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'server', // Enable SSR for dynamic pages
+  output: 'static', // Revert to static - SSR requires adapter
   build: {
     assets: 'assets'
   }
