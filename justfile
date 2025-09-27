@@ -343,26 +343,43 @@ quality:
     fi
     echo "  Bundle size: $(cat bundle-size.txt | cut -d'-' -f2 | cut -d'(' -f1 | xargs || echo "unknown")"
 
-# Deploy to AWS Amplify (SSR-enabled deployment)
+# Deploy to AWS Amplify (SSR-enabled deployment via S3)
 deploy-amplify app_id:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🚀 Deploying to AWS Amplify (SSR)..."
+    echo "🚀 Deploying to AWS Amplify via S3..."
     
     APP_ID="{{app_id}}"
+    BUCKET_NAME="amplify-deployments-${APP_ID}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    ZIP_NAME="amplify-deployment-${TIMESTAMP}.zip"
+    
     echo "📦 Deployment configuration:"
     echo "  Amplify App ID: $APP_ID"
+    echo "  S3 Bucket: $BUCKET_NAME"
+    echo "  Package: $ZIP_NAME"
     echo "  Build output: dist/"
-    echo "  Deployment type: SSR (Server-Side Rendering)"
     echo ""
     
     # Create deployment package
     echo "📦 Creating deployment package..."
-    zip -r amplify-deployment.zip dist/
+    zip -r "$ZIP_NAME" dist/
     
-    echo "📤 Deploying to Amplify..."
+    # Create S3 bucket if it doesn't exist
+    echo "📦 Ensuring S3 bucket exists..."
+    aws s3 mb "s3://$BUCKET_NAME" --region us-east-1 2>/dev/null || echo "Bucket already exists"
+    
+    # Upload to S3
+    echo "📤 Uploading to S3..."
+    aws s3 cp "$ZIP_NAME" "s3://$BUCKET_NAME/$ZIP_NAME" --region us-east-1
+    
+    # Get S3 URI
+    S3_URI="s3://$BUCKET_NAME/$ZIP_NAME"
+    echo "📍 S3 URI: $S3_URI"
+    
+    echo "🚀 Creating Amplify deployment from S3..."
     aws amplify create-deployment \
-        --app-id $APP_ID \
+        --app-id "$APP_ID" \
         --branch-name main \
         --region us-east-1 > deployment.json
     
@@ -370,24 +387,25 @@ deploy-amplify app_id:
     UPLOAD_URL=$(cat deployment.json | grep -o '"uploadUrl":"[^"]*' | cut -d'"' -f4)
     DEPLOYMENT_ID=$(cat deployment.json | grep -o '"deploymentId":"[^"]*' | cut -d'"' -f4)
     
-    echo "📤 Uploading build artifacts..."
+    echo "📤 Uploading build artifacts to Amplify..."
     curl -X PUT "$UPLOAD_URL" \
         -H "Content-Type: application/zip" \
-        --data-binary @amplify-deployment.zip
+        --data-binary "@$ZIP_NAME"
     
-    echo "🚀 Starting deployment..."
+    echo "🚀 Starting Amplify deployment..."
     aws amplify start-deployment \
-        --app-id $APP_ID \
+        --app-id "$APP_ID" \
         --branch-name main \
-        --deployment-id $DEPLOYMENT_ID \
+        --deployment-id "$DEPLOYMENT_ID" \
         --region us-east-1
     
     echo "✅ Amplify deployment initiated!"
     echo "🌐 Amplify Console: https://console.aws.amazon.com/amplify/home#/$APP_ID"
+    echo "📊 S3 Source: $S3_URI"
     echo "📊 Monitor deployment progress in the Amplify Console"
     
-    # Cleanup
-    rm -f amplify-deployment.zip deployment.json
+    # Cleanup local files
+    rm -f "$ZIP_NAME" deployment.json
 
 # Deploy to S3 + CloudFront (production deployment)
 deploy-aws:
