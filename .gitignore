@@ -12,3 +12,5 @@ dev.log
 # Astro build artifacts
 .astro/
 amplify-deployment.zip
+amplify-deployment-*.zip
+deployment.json
