@@ -343,6 +343,52 @@ quality:
     fi
     echo "  Bundle size: $(cat bundle-size.txt | cut -d'-' -f2 | cut -d'(' -f1 | xargs || echo "unknown")"
 
+# Deploy to AWS Amplify (SSR-enabled deployment)
+deploy-amplify app_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🚀 Deploying to AWS Amplify (SSR)..."
+    
+    APP_ID="{{app_id}}"
+    echo "📦 Deployment configuration:"
+    echo "  Amplify App ID: $APP_ID"
+    echo "  Build output: dist/"
+    echo "  Deployment type: SSR (Server-Side Rendering)"
+    echo ""
+    
+    # Create deployment package
+    echo "📦 Creating deployment package..."
+    zip -r amplify-deployment.zip dist/
+    
+    echo "📤 Deploying to Amplify..."
+    aws amplify create-deployment \
+        --app-id $APP_ID \
+        --branch-name main \
+        --region us-east-1 > deployment.json
+    
+    # Extract upload URL and deployment ID
+    UPLOAD_URL=$(cat deployment.json | grep -o '"uploadUrl":"[^"]*' | cut -d'"' -f4)
+    DEPLOYMENT_ID=$(cat deployment.json | grep -o '"deploymentId":"[^"]*' | cut -d'"' -f4)
+    
+    echo "📤 Uploading build artifacts..."
+    curl -X PUT "$UPLOAD_URL" \
+        -H "Content-Type: application/zip" \
+        --data-binary @amplify-deployment.zip
+    
+    echo "🚀 Starting deployment..."
+    aws amplify start-deployment \
+        --app-id $APP_ID \
+        --branch-name main \
+        --deployment-id $DEPLOYMENT_ID \
+        --region us-east-1
+    
+    echo "✅ Amplify deployment initiated!"
+    echo "🌐 Amplify Console: https://console.aws.amazon.com/amplify/home#/$APP_ID"
+    echo "📊 Monitor deployment progress in the Amplify Console"
+    
+    # Cleanup
+    rm -f amplify-deployment.zip deployment.json
+
 # Deploy to S3 + CloudFront (production deployment)
 deploy-aws:
     #!/usr/bin/env bash
@@ -480,7 +526,7 @@ ci-quality:
     echo "✅ CI quality pipeline completed (with any necessary fallbacks)"
 
 # Complete deployment pipeline (build + deploy)
-ci-deploy target="s3":
+ci-deploy target="s3" app_id="":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🚀 People Register Frontend - CI Deployment Pipeline"
@@ -520,8 +566,12 @@ ci-deploy target="s3":
     if [ "{{target}}" = "s3" ]; then
         just deploy-aws
     elif [ "{{target}}" = "amplify" ]; then
-        echo "ℹ️ Amplify deployment requires app-id parameter"
-        echo "Use: just deploy-amplify <app-id>"
+        if [ -z "{{app_id}}" ]; then
+            echo "❌ Amplify deployment requires app-id parameter"
+            echo "Use: just ci-deploy amplify <app-id>"
+            exit 1
+        fi
+        just deploy-amplify "{{app_id}}"
     else
         echo "❌ Unknown deployment target: {{target}}"
         echo "Available targets: s3, amplify"
