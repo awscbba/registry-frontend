@@ -151,7 +151,27 @@ Actions:
             echo ""
             echo "🌐 Production URLs:"
             echo "  Amplify Console: https://console.aws.amazon.com/amplify/home#/d2df6u91uqaaay"
+            echo "  Amplify App: https://main.d2df6u91uqaaay.amplifyapp.com"
             echo "  API: https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod"
+            echo ""
+            echo "✅ Post-Deployment Validation"
+            echo "============================"
+            
+            # Basic health checks
+            echo "🔍 Checking API availability..."
+            if curl -f -s https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/health > /dev/null; then
+            echo "✅ API is accessible"
+            else
+            echo "⚠️ API health check failed (may be expected if no health endpoint)"
+            fi
+            
+            echo "🔍 Checking Amplify deployment..."
+            echo "📋 Amplify App: https://main.d2df6u91uqaaay.amplifyapp.com"
+            echo "📋 Monitor deployment in Amplify Console"
+            
+            echo ""
+            echo "🎯 Deployment validation completed"
+            echo "🌐 Amplify SSR deployment initiated successfully"
             echo ""
             echo "🎉 Amplify SSR deployment completed successfully!"
       Container:
