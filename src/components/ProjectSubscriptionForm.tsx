@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getComponentLogger } from '../utils/logger';
+import { getComponentLogger, getErrorMessage, getErrorObject } from '../utils/logger';
 import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project, SubscriptionCreate } from '../types/project';
@@ -91,7 +91,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       
       setProject(matchingProject);
     } catch (err) {
-      logger.error('Error loading project', { project_id: projectId, error: err.message }, err);
+      logger.error('Error loading project', { project_id: projectId, error: getErrorMessage(err) }, getErrorObject(err));
       setError('Error al cargar el proyecto');
     } finally {
       setIsLoading(false);
@@ -119,15 +119,27 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     setSuccess(null);
 
     try {
-      // Use the service layer for consistent API calls and error handling
+      // Enterprise validation before API call
+      if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim()) {
+        throw new Error('Required fields missing: firstName, lastName, and email are mandatory');
+      }
+
+      if (!project?.id) {
+        throw new Error('Invalid project: Project ID is required');
+      }
+
+      // Use proper business logic for subscription creation
       const subscriptionData: SubscriptionCreate = {
-        person: {
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email
-        },
-        projectId: project!.id,
-        notes: formData.notes || undefined
+        personId: formData.email, // Use email as unique identifier, not display name
+        projectId: project.id,
+        notes: formData.notes?.trim() || undefined
       };
+
+      logger.info('Creating subscription', { 
+        projectId: project.id, 
+        personEmail: formData.email,
+        event_type: 'subscription_create_attempt'
+      });
 
       const result = await projectApi.createSubscription(subscriptionData);
       
@@ -207,7 +219,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         <div className="error-state">
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={loadProject} className={BUTTON_CLASSES.secondary}>
+          <button onClick={loadProject} className={BUTTON_CLASSES.SECONDARY}>
             Reintentar
           </button>
         </div>
@@ -253,11 +265,11 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
           <div className="project-details">
             <div className="detail-item">
               <span className="detail-label">Fecha de inicio:</span>
-              <span className="detail-value">{new Date(project.startDate).toLocaleDateString()}</span>
+              <span className="detail-value">{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No especificada'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Fecha de fin:</span>
-              <span className="detail-value">{new Date(project.endDate).toLocaleDateString()}</span>
+              <span className="detail-value">{project.endDate ? new Date(project.endDate).toLocaleDateString() : 'No especificada'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Participantes máximos:</span>
@@ -287,7 +299,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
             <div className="auth-actions">
               <button 
                 onClick={handleShowUserDashboard}
-                className={BUTTON_CLASSES.primary}
+                className={BUTTON_CLASSES.PRIMARY}
               >
                 Ver Mi Panel de Usuario
               </button>
@@ -397,7 +409,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={BUTTON_CLASSES.primary}
+                  className={BUTTON_CLASSES.PRIMARY}
                 >
                   {isSubmitting ? 'Enviando solicitud...' : 'Enviar Solicitud de Suscripción'}
                 </button>

@@ -1,23 +1,30 @@
 {
-  "@types/react": {
-    "current": "19.1.6",
-    "wanted": "19.1.8",
-    "latest": "19.1.8",
+  "@types/jest": {
+    "current": "29.5.14",
+    "wanted": "29.5.14",
+    "latest": "30.0.0",
     "dependent": "registry-frontend",
-    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/@types/react"
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/people-registry-03/registry-frontend/node_modules/@types/jest"
   },
-  "astro": {
-    "current": "5.9.1",
-    "wanted": "5.10.1",
-    "latest": "5.10.1",
+  "jest": {
+    "current": "29.7.0",
+    "wanted": "29.7.0",
+    "latest": "30.1.3",
     "dependent": "registry-frontend",
-    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/astro"
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/people-registry-03/registry-frontend/node_modules/jest"
+  },
+  "jest-environment-jsdom": {
+    "current": "29.7.0",
+    "wanted": "29.7.0",
+    "latest": "30.1.2",
+    "dependent": "registry-frontend",
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/people-registry-03/registry-frontend/node_modules/jest-environment-jsdom"
   },
   "tailwindcss": {
     "current": "3.4.17",
     "wanted": "3.4.17",
-    "latest": "4.1.10",
+    "latest": "4.1.13",
     "dependent": "registry-frontend",
-    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/PeopleRegister/registry-frontend/node_modules/tailwindcss"
+    "location": "/Users/sergio.rodriguez/Projects/Community/AWS/UserGroupCbba/CodeCatalyst/people-registry-03/registry-frontend/node_modules/tailwindcss"
   }
 }

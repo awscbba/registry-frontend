@@ -24,7 +24,7 @@ const ConnectionPoolMonitor: React.FC<ConnectionPoolMonitorProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch connection pool status');
-      logger.error('Connection pool error', { error: err.message }, err);
+      logger.error('Connection pool error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

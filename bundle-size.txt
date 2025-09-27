@@ -1,1 +1,1 @@
-Bundle size - 276K (Budget - 2MB)
+Bundle size - 1.4M (Budget - 2MB)

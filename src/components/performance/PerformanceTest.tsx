@@ -35,7 +35,7 @@ const PerformanceTest: React.FC = () => {
         test_name: testName, 
         error: errorMessage, 
         event_type: 'test_failed' 
-      }, err);
+      }, (err));
       setError(`${testName}: ${errorMessage}`);
     } finally {
       setLoading(false);
