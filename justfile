@@ -380,7 +380,7 @@ deploy-amplify app_id:
     echo "🚀 Creating Amplify deployment from S3..."
     aws amplify create-deployment \
         --app-id "$APP_ID" \
-        --branch-name main \
+        --branch-name prod \
         --region us-east-1 > deployment.json
     
     # Extract upload URL and deployment ID
@@ -395,7 +395,7 @@ deploy-amplify app_id:
     echo "🚀 Starting Amplify deployment..."
     aws amplify start-deployment \
         --app-id "$APP_ID" \
-        --branch-name main \
+        --branch-name prod \
         --deployment-id "$DEPLOYMENT_ID" \
         --region us-east-1
     
