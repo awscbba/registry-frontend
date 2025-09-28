@@ -35,8 +35,12 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   });
 
   useEffect(() => {
-    // Only load project if not already provided by SSR
-    if (!project) {
+    // Initialize component state - respect dependency injection
+    if (project) {
+      // Use injected project data (SSR or props)
+      setCurrentProject(project);
+    } else {
+      // Fallback to repository pattern for data fetching
       loadProject();
     }
     checkUserLoginStatus();
