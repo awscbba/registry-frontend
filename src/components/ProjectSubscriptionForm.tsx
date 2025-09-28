@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getComponentLogger, getErrorMessage, getErrorObject } from '../utils/logger';
-import { projectApi, ApiError } from '../services/projectApi';
+import { projectApi } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project, SubscriptionCreate } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
