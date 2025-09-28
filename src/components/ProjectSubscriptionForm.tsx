@@ -84,14 +84,26 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       
       // First, get all projects to find the one matching the slug
       const allProjects = await projectApi.getPublicProjects();
+      logger.info('Client-side project lookup', { 
+        projectId, 
+        totalProjects: allProjects.length,
+        projectNames: allProjects.map(p => p.name)
+      });
       
       // Find project by slug
       const matchingProject = allProjects.find(p => {
         const projectSlug = getProjectSlug(p);
+        logger.info('Slug comparison', { 
+          projectName: p.name, 
+          generatedSlug: projectSlug, 
+          targetSlug: projectId,
+          match: projectSlug === projectId 
+        });
         return projectSlug === projectId;
       });
       
       if (!matchingProject) {
+        logger.error('No matching project found', { projectId, availableProjects: allProjects.map(p => ({ name: p.name, slug: getProjectSlug(p) })) });
         setError('Proyecto no encontrado');
         return;
       }
