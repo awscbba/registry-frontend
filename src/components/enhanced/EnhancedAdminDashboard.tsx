@@ -328,10 +328,14 @@ export default function EnhancedAdminDashboard() {
       adminLogger.error('Person deletion failed', errorContext, getErrorObject(err));
       
       // User-friendly error message based on error type
-      if (getErrorMessage(err).includes('404')) {
+      const errorMessage = getErrorMessage(err);
+      
+      if (errorMessage.includes('404')) {
         setError('Person not found. They may have already been deleted.');
-      } else if (getErrorMessage(err).includes('403')) {
+      } else if (errorMessage.includes('403')) {
         setError('You do not have permission to delete this person.');
+      } else if (errorMessage.includes('active subscriptions') || errorMessage.includes('active project subscriptions')) {
+        setError('El usuario tiene registros activos, deben borrarse antes de remover.');
       } else {
         setError('Failed to delete person. Please try again or contact support.');
       }
