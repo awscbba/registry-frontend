@@ -86,6 +86,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       const allProjects = await projectApi.getPublicProjects();
       logger.info('Client-side project lookup', { 
         projectId, 
+        projectIdType: typeof projectId,
         totalProjects: allProjects.length,
         projectNames: allProjects.map(p => p.name)
       });
