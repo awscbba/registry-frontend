@@ -184,20 +184,32 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         notes: ''
       });
 
-    } catch (err) {
-      if (err instanceof ApiError) {
-        // Handle specific API errors with user-friendly messages
-        if (err.message.includes('already subscribed') || err.message.includes('ya suscrito')) {
-          setLoginMessage('Ya tienes una suscripción a este proyecto. Inicia sesión para ver el estado de tu suscripción.');
-          setShowLoginModal(true);
-        } else if (err.message.includes('account exists') || err.message.includes('cuenta existe')) {
-          setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
-          setShowLoginModal(true);
-        } else {
-          setError(`Error al procesar suscripción: ${err.message}`);
-        }
+    } catch (err: any) {
+      logger.error('Subscription error', { error: err });
+      
+      // Extract error message from API response structure
+      let errorMessage = 'Error desconocido al procesar la suscripción';
+      
+      if (err?.error?.message) {
+        // API error response format: { error: { message: "...", code: "..." } }
+        errorMessage = err.error.message;
+      } else if (err?.message) {
+        // Standard Error object
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
+      // Handle specific error cases with user-friendly messages
+      if (errorMessage.includes('already exists') || errorMessage.includes('Subscription already exists')) {
+        setLoginMessage('Ya tienes una suscripción a este proyecto. Inicia sesión para ver el estado de tu suscripción.');
+        setShowLoginModal(true);
+      } else if (errorMessage.includes('account exists') || errorMessage.includes('cuenta existe')) {
+        setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
+        setShowLoginModal(true);
       } else {
-        setError('Error desconocido al procesar la suscripción');
+        // Show user-friendly error message
+        setError(`Error al procesar suscripción: ${errorMessage}`);
       }
     } finally {
       setIsSubmitting(false);
