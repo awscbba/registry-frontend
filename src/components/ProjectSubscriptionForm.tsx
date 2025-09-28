@@ -64,16 +64,14 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const getProjectSlug = (project: Project): string => {
     const name = project.name.toLowerCase();
     
-    // Map known projects to their expected slugs
+    // Map known projects to their expected slugs only if needed
     if (name.includes('aws workshop')) {
       return 'aws-workshop-2025';
     } else if (name.includes('serverless bootcamp')) {
       return 'serverless-bootcamp';
-    } else if (name.includes('testproy') || name.includes('test')) {
-      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
     }
     
-    // Fallback to generated slug
+    // Use natural slug generation for all other projects
     return nameToSlug(project.name);
   };
 
