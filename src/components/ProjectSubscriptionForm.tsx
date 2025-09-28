@@ -35,9 +35,12 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   });
 
   useEffect(() => {
-    loadProject();
+    // Only load project if not already provided by SSR
+    if (!project) {
+      loadProject();
+    }
     checkUserLoginStatus();
-  }, [projectId]);
+  }, [projectId, project]);
 
   const checkUserLoginStatus = () => {
     setIsLoggedIn(authService.isAuthenticated());
