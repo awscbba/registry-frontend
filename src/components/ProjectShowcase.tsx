@@ -98,11 +98,9 @@ export default function ProjectShowcase() {
       return 'aws-workshop-2025';
     } else if (name.includes('serverless bootcamp')) {
       return 'serverless-bootcamp';
-    } else if (name.includes('testproy') || name.includes('test')) {
-      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
     }
     
-    // Fallback to generated slug
+    // Use natural slug generation for all projects
     return nameToSlug(project.name);
   };
 
