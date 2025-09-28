@@ -37,8 +37,8 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   useEffect(() => {
     // Initialize component state - respect dependency injection
     if (project) {
-      // Use injected project data (SSR or props)
-      setCurrentProject(project);
+      // Use injected project data (SSR or props) - no additional state needed
+      // Project data flows through props following clean architecture
     } else {
       // Fallback to repository pattern for data fetching
       loadProject();
