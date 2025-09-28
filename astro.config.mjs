@@ -2,15 +2,11 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
-import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'server', // Server-side rendering for dynamic subscription pages
-  adapter: node({
-    mode: 'standalone'
-  }),
+  output: 'static', // Static build for Amplify compatibility (SSR not supported via S3)
   build: {
     assets: 'assets'
   }
