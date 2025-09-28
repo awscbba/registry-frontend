@@ -7,7 +7,7 @@ import node from '@astrojs/node';
 // https://astro.build/config
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'server', // Server-side rendering for dynamic project pages
+  output: 'hybrid', // Hybrid mode - static by default, server for dynamic routes
   adapter: node({
     mode: 'standalone'
   }),
