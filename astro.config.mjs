@@ -7,15 +7,16 @@ import node from '@astrojs/node';
 // https://astro.build/config
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'server', // Server-side rendering for dynamic project pages
+  output: 'server',
   adapter: node({
     mode: 'standalone'
   }),
-  server: {
-    host: '0.0.0.0',
-    port: 3000
-  },
   build: {
     assets: 'assets'
+  },
+  vite: {
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+    }
   }
 });
