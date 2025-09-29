@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
+import { httpClient, getApiUrl } from '../services/httpClient';
 import type { Project } from '../types/project';
 import type { Person } from '../types/person';
 
@@ -10,52 +11,88 @@ interface ProjectSubscribersListProps {
 interface SubscriberWithDetails extends Person {
   subscriptionStatus: string;
   subscriptionDate: string;
+  subscriptionId: string;
 }
 
 export default function ProjectSubscribersList({ project }: ProjectSubscribersListProps) {
   const [subscribers, setSubscribers] = useState<SubscriberWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [removingSubscriber, setRemovingSubscriber] = useState<string | null>(null);
+
+  const loadSubscribers = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Get all subscribers for this project
+      const projectSubscribers = await projectApi.getProjectSubscribers(project.id);
+      
+      // Map subscribers to the format we need
+      const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
+        id: subscriber.person.id,
+        firstName: subscriber.person.firstName,
+        lastName: subscriber.person.lastName,
+        email: subscriber.person.email,
+        phone: '', // Not available in subscriber data
+        dateOfBirth: '',
+        address: undefined,
+        isActive: true,
+        createdAt: subscriber.subscribedAt,
+        updatedAt: '',
+        subscriptionStatus: subscriber.status,
+        subscriptionDate: subscriber.subscribedAt,
+        subscriptionId: subscriber.subscriptionId || `${subscriber.person.id}-${project.id}` // Fallback ID
+      }));
+      
+      setSubscribers(subscribersWithDetails);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(`Error al cargar suscriptores: ${err.message}`);
+      } else {
+        setError('Error desconocido al cargar suscriptores');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadSubscribers = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Get all subscribers for this project
-        const projectSubscribers = await projectApi.getProjectSubscribers(project.id);
-        
-        // Map subscribers to the format we need
-        const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
-          id: subscriber.person.id,
-          firstName: subscriber.person.firstName,
-          lastName: subscriber.person.lastName,
-          email: subscriber.person.email,
-          phone: '', // Not available in subscriber data
-          dateOfBirth: '',
-          address: undefined,
-          isActive: true,
-          createdAt: subscriber.subscribedAt,
-          updatedAt: '',
-          subscriptionStatus: subscriber.status,
-          subscriptionDate: subscriber.subscribedAt
-        }));
-        
-        setSubscribers(subscribersWithDetails);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(`Error al cargar suscriptores: ${err.message}`);
-        } else {
-          setError('Error desconocido al cargar suscriptores');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadSubscribers();
   }, [project.id]);
+
+  const handleRemoveSubscriber = async (subscriber: SubscriberWithDetails) => {
+    if (!confirm(`¿Estás seguro de que quieres remover a ${subscriber.firstName} ${subscriber.lastName} de este proyecto?`)) {
+      return;
+    }
+
+    setRemovingSubscriber(subscriber.id);
+    
+    try {
+      // Get all subscriptions to find the correct one
+      const allSubscriptions = await httpClient.getJson(getApiUrl('/v2/subscriptions'));
+      const subscription = (allSubscriptions.data as any[]).find(sub => 
+        sub.personId === subscriber.id && sub.projectId === project.id
+      );
+
+      if (!subscription) {
+        throw new Error('Subscription not found');
+      }
+
+      // Delete the subscription
+      await httpClient.request(getApiUrl(`/v2/subscriptions/${subscription.id}`), { 
+        method: 'DELETE' 
+      });
+
+      // Refresh the subscribers list
+      await loadSubscribers();
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al remover suscriptor');
+    } finally {
+      setRemovingSubscriber(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -135,11 +172,27 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
                 </h4>
                 <p className="subscriber-email">{subscriber.email}</p>
               </div>
-              <div 
-                className="subscription-status"
-                style={{ backgroundColor: getStatusColor(subscriber.subscriptionStatus) }}
-              >
-                {getStatusText(subscriber.subscriptionStatus)}
+              <div className="subscriber-actions">
+                <div 
+                  className="subscription-status"
+                  style={{ backgroundColor: getStatusColor(subscriber.subscriptionStatus) }}
+                >
+                  {getStatusText(subscriber.subscriptionStatus)}
+                </div>
+                <button
+                  onClick={() => handleRemoveSubscriber(subscriber)}
+                  disabled={removingSubscriber === subscriber.id}
+                  className="remove-subscriber-btn"
+                  title="Remover suscriptor"
+                >
+                  {removingSubscriber === subscriber.id ? (
+                    <div className="spinner"></div>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -265,6 +318,47 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
           flex: 1;
         }
 
+        .subscriber-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .remove-subscriber-btn {
+          background: #fee2e2;
+          border: 1px solid #fecaca;
+          border-radius: 6px;
+          padding: 0.5rem;
+          cursor: pointer;
+          color: #dc2626;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 32px;
+        }
+
+        .remove-subscriber-btn:hover:not(:disabled) {
+          background: #fecaca;
+          border-color: #f87171;
+          transform: scale(1.05);
+        }
+
+        .remove-subscriber-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid #fecaca;
+          border-top: 2px solid #dc2626;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
         .subscriber-name {
           margin: 0 0 0.25rem 0;
           color: #374151;
@@ -329,6 +423,11 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
             flex-direction: column;
             align-items: flex-start;
             gap: 0.75rem;
+          }
+
+          .subscriber-actions {
+            align-self: stretch;
+            justify-content: space-between;
           }
 
           .detail-item {
