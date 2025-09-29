@@ -62,7 +62,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
   }, [project.id]);
 
   const handleRemoveSubscriber = async (subscriber: SubscriberWithDetails) => {
-    if (!confirm(`¿Estás seguro de que quieres remover a ${subscriber.firstName} ${subscriber.lastName} de este proyecto?`)) {
+    if (!window.confirm(`¿Estás seguro de que quieres remover a ${subscriber.firstName} ${subscriber.lastName} de este proyecto?`)) {
       return;
     }
 
