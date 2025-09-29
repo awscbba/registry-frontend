@@ -386,7 +386,7 @@ export default function EnhancedAdminDashboard() {
       if (subscriptionData && subscriptionData.projectIds.length > 0) {
         for (const projectId of subscriptionData.projectIds) {
           await httpClient.postJson(getApiUrl('/v2/subscriptions'), {
-            personId: createData.email, // Use email as personId for new users
+            personId: newPerson.id, // Use the actual person ID returned from creation
             projectId: projectId,
             status: 'active'
           });

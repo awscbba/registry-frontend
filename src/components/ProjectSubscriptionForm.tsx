@@ -146,20 +146,30 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         throw new Error('Invalid project: Project ID is required');
       }
 
-      // Use proper business logic for subscription creation
-      const subscriptionData: SubscriptionCreate = {
-        personId: formData.email, // Use email as unique identifier, not display name
+      // Use proper business logic for public subscription creation
+      const publicSubscriptionData = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone || '',
+        dateOfBirth: formData.dateOfBirth || '1990-01-01',
         projectId: project.id,
-        notes: formData.notes?.trim() || undefined
+        address: {
+          street: formData.address?.street || '',
+          city: formData.address?.city || '',
+          state: formData.address?.state || '',
+          postalCode: formData.address?.postalCode || '',
+          country: formData.address?.country || ''
+        }
       };
 
-      logger.info('Creating subscription', { 
+      logger.info('Creating public subscription', { 
         projectId: project.id, 
         personEmail: formData.email,
-        event_type: 'subscription_create_attempt'
+        event_type: 'public_subscription_create_attempt'
       });
 
-      const result = await projectApi.createSubscription(subscriptionData);
+      const result = await projectApi.createSubscription(publicSubscriptionData);
       
       // Handle success based on API response
       if (result && typeof result === 'object' && 'personCreated' in result) {
