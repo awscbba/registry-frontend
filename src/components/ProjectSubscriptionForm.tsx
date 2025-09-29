@@ -197,17 +197,25 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     } catch (err: any) {
       logger.error('Subscription error', { error: err });
       
-      // Extract error message from API response structure
+      // Extract error message from API response structure with better handling
       let errorMessage = 'Error desconocido al procesar la suscripción';
       
-      if (err?.error?.message) {
-        // API error response format: { error: { message: "...", code: "..." } }
-        errorMessage = err.error.message;
-      } else if (err?.message) {
-        // Standard Error object
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
+      try {
+        if (err?.error?.message) {
+          // API error response format: { error: { message: "...", code: "..." } }
+          errorMessage = err.error.message;
+        } else if (err?.message) {
+          // Standard Error object
+          errorMessage = err.message;
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err && typeof err === 'object') {
+          // Handle cases where err is an object but doesn't have expected structure
+          errorMessage = 'Error de conexión al procesar la suscripción';
+        }
+      } catch (parseError) {
+        // If error parsing fails, use default message
+        errorMessage = 'Error de conexión al procesar la suscripción';
       }
 
       // Handle specific error cases with user-friendly messages
@@ -217,9 +225,15 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       } else if (errorMessage.includes('account exists') || errorMessage.includes('cuenta existe')) {
         setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
         setShowLoginModal(true);
+      } else if (errorMessage.includes("can't be used in 'await' expression") || errorMessage.includes('HTTP_400')) {
+        // Handle the specific backend async error with user-friendly message
+        setError('Error temporal del servidor. Por favor intenta nuevamente en unos momentos.');
       } else {
-        // Show user-friendly error message
-        setError(`Error al procesar suscripción: ${errorMessage}`);
+        // Show user-friendly error message, but limit length to avoid showing raw JSON
+        const displayMessage = errorMessage.length > 200 
+          ? 'Error al procesar la suscripción. Por favor verifica tus datos e intenta nuevamente.'
+          : errorMessage;
+        setError(`Error al procesar suscripción: ${displayMessage}`);
       }
     } finally {
       setIsSubmitting(false);
