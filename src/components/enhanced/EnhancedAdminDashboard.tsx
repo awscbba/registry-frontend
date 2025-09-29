@@ -48,13 +48,47 @@ interface AdminUser {
   updatedAt?: string;
 }
 
-type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user' | 'create-user' | 'create-project' | 'edit-project' | 'view-project-subscribers';
+type AdminView = 'dashboard' | 'users' | 'projects' | 'subscriptions' | 'performance' | 'cache' | 'database' | 'query-optimization' | 'connection-pools' | 'system-health' | 'edit-user' | 'view-user' | 'create-user' | 'create-project' | 'edit-project' | 'view-project-subscribers';
 
 export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [people, setPeople] = useState<Person[]>([]);
+  const [pendingSubscriptions, setPendingSubscriptions] = useState<any[]>([]);
+
+  const fetchPendingSubscriptions = async () => {
+    try {
+      const response = await httpClient.getJson(getApiUrl('/v2/subscriptions'));
+      const allSubscriptions = response.data || [];
+      const pending = allSubscriptions.filter((sub: any) => sub.status === 'pending');
+      setPendingSubscriptions(pending);
+    } catch (err) {
+      adminLogger.error('Error fetching pending subscriptions', { error: getErrorMessage(err) });
+    }
+  };
+
+  const handleSubscriptionApproval = async (subscriptionId: string, approve: boolean) => {
+    try {
+      const newStatus = approve ? 'active' : 'rejected';
+      await httpClient.putJson(getApiUrl(`/v2/subscriptions/${subscriptionId}`), {
+        status: newStatus
+      });
+      
+      adminLogger.info('Subscription status updated', { 
+        subscriptionId, 
+        newStatus,
+        event_type: 'subscription_approval'
+      });
+      
+      // Refresh pending subscriptions
+      await fetchPendingSubscriptions();
+      await fetchAdminData(); // Refresh main data
+      
+    } catch (err) {
+      adminLogger.error('Error updating subscription status', { error: getErrorMessage(err) });
+      setError(getErrorMessage(err) || 'Failed to update subscription status');
+    }
+  };
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -127,6 +161,9 @@ export default function EnhancedAdminDashboard() {
         event_type: 'data_fetch'
       });
       setPeople(peopleList);
+
+      // Fetch pending subscriptions
+      await fetchPendingSubscriptions();
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
@@ -501,6 +538,25 @@ export default function EnhancedAdminDashboard() {
                 </svg>
                 Projects
               </button>
+
+              <button
+                onClick={() => setCurrentView('subscriptions')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  currentView === 'subscriptions'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Subscriptions
+                {pendingSubscriptions.length > 0 && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    {pendingSubscriptions.length}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -695,6 +751,89 @@ export default function EnhancedAdminDashboard() {
           </div>
         );
       
+      case 'subscriptions':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Subscription Approvals</h2>
+              <div className="text-sm text-gray-500">
+                {pendingSubscriptions.length} pending approval{pendingSubscriptions.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+            
+            {pendingSubscriptions.length === 0 ? (
+              <div className="bg-white shadow rounded-lg p-6 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No pending subscriptions</h3>
+                <p className="mt-1 text-sm text-gray-500">All subscription requests have been processed.</p>
+              </div>
+            ) : (
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul className="divide-y divide-gray-200">
+                  {pendingSubscriptions.map((subscription: any) => {
+                    const person = people.find(p => p.id === subscription.personId);
+                    const project = projects.find(p => p.id === subscription.projectId);
+                    
+                    return (
+                      <li key={subscription.id} className="px-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                  <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {person ? `${person.firstName} ${person.lastName}` : 'Unknown User'}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {person?.email || 'No email available'}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  wants to join: <span className="font-medium">{project?.name || 'Unknown Project'}</span>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Requested: {new Date(subscription.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleSubscriptionApproval(subscription.id, true)}
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleSubscriptionApproval(subscription.id, false)}
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+
       case 'create-project':
       case 'edit-project':
         return (
