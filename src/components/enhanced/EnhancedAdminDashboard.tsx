@@ -143,13 +143,46 @@ export default function EnhancedAdminDashboard() {
 
 
 
-  const handleUserUpdate = async (updates: PersonUpdate) => {
+  const handleUserUpdate = async (updates: PersonUpdate, subscriptionData?: { projectIds: string[] }) => {
     if (!selectedUser) {
       return;
     }
 
     try {
+      // Update user data
       await httpClient.putJson(getApiUrl(`/v2/admin/users/${selectedUser.id}`), updates);
+
+      // Handle subscription changes if provided
+      if (subscriptionData) {
+        // Get current subscriptions for the user
+        const currentSubscriptions = await httpClient.getJson(getApiUrl(`/v2/subscriptions`));
+        const userSubscriptions = currentSubscriptions.data.filter((sub: any) => sub.personId === selectedUser.id);
+        
+        // Find subscriptions to delete (currently subscribed but not in new selection)
+        const currentProjectIds = userSubscriptions.map((sub: any) => sub.projectId);
+        const subscriptionsToDelete = userSubscriptions.filter((sub: any) => 
+          !subscriptionData.projectIds.includes(sub.projectId)
+        );
+        
+        // Find subscriptions to create (in new selection but not currently subscribed)
+        const subscriptionsToCreate = subscriptionData.projectIds.filter(projectId => 
+          !currentProjectIds.includes(projectId)
+        );
+
+        // Delete unselected subscriptions
+        for (const subscription of subscriptionsToDelete) {
+          await httpClient.deleteJson(getApiUrl(`/v2/subscriptions/${subscription.id}`));
+        }
+
+        // Create new subscriptions
+        for (const projectId of subscriptionsToCreate) {
+          await httpClient.postJson(getApiUrl('/v2/subscriptions'), {
+            personId: selectedUser.id,
+            projectId: projectId,
+            status: 'active'
+          });
+        }
+      }
 
       // Refresh users list
       await fetchAdminData();
@@ -342,12 +375,24 @@ export default function EnhancedAdminDashboard() {
     }
   };
 
-  const handleUserCreate = async (userData: PersonCreate | PersonUpdate) => {
+  const handleUserCreate = async (userData: PersonCreate | PersonUpdate, subscriptionData?: { projectIds: string[] }) => {
     try {
       // For create, we expect PersonCreate data
       const createData = userData as PersonCreate;
       adminLogger.logUserAction('create_user', { email: createData.email });
-      await projectApi.createPerson(createData);
+      const newPerson = await projectApi.createPerson(createData);
+      
+      // Handle initial subscriptions if provided
+      if (subscriptionData && subscriptionData.projectIds.length > 0) {
+        for (const projectId of subscriptionData.projectIds) {
+          await httpClient.postJson(getApiUrl('/v2/subscriptions'), {
+            personId: newPerson.id,
+            projectId: projectId,
+            status: 'active'
+          });
+        }
+      }
+      
       adminLogger.info('User created successfully', { 
         email: createData.email,
         event_type: 'user_created'
