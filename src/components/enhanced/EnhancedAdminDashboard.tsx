@@ -54,6 +54,7 @@ export default function EnhancedAdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [people, setPeople] = useState<Person[]>([]);
   const [pendingSubscriptions, setPendingSubscriptions] = useState<any[]>([]);
 
   const fetchPendingSubscriptions = async () => {
