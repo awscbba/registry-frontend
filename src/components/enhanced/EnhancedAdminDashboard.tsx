@@ -156,7 +156,7 @@ export default function EnhancedAdminDashboard() {
       if (subscriptionData) {
         // Get current subscriptions for the user
         const currentSubscriptions = await httpClient.getJson(getApiUrl(`/v2/subscriptions`));
-        const userSubscriptions = currentSubscriptions.data.filter((sub: any) => sub.personId === selectedUser.id);
+        const userSubscriptions = (currentSubscriptions.data as any[]).filter((sub: any) => sub.personId === selectedUser.id);
         
         // Find subscriptions to delete (currently subscribed but not in new selection)
         const currentProjectIds = userSubscriptions.map((sub: any) => sub.projectId);
@@ -171,7 +171,7 @@ export default function EnhancedAdminDashboard() {
 
         // Delete unselected subscriptions
         for (const subscription of subscriptionsToDelete) {
-          await httpClient.deleteJson(getApiUrl(`/v2/subscriptions/${subscription.id}`));
+          await httpClient.request(getApiUrl(`/v2/subscriptions/${subscription.id}`), { method: 'DELETE' });
         }
 
         // Create new subscriptions
