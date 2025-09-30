@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getComponentLogger, getErrorMessage, getErrorObject } from '../utils/logger';
 import { projectApi } from '../services/projectApi';
 import { authService } from '../services/authService';
-import type { Project, SubscriptionCreate } from '../types/project';
+import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
@@ -213,7 +213,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
           // Handle cases where err is an object but doesn't have expected structure
           errorMessage = 'Error de conexión al procesar la suscripción';
         }
-      } catch (parseError) {
+      } catch {
         // If error parsing fails, use default message
         errorMessage = 'Error de conexión al procesar la suscripción';
       }

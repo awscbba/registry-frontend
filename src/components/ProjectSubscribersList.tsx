@@ -61,7 +61,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
 
   useEffect(() => {
     loadSubscribers();
-  }, [project.id]);
+  }, [project.id, loadSubscribers]);
 
   const handleApproveSubscriber = async (subscriber: SubscriberWithDetails) => {
     setApprovingSubscriber(subscriber.id);
@@ -119,7 +119,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
     try {
       // Get all subscriptions to find the correct one
       const allSubscriptions = await httpClient.getJson(getApiUrl('/v2/subscriptions'));
-      const subscription = (allSubscriptions.data as any[]).find(sub => 
+      const subscription = (allSubscriptions.data as Array<{personId: string, projectId: string, id: string}>).find(sub => 
         sub.personId === subscriber.id && sub.projectId === project.id
       );
 
