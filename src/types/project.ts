@@ -66,15 +66,15 @@ export interface ProjectSubscriber {
   personId: string;
   projectId: string;
   status: 'active' | 'cancelled' | 'pending';
-  subscribedAt: string;
-  subscribedBy?: string;
-  notes?: string;
-  person: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  subscriptionDate: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  // Enriched person fields from backend
+  personName: string;
+  personEmail: string;
+  personFirstName: string;
+  personLastName: string;
 }
 
 export interface AdminDashboard {
