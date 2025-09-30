@@ -19,6 +19,8 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingSubscriber, setRemovingSubscriber] = useState<string | null>(null);
+  const [approvingSubscriber, setApprovingSubscriber] = useState<string | null>(null);
+  const [rejectingSubscriber, setRejectingSubscriber] = useState<string | null>(null);
 
   const loadSubscribers = async () => {
     setIsLoading(true);
@@ -30,19 +32,19 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
       
       // Map subscribers to the format we need
       const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
-        id: subscriber.person.id,
-        firstName: subscriber.person.firstName,
-        lastName: subscriber.person.lastName,
-        email: subscriber.person.email,
+        id: subscriber.personId, // Use personId as the person ID
+        firstName: subscriber.personFirstName || 'Unknown',
+        lastName: subscriber.personLastName || 'User', 
+        email: subscriber.personEmail || 'unknown@example.com',
         phone: '', // Not available in subscriber data
         dateOfBirth: '',
         address: undefined,
-        isActive: true,
-        createdAt: subscriber.subscribedAt,
-        updatedAt: '',
+        isActive: subscriber.isActive || false,
+        createdAt: subscriber.createdAt || subscriber.subscriptionDate,
+        updatedAt: subscriber.updatedAt || '',
         subscriptionStatus: subscriber.status,
-        subscriptionDate: subscriber.subscribedAt,
-        subscriptionId: subscriber.subscriptionId || `${subscriber.person.id}-${project.id}` // Fallback ID
+        subscriptionDate: subscriber.subscriptionDate || subscriber.createdAt,
+        subscriptionId: subscriber.id // Use the subscription ID from the API
       }));
       
       setSubscribers(subscribersWithDetails);
@@ -60,6 +62,52 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
   useEffect(() => {
     loadSubscribers();
   }, [project.id]);
+
+  const handleApproveSubscriber = async (subscriber: SubscriberWithDetails) => {
+    setApprovingSubscriber(subscriber.id);
+    
+    try {
+      // Update subscription status to active
+      await httpClient.request(getApiUrl(`/v2/subscriptions/${subscriber.subscriptionId}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active', isActive: true })
+      });
+
+      // Refresh the subscribers list
+      await loadSubscribers();
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al aprobar suscriptor');
+    } finally {
+      setApprovingSubscriber(null);
+    }
+  };
+
+  const handleRejectSubscriber = async (subscriber: SubscriberWithDetails) => {
+    if (!window.confirm(`¿Estás seguro de que quieres rechazar la suscripción de ${subscriber.firstName} ${subscriber.lastName}?`)) {
+      return;
+    }
+
+    setRejectingSubscriber(subscriber.id);
+    
+    try {
+      // Update subscription status to cancelled
+      await httpClient.request(getApiUrl(`/v2/subscriptions/${subscriber.subscriptionId}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled', isActive: false })
+      });
+
+      // Refresh the subscribers list
+      await loadSubscribers();
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al rechazar suscriptor');
+    } finally {
+      setRejectingSubscriber(null);
+    }
+  };
 
   const handleRemoveSubscriber = async (subscriber: SubscriberWithDetails) => {
     if (!window.confirm(`¿Estás seguro de que quieres remover a ${subscriber.firstName} ${subscriber.lastName} de este proyecto?`)) {
@@ -179,20 +227,58 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
                 >
                   {getStatusText(subscriber.subscriptionStatus)}
                 </div>
-                <button
-                  onClick={() => handleRemoveSubscriber(subscriber)}
-                  disabled={removingSubscriber === subscriber.id}
-                  className="remove-subscriber-btn"
-                  title="Remover suscriptor"
-                >
-                  {removingSubscriber === subscriber.id ? (
-                    <div className="spinner"></div>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                  )}
-                </button>
+                
+                {/* Show approve/reject buttons for pending subscriptions */}
+                {subscriber.subscriptionStatus === 'pending' && (
+                  <div className="pending-actions">
+                    <button
+                      onClick={() => handleApproveSubscriber(subscriber)}
+                      disabled={approvingSubscriber === subscriber.id}
+                      className="approve-btn"
+                      title="Aprobar suscripción"
+                    >
+                      {approvingSubscriber === subscriber.id ? (
+                        <div className="spinner"></div>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleRejectSubscriber(subscriber)}
+                      disabled={rejectingSubscriber === subscriber.id}
+                      className="reject-btn"
+                      title="Rechazar suscripción"
+                    >
+                      {rejectingSubscriber === subscriber.id ? (
+                        <div className="spinner"></div>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
+                
+                {/* Show remove button for active subscriptions */}
+                {subscriber.subscriptionStatus === 'active' && (
+                  <button
+                    onClick={() => handleRemoveSubscriber(subscriber)}
+                    disabled={removingSubscriber === subscriber.id}
+                    className="remove-subscriber-btn"
+                    title="Remover suscriptor"
+                  >
+                    {removingSubscriber === subscriber.id ? (
+                      <div className="spinner"></div>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -322,6 +408,63 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
           display: flex;
           align-items: center;
           gap: 0.75rem;
+        }
+
+        .pending-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .approve-btn {
+          background: #dcfce7;
+          border: 1px solid #bbf7d0;
+          border-radius: 6px;
+          padding: 0.5rem;
+          cursor: pointer;
+          color: #16a34a;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 32px;
+        }
+
+        .approve-btn:hover:not(:disabled) {
+          background: #bbf7d0;
+          border-color: #86efac;
+          transform: scale(1.05);
+        }
+
+        .approve-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .reject-btn {
+          background: #fee2e2;
+          border: 1px solid #fecaca;
+          border-radius: 6px;
+          padding: 0.5rem;
+          cursor: pointer;
+          color: #dc2626;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 32px;
+        }
+
+        .reject-btn:hover:not(:disabled) {
+          background: #fecaca;
+          border-color: #f87171;
+          transform: scale(1.05);
+        }
+
+        .reject-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .remove-subscriber-btn {
