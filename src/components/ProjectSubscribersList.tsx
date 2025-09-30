@@ -30,20 +30,23 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
       // Get all subscribers for this project
       const projectSubscribers = await projectApi.getProjectSubscribers(project.id);
       
+      // Debug: Log the actual API response
+      console.log('API Response for project subscribers:', projectSubscribers);
+      
       // Map subscribers to the format we need - API now returns enriched data directly
       const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
-        id: subscriber.personId,
-        firstName: subscriber.personFirstName,
-        lastName: subscriber.personLastName, 
-        email: subscriber.personEmail,
+        id: subscriber.personId || subscriber.id,
+        firstName: subscriber.personFirstName || 'Unknown',
+        lastName: subscriber.personLastName || 'User', 
+        email: subscriber.personEmail || 'unknown@example.com',
         phone: '', // Not available in subscriber data
         dateOfBirth: '',
         address: undefined,
-        isActive: subscriber.isActive,
-        createdAt: subscriber.createdAt,
-        updatedAt: subscriber.updatedAt,
-        subscriptionStatus: subscriber.status,
-        subscriptionDate: subscriber.subscriptionDate,
+        isActive: subscriber.isActive ?? true,
+        createdAt: subscriber.createdAt || new Date().toISOString(),
+        updatedAt: subscriber.updatedAt || new Date().toISOString(),
+        subscriptionStatus: subscriber.status || 'pending',
+        subscriptionDate: subscriber.subscriptionDate || subscriber.createdAt || new Date().toISOString(),
         subscriptionId: subscriber.id
       }));
       
