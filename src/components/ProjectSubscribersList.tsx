@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import { httpClient, getApiUrl } from '../services/httpClient';
 import type { Project } from '../types/project';
@@ -22,7 +22,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
   const [approvingSubscriber, setApprovingSubscriber] = useState<string | null>(null);
   const [rejectingSubscriber, setRejectingSubscriber] = useState<string | null>(null);
 
-  const loadSubscribers = async () => {
+  const loadSubscribers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -57,7 +57,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [project.id]);
 
   useEffect(() => {
     loadSubscribers();
