@@ -150,7 +150,7 @@ class PerformanceService {
    */
   async getPerformanceHistory(timeRange: string = '24h'): Promise<PerformanceHistory> {
     try {
-      const response = await httpClient.getJson(getApiUrl(`/admin/performance/history?range=${timeRange}`)) as any;
+      const response = await httpClient.getJson(getApiUrl(`/v2/admin/performance/history?range=${timeRange}`)) as any;
       const data = response.success ? response.data : response;
       return {
         timeRange: data?.time_range || timeRange,

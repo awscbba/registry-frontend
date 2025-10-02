@@ -25,7 +25,7 @@ class DatabaseService {
    */
   async getMetrics(): Promise<DatabaseMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/metrics`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/metrics`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ class DatabaseService {
    */
   async getRecommendations(): Promise<Recommendation[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/recommendations`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/recommendations`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ class DatabaseService {
    */
   async getConnectionPoolStatus(): Promise<ConnectionPoolMetrics[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/connection-pool`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/connection-pool`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ class DatabaseService {
    */
   async getQueryAnalysis(): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/query-analysis`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/query-analysis`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ class DatabaseService {
    */
   async getOptimizationHistory(timeRange: string = '24h'): Promise<DatabaseOptimizationHistory> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/optimization-history?range=${timeRange}`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/optimization-history?range=${timeRange}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ class DatabaseService {
    */
   async applyRecommendation(recommendationId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/apply-optimization`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/apply-optimization`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
