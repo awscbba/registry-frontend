@@ -55,41 +55,6 @@ export default function EnhancedAdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
-  const [pendingSubscriptions, setPendingSubscriptions] = useState<any[]>([]);
-
-  const fetchPendingSubscriptions = async () => {
-    try {
-      const response = await httpClient.getJson(getApiUrl('/v2/subscriptions'));
-      const allSubscriptions = response.data || [];
-      const pending = allSubscriptions.filter((sub: any) => sub.status === 'pending');
-      setPendingSubscriptions(pending);
-    } catch (err) {
-      adminLogger.error('Error fetching pending subscriptions', { error: getErrorMessage(err) });
-    }
-  };
-
-  const handleSubscriptionApproval = async (subscriptionId: string, approve: boolean) => {
-    try {
-      const newStatus = approve ? 'active' : 'rejected';
-      await httpClient.putJson(getApiUrl(`/v2/subscriptions/${subscriptionId}`), {
-        status: newStatus
-      });
-      
-      adminLogger.info('Subscription status updated', { 
-        subscriptionId, 
-        newStatus,
-        event_type: 'subscription_approval'
-      });
-      
-      // Refresh pending subscriptions
-      await fetchPendingSubscriptions();
-      await fetchAdminData(); // Refresh main data
-      
-    } catch (err) {
-      adminLogger.error('Error updating subscription status', { error: getErrorMessage(err) });
-      setError(getErrorMessage(err) || 'Failed to update subscription status');
-    }
-  };
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
