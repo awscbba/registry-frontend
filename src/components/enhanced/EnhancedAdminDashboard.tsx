@@ -66,8 +66,15 @@ export default function EnhancedAdminDashboard() {
     try {
       const health = await performanceService.getHealthStatus();
       setSystemHealth(health);
-    } catch {
-      // Failed to fetch system health - continue silently
+    } catch (error) {
+      // Show error state instead of hiding it
+      setSystemHealth({
+        status: 'error',
+        score: 0,
+        issues: ['Failed to fetch system health: API endpoint unreachable'],
+        uptime: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   };
 

@@ -20,10 +20,11 @@ export interface EndpointMetric {
 }
 
 export interface HealthStatus {
-  status: 'healthy' | 'warning' | 'critical';
+  status: 'healthy' | 'warning' | 'critical' | 'error';
   score: number;
   issues: HealthIssue[];
   uptime: number;
+  error?: string; // Error message when status is 'error'
 }
 
 export interface HealthIssue {

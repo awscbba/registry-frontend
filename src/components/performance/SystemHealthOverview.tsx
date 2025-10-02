@@ -11,7 +11,10 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
   healthStatus,
   compactView = false
 }) => {
-  const getHealthScoreColor = (score: number): string => {
+  const getHealthScoreColor = (score: number, status: string): string => {
+    if (status === 'error') {
+      return 'text-red-600';
+    }
     if (score >= 90) {
       return 'text-green-600';
     }
@@ -24,7 +27,10 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
     return 'text-red-600';
   };
 
-  const getHealthScoreBackground = (score: number): string => {
+  const getHealthScoreBackground = (score: number, status: string): string => {
+    if (status === 'error') {
+      return 'bg-red-100';
+    }
     if (score >= 90) {
       return 'bg-green-100';
     }
@@ -112,9 +118,10 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
             <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               healthStatus.status === 'healthy' ? 'bg-green-100 text-green-800' :
               healthStatus.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+              healthStatus.status === 'error' ? 'bg-red-100 text-red-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {PerformanceService.getHealthStatusBadge(healthStatus.status).text}
+              {healthStatus.status === 'error' ? 'System Error' : PerformanceService.getHealthStatusBadge(healthStatus.status).text}
             </div>
           </div>
         </div>
@@ -122,12 +129,14 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
         {/* Health Score Display */}
         <div className="flex items-center justify-center mb-6">
           <div className="relative">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center ${getHealthScoreBackground(healthStatus.score)}`}>
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center ${getHealthScoreBackground(healthStatus.score, healthStatus.status)}`}>
               <div className="text-center">
-                <div className={`text-2xl font-bold ${getHealthScoreColor(healthStatus.score)}`}>
-                  {healthStatus.score}
+                <div className={`text-2xl font-bold ${getHealthScoreColor(healthStatus.score, healthStatus.status)}`}>
+                  {healthStatus.status === 'error' ? 'ERR' : healthStatus.score}
                 </div>
-                <div className="text-xs text-gray-600">Health Score</div>
+                <div className="text-xs text-gray-600">
+                  {healthStatus.status === 'error' ? 'Error' : 'Health Score'}
+                </div>
               </div>
             </div>
             {/* Health Score Ring */}
@@ -160,8 +169,8 @@ const SystemHealthOverview: React.FC<SystemHealthOverviewProps> = ({
         {/* System Uptime */}
         <div className="text-center mb-6">
           <div className="text-sm text-gray-600">System Uptime</div>
-          <div className="text-lg font-medium text-gray-900">
-            {formatUptime(healthStatus.uptime)}
+          <div className={`text-lg font-medium ${healthStatus.status === 'error' ? 'text-red-600' : 'text-gray-900'}`}>
+            {healthStatus.status === 'error' ? 'Unavailable' : formatUptime(healthStatus.uptime)}
           </div>
         </div>
 

@@ -97,14 +97,14 @@ class PerformanceService {
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
       const data = response.success ? response.data : response;
       return {
-        status: data?.status || data?.system_status || 'healthy',
-        score: data?.score || data?.performance?.score || 100,
+        status: data?.status || 'unknown',
+        score: data?.score || data?.performance?.score || 0,
         issues: data?.issues || [],
         uptime: data?.uptime || 0,
       };
     } catch (error) {
-      logger.error('Error fetching health status', { error: error.message }, error);
-      throw error;
+      // Don't hide errors - throw them so UI can show real error state
+      throw new Error(`Health check failed: ${error.message || 'API unreachable'}`);
     }
   }
 
@@ -235,6 +235,8 @@ class PerformanceService {
         return { color: '#f59e0b', text: 'Warning' };
       case 'critical':
         return { color: '#ef4444', text: 'Critical' };
+      case 'error':
+        return { color: '#dc2626', text: 'Error' };
       default:
         return { color: '#6b7280', text: 'Unknown' };
     }
