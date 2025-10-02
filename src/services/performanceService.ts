@@ -111,7 +111,7 @@ class PerformanceService {
         status: healthData?.status || data?.status || 'healthy',
         score: healthData?.overallScore || data?.overallScore || healthData?.score || data?.score || 100,
         issues: healthData?.issues || data?.issues || [],
-        uptime: healthData?.uptime || data?.uptime || 0,
+        uptime: data?.components?.api?.uptime_seconds || healthData?.uptime || data?.uptime || 0,
       };
     } catch (error) {
       throw new Error(`Health check failed: ${error.message || 'API unreachable'}`);
