@@ -27,12 +27,22 @@ class PerformanceService {
     try {
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/dashboard')) as any;
       const data = response.success ? response.data : response;
+      
+      // Get cache data from dedicated cache stats endpoint
+      let cacheHitRate = 0;
+      try {
+        const cacheStats = await this.getCacheStats();
+        cacheHitRate = cacheStats.hitRate / 100; // Convert percentage to decimal for comparison logic
+      } catch (error) {
+        // Cache stats not available, use default
+      }
+      
       return {
-        responseTime: data?.overview?.average_response_time || 0,
-        cacheHitRate: data?.cache?.hit_rate || 0,
+        responseTime: data?.performance?.average_response_time || data?.overview?.average_response_time || 0,
+        cacheHitRate,
         slowestEndpoints: data?.slowest_endpoints || [],
         systemHealth: data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
-        activeRequests: data?.overview?.active_requests || 0,
+        activeRequests: data?.performance?.active_requests || data?.overview?.active_requests || 0,
         timestamp: data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {
