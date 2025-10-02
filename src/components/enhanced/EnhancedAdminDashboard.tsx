@@ -134,15 +134,15 @@ export default function EnhancedAdminDashboard() {
         overview?: Record<string, number>;
       };
       
-      const statsOverview = statsResponse.success ? 
-        (statsResponse.data?.overview || {}) : 
-        (statsResponse.overview || statsResponse.data?.overview || {});
+      const statsData = statsResponse.success ? 
+        (statsResponse.data || {}) : 
+        (statsResponse.data || {});
         
       setStats({
-        totalUsers: statsOverview.total_users || 0,
-        totalProjects: statsOverview.total_projects || 0,
-        totalSubscriptions: statsOverview.total_subscriptions || 0,
-        activeUsers: statsOverview.active_users || 0,
+        totalUsers: statsData.totalUsers || 0,
+        totalProjects: statsData.totalProjects || 0,
+        totalSubscriptions: statsData.totalSubscriptions || 0,
+        activeUsers: statsData.activeUsers || 0,
       });
 
       // Note: Users are now managed through the people list for consistency
