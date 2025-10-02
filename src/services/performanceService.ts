@@ -38,11 +38,12 @@ class PerformanceService {
       }
       
       return {
-        responseTime: data?.performance?.average_response_time || data?.overview?.average_response_time || 0,
+        responseTime: data?.performance?.average_response_time_ms || data?.health?.metrics?.responseTimeMs || 0,
         cacheHitRate,
         slowestEndpoints: data?.slowest_endpoints || [],
-        systemHealth: data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
-        activeRequests: data?.performance?.active_requests || data?.overview?.active_requests || 0,
+        systemHealth: data?.health || data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
+        activeRequests: data?.health?.metrics?.activeRequests || 0,
+        totalRequests: data?.performance?.total_requests || 0,
         timestamp: data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {

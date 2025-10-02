@@ -7,6 +7,7 @@ export interface PerformanceMetrics {
   slowestEndpoints: EndpointMetric[];
   systemHealth: HealthStatus;
   activeRequests: number;
+  totalRequests: number;
   timestamp: string;
 }
 
