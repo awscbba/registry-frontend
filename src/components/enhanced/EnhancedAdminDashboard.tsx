@@ -65,13 +65,15 @@ export default function EnhancedAdminDashboard() {
   const fetchSystemHealth = async () => {
     try {
       const health = await performanceService.getHealthStatus();
+      console.log('Health status fetched:', health); // Debug log
       setSystemHealth(health);
     } catch (error) {
+      console.error('Health fetch error:', error); // Debug log
       // Show error state instead of hiding it
       setSystemHealth({
         status: 'error',
         score: 0,
-        issues: ['Failed to fetch system health: API endpoint unreachable'],
+        issues: [`Failed to fetch system health: ${error instanceof Error ? error.message : 'Unknown error'}`],
         uptime: 0,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -532,6 +534,20 @@ export default function EnhancedAdminDashboard() {
 
   const renderDashboardOverview = () => (
     <div className="space-y-6">
+      {/* Header with refresh button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-900">Dashboard Overview</h2>
+        <button
+          onClick={() => {
+            console.log('Manual health refresh triggered');
+            fetchSystemHealth();
+          }}
+          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Refresh Health
+        </button>
+      </div>
+      
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

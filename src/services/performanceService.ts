@@ -95,15 +95,27 @@ class PerformanceService {
   async getHealthStatus(): Promise<HealthStatus> {
     try {
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
-      const data = response.success ? response.data : response;
+      console.log('Raw health response:', response); // Debug log
+      
+      // Handle different response structures
+      let data = response;
+      if (response.success && response.data) {
+        data = response.data;
+      } else if (response.data && !response.success) {
+        data = response.data;
+      }
+      
+      // Extract health data from various possible structures
+      const healthData = data.health || data.system_health || data;
+      
       return {
-        status: data?.status || 'unknown',
-        score: data?.score || data?.performance?.score || 0,
-        issues: data?.issues || [],
-        uptime: data?.uptime || 0,
+        status: healthData?.status || data?.status || 'healthy',
+        score: healthData?.overallScore || data?.overallScore || healthData?.score || data?.score || 100,
+        issues: healthData?.issues || data?.issues || [],
+        uptime: healthData?.uptime || data?.uptime || 0,
       };
     } catch (error) {
-      // Don't hide errors - throw them so UI can show real error state
+      console.error('Health check error:', error); // Debug log
       throw new Error(`Health check failed: ${error.message || 'API unreachable'}`);
     }
   }
