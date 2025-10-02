@@ -215,7 +215,8 @@ class PerformanceService {
    * Format cache hit rate as percentage
    */
   static formatCacheHitRate(rate: number): string {
-    return `${(rate * 100).toFixed(1)}%`;
+    // API already returns percentage values (e.g., 85.2), so don't multiply by 100
+    return `${rate.toFixed(1)}%`;
   }
 
   /**

@@ -168,7 +168,7 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
               
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {(cacheStats.cacheSize / 1024 / 1024).toFixed(1)}MB
+                  {typeof cacheStats.cacheSize === 'string' ? cacheStats.cacheSize : `${(cacheStats.cacheSize / 1024 / 1024).toFixed(1)}MB`}
                 </div>
                 <div className="text-sm text-gray-600">Cache Size</div>
                 <div className="text-xs text-gray-500 mt-1">
