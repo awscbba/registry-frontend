@@ -95,7 +95,6 @@ class PerformanceService {
   async getHealthStatus(): Promise<HealthStatus> {
     try {
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
-      console.log('Raw health response:', response); // Debug log
       
       // Handle different response structures
       let data = response;
@@ -115,7 +114,6 @@ class PerformanceService {
         uptime: healthData?.uptime || data?.uptime || 0,
       };
     } catch (error) {
-      console.error('Health check error:', error); // Debug log
       throw new Error(`Health check failed: ${error.message || 'API unreachable'}`);
     }
   }

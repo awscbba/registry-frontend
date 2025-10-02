@@ -65,10 +65,8 @@ export default function EnhancedAdminDashboard() {
   const fetchSystemHealth = async () => {
     try {
       const health = await performanceService.getHealthStatus();
-      console.log('Health status fetched:', health); // Debug log
       setSystemHealth(health);
     } catch (error) {
-      console.error('Health fetch error:', error); // Debug log
       // Show error state instead of hiding it
       setSystemHealth({
         status: 'error',
@@ -539,7 +537,6 @@ export default function EnhancedAdminDashboard() {
         <h2 className="text-xl font-semibold text-gray-900">Dashboard Overview</h2>
         <button
           onClick={() => {
-            console.log('Manual health refresh triggered');
             fetchSystemHealth();
           }}
           className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
