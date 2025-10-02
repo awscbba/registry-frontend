@@ -128,9 +128,6 @@ export default function EnhancedAdminDashboard() {
       });
       setPeople(peopleList);
 
-      // Fetch pending subscriptions
-      await fetchPendingSubscriptions();
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data');
       // Admin dashboard error logged
