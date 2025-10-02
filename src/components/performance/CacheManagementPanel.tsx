@@ -146,13 +146,13 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
                 </div>
                 <div className="text-sm text-gray-600">Hit Rate</div>
                 <div className={`text-xs mt-1 ${
-                  cacheStats.hitRate > 0.8 ? 'text-green-600' :
-                  cacheStats.hitRate > 0.6 ? 'text-blue-600' :
-                  cacheStats.hitRate > 0.4 ? 'text-yellow-600' : 'text-red-600'
+                  cacheStats.hitRate > 80 ? 'text-green-600' :
+                  cacheStats.hitRate > 60 ? 'text-blue-600' :
+                  cacheStats.hitRate > 40 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
-                  {cacheStats.hitRate > 0.8 ? 'Excellent' :
-                   cacheStats.hitRate > 0.6 ? 'Good' :
-                   cacheStats.hitRate > 0.4 ? 'Fair' : 'Poor'}
+                  {cacheStats.hitRate > 80 ? 'Excellent' :
+                   cacheStats.hitRate > 60 ? 'Good' :
+                   cacheStats.hitRate > 40 ? 'Fair' : 'Poor'}
                 </div>
               </div>
               
@@ -200,11 +200,11 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full ${
-                      cacheStats.hitRate > 0.8 ? 'bg-green-500' :
-                      cacheStats.hitRate > 0.6 ? 'bg-blue-500' :
-                      cacheStats.hitRate > 0.4 ? 'bg-yellow-500' : 'bg-red-500'
+                      cacheStats.hitRate > 80 ? 'bg-green-500' :
+                      cacheStats.hitRate > 60 ? 'bg-blue-500' :
+                      cacheStats.hitRate > 40 ? 'bg-yellow-500' : 'bg-red-500'
                     }`}
-                    style={{ width: `${cacheStats.hitRate * 100}%` }}
+                    style={{ width: `${Math.min(cacheStats.hitRate, 100)}%` }}
                   ></div>
                 </div>
               </div>
