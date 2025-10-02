@@ -34,25 +34,21 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
       console.log('API Response for project subscribers:', projectSubscribers);
       
       // Map subscribers to the format we need - API now returns enriched data directly
-      console.log('Raw projectSubscribers:', projectSubscribers); // Debug log
-      const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => {
-        console.log('Mapping subscriber:', subscriber); // Debug log
-        return {
-          id: subscriber.personId || subscriber.id,
-          firstName: subscriber.personFirstName || 'Unknown',
-          lastName: subscriber.personLastName || 'User', 
-          email: subscriber.personEmail || 'unknown@example.com',
-          phone: '', // Not available in subscriber data
-          dateOfBirth: '',
-          address: undefined,
-          isActive: subscriber.isActive ?? true,
-          createdAt: subscriber.createdAt || new Date().toISOString(),
-          updatedAt: subscriber.updatedAt || new Date().toISOString(),
-          subscriptionStatus: subscriber.status || 'pending',
-          subscriptionDate: subscriber.subscriptionDate || subscriber.createdAt || new Date().toISOString(),
-          subscriptionId: subscriber.id
-        };
-      });
+      const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
+        id: subscriber.personId || subscriber.id,
+        firstName: subscriber.person?.firstName || subscriber.personFirstName || 'Unknown',
+        lastName: subscriber.person?.lastName || subscriber.personLastName || 'User', 
+        email: subscriber.person?.email || subscriber.personEmail || 'unknown@example.com',
+        phone: '', // Not available in subscriber data
+        dateOfBirth: '',
+        address: undefined,
+        isActive: subscriber.isActive ?? true,
+        createdAt: subscriber.createdAt || new Date().toISOString(),
+        updatedAt: subscriber.updatedAt || new Date().toISOString(),
+        subscriptionStatus: subscriber.status || 'pending',
+        subscriptionDate: subscriber.subscriptionDate || subscriber.subscribedAt || subscriber.createdAt || new Date().toISOString(),
+        subscriptionId: subscriber.id
+      }));
       
       setSubscribers(subscribersWithDetails);
     } catch (err) {
