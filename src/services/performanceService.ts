@@ -50,10 +50,10 @@ class PerformanceService {
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/cache/stats')) as any;
       const data = response.success ? response.data : response;
       return {
-        hitRate: data?.hit_rate || 0,
-        missRate: data?.miss_rate || 0,
-        totalRequests: data?.total_requests || 0,
-        cacheSize: data?.cache_size || 0,
+        hitRate: data?.hitRate || data?.hit_rate || 0,
+        missRate: data?.missRate || data?.miss_rate || 0,
+        totalRequests: data?.totalRequests || data?.total_requests || 0,
+        cacheSize: data?.cacheSize || data?.cache_size || 0,
         ttlStats: {
           averageTTL: data?.ttl_stats?.average_ttl || 0,
           expiredKeys: data?.ttl_stats?.expired_keys || 0,
