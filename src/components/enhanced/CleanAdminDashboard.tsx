@@ -1,23 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { authService } from '../../services/authService';
 import { httpClient, getApiUrl } from '../../services/httpClient';
 import { projectApi } from '../../services/projectApi';
-import { getErrorMessage, getErrorObject } from '../../utils/logger';
-import type { PersonUpdate, Person, PersonCreate } from '../../types/person';
-import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project';
-import PersonForm from '../PersonForm';
+import { getErrorObject } from '../../utils/logger';
+import type { Person } from '../../types/person';
+import type { Project } from '../../types/project';
 import PersonList from '../PersonList';
-import ProjectList from '../ProjectList';
-import ProjectForm from '../ProjectForm';
-import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
 import SystemHealthOverview from '../performance/SystemHealthOverview';
 import DatabasePerformancePanel from '../performance/DatabasePerformancePanel';
-import QueryOptimizationPanel from '../performance/QueryOptimizationPanel';
-import ConnectionPoolMonitor from '../performance/ConnectionPoolMonitor';
 import DatabaseCharts from '../performance/DatabaseCharts';
-import performanceService, { PerformanceService } from '../../services/performanceService';
+import performanceService from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
 import { adminLogger } from '../../utils/logger';
 
@@ -75,10 +68,6 @@ export default function CleanAdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [editingUser, setEditingUser] = useState<Person | null>(null);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   // Clean Architecture menu handlers
   const handleMenuNavigation = useCallback((type: MenuItemType) => {
@@ -184,7 +173,6 @@ export default function CleanAdminDashboard() {
 
   // Improved navigation with Clean Architecture and UX design
   const renderNavigation = () => {
-    const currentMenuItem = menuRepo.getCurrentMenuItem();
     const statsItems = menuRepo.getStatsSubMenuItems();
 
     return (

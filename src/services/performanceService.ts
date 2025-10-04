@@ -33,7 +33,7 @@ class PerformanceService {
       try {
         const cacheStats = await this.getCacheStats();
         cacheHitRate = cacheStats.hitRate / 100; // Convert percentage to decimal for comparison logic
-      } catch (error) {
+      } catch {
         // Cache stats not available, use default
       }
       
