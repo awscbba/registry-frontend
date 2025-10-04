@@ -45,6 +45,23 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     return dateString.split('T')[0];
   };
 
+  // Helper function to determine user role from person data
+  const getUserRole = (person: any): string => {
+    if (!person) return 'user';
+    
+    // Check roles array first (from RBAC system)
+    if (person.roles && Array.isArray(person.roles)) {
+      if (person.roles.includes('super_admin') || person.roles.includes('SUPER_ADMIN')) return 'super_admin';
+      if (person.roles.includes('admin') || person.roles.includes('ADMIN')) return 'admin';
+      if (person.roles.includes('moderator') || person.roles.includes('MODERATOR')) return 'moderator';
+    }
+    
+    // Fallback to isAdmin field
+    if (person.isAdmin) return 'admin';
+    
+    return 'user';
+  };
+
   const [formData, setFormData] = useState({
     firstName: person?.firstName || '',
     lastName: person?.lastName || '',
@@ -52,6 +69,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     phone: person?.phone || '',
     dateOfBirth: formatDateForInput(person?.dateOfBirth),
     isAdmin: (person as any)?.isAdmin || false, // Cast to any since Person type might not have isAdmin
+    userRole: getUserRole(person as any), // Add userRole field
     address: {
       street: person?.address?.street || '',
       city: person?.address?.city || '',
@@ -387,27 +405,40 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           </div>
         </div>
 
-        {/* Admin Role Section - Only visible to super admins */}
+        {/* User Role Section - Only visible to super admins */}
         {authService.isSuperAdmin() && (
           <div className="form-section">
-            <h3 className="section-title">Permisos de Administrador</h3>
+            <h3 className="section-title">Rol de Usuario</h3>
             
             <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="isAdmin"
-                  checked={formData.isAdmin}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isAdmin: e.target.checked }))}
-                  disabled={isLoading}
-                  className="checkbox-input"
-                />
-                <span className="checkbox-text">
-                  Otorgar permisos de administrador a este usuario
-                </span>
+              <label htmlFor="userRole" className="form-label">
+                Rol del Usuario *
               </label>
+              <select
+                id="userRole"
+                name="userRole"
+                value={formData.userRole}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    userRole: newRole,
+                    isAdmin: newRole === 'admin' || newRole === 'super_admin' || newRole === 'moderator'
+                  }));
+                }}
+                disabled={isLoading}
+                className="form-control"
+              >
+                <option value="user">Usuario Regular</option>
+                <option value="moderator">Moderador</option>
+                <option value="admin">Administrador</option>
+                <option value="super_admin">Super Administrador</option>
+              </select>
               <p className="help-text">
-                Los administradores pueden gestionar usuarios, proyectos y acceder al panel de administración.
+                <strong>Usuario Regular:</strong> Acceso básico a la plataforma.<br/>
+                <strong>Moderador:</strong> Puede moderar contenido y proyectos.<br/>
+                <strong>Administrador:</strong> Puede gestionar usuarios y proyectos.<br/>
+                <strong>Super Administrador:</strong> Acceso completo, puede asignar roles.
               </p>
             </div>
           </div>

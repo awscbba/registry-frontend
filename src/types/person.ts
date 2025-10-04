@@ -37,4 +37,5 @@ export interface PersonUpdate {
   dateOfBirth?: string;
   address?: Address;
   isAdmin?: boolean; // Added for admin role management
+  userRole?: string; // Added for RBAC role management
 }
