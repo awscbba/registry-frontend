@@ -31,7 +31,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
       const projectSubscribers = await projectApi.getProjectSubscribers(project.id);
       
       // Debug: Log the actual API response
-      console.log('API Response for project subscribers:', projectSubscribers);
+      // console.log('API Response for project subscribers:', projectSubscribers);
       
       // Map subscribers to the format we need - API now returns enriched data directly
       const subscribersWithDetails: SubscriberWithDetails[] = projectSubscribers.map(subscriber => ({
