@@ -60,7 +60,6 @@ export default function EnhancedAdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
-  const [isStatsMenuOpen, setIsStatsMenuOpen] = useState(false);
 
   // Fetch system health for quick overview
   const fetchSystemHealth = async () => {
@@ -454,62 +453,29 @@ export default function EnhancedAdminDashboard() {
                 Projects
               </button>
 
-              {/* Stats Dropdown */}
-              <div className="relative inline-flex">
+              {/* Quick Actions */}
+              <div className="flex items-center space-x-4 ml-8">
                 <button
-                  onClick={() => setIsStatsMenuOpen(!isStatsMenuOpen)}
-                  onMouseEnter={() => setIsStatsMenuOpen(true)}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    ['performance', 'cache', 'database', 'query-optimization', 'connection-pools', 'system-health'].includes(currentView)
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  onClick={() => setCurrentView('create-user')}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
                 >
-                  Stats
-                  <svg className={`ml-1 h-4 w-4 transition-transform duration-200 ${isStatsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
+                  Agregar usuario
                 </button>
-
-                {isStatsMenuOpen && (
-                  <div 
-                    className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200"
-                    onMouseLeave={() => setIsStatsMenuOpen(false)}
-                  >
-                    <div className="py-2">
-                      <button
-                        onClick={() => { setCurrentView('performance'); setIsStatsMenuOpen(false); }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
-                      >
-                        <span className="text-lg mt-0.5">📊</span>
-                        <div>
-                          <div className="font-medium text-gray-900">Performance</div>
-                          <div className="text-sm text-gray-500 mt-0.5">System performance metrics and monitoring</div>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => { setCurrentView('cache'); setIsStatsMenuOpen(false); }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
-                      >
-                        <span className="text-lg mt-0.5">⚡</span>
-                        <div>
-                          <div className="font-medium text-gray-900">Cache</div>
-                          <div className="text-sm text-gray-500 mt-0.5">Cache management and optimization</div>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => { setCurrentView('database'); setIsStatsMenuOpen(false); }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
-                      >
-                        <span className="text-lg mt-0.5">🗄️</span>
-                        <div>
-                          <div className="font-medium text-gray-900">Database</div>
-                          <div className="text-sm text-gray-500 mt-0.5">Database performance and optimization</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                
+                <span className="text-gray-300">|</span>
+                
+                <button
+                  onClick={() => setCurrentView('create-project')}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+                >
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Agregar Proyecto
+                </button>
               </div>
             </div>
           </div>
