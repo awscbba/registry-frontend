@@ -405,6 +405,15 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           </div>
         </div>
 
+        {/* Debug Section - Temporary */}
+        <div className="form-section" style={{backgroundColor: '#f0f0f0', padding: '10px', margin: '10px 0'}}>
+          <h3 className="section-title">Debug Info (Temporary)</h3>
+          <p><strong>Is Authenticated:</strong> {authService.isAuthenticated() ? 'Yes' : 'No'}</p>
+          <p><strong>Is Admin:</strong> {authService.isAdmin() ? 'Yes' : 'No'}</p>
+          <p><strong>Is Super Admin:</strong> {authService.isSuperAdmin() ? 'Yes' : 'No'}</p>
+          <p><strong>Current User:</strong> {JSON.stringify(authService.user, null, 2)}</p>
+        </div>
+
         {/* User Role Section - Only visible to super admins */}
         {authService.isSuperAdmin() && (
           <div className="form-section">
