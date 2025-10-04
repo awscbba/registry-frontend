@@ -300,11 +300,11 @@ class AuthService {
 
     // Debug current user data
     // console.log('Current user data for super admin check:', {
-      // user: this.user,
-      // roles: this.user.roles,
-      role: this.user.role,
-      isAdmin: this.user.isAdmin
-    });
+    //   user: this.user,
+    //   roles: this.user.roles,
+    //   role: this.user.role,
+    //   isAdmin: this.user.isAdmin
+    // });
 
     // Check for super admin role from backend
     return !!(

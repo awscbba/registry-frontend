@@ -77,7 +77,7 @@ function transformFieldNamesArray<T>(
 
   try {
     return array.map(obj => transformFieldNames<T>(obj, fieldMap));
-  } catch (error) {
+  } catch {
     // console.error('Error transforming array field names', {
     //   error: error instanceof Error ? error.message : String(error)
     // });
