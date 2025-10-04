@@ -44,11 +44,9 @@ export default function CleanAdminDashboard() {
   
   // Keep all existing state and logic from original dashboard
   const [people, setPeople] = useState<Person[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState<Person | null>(null);
 
   // Clean Architecture menu handlers
   const handleMenuNavigation = useCallback((type: MenuItemType) => {
@@ -73,7 +71,6 @@ export default function CleanAdminDashboard() {
         setIsLoading(true);
         await Promise.all([
           fetchPeople(),
-          fetchProjects(),
           fetchStats(),
           fetchSystemHealth()
         ]);
@@ -96,17 +93,6 @@ export default function CleanAdminDashboard() {
       }
     } catch (error) {
       adminLogger.error('Failed to fetch people', getErrorObject(error));
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await projectApi.getProjects();
-      if (response.success && response.data) {
-        setProjects(response.data);
-      }
-    } catch (error) {
-      adminLogger.error('Failed to fetch projects', getErrorObject(error));
     }
   };
 
@@ -137,7 +123,8 @@ export default function CleanAdminDashboard() {
 
   // Keep all existing handler functions (handlePersonEdit, handlePersonDelete, etc.)
   const handlePersonEdit = (person: Person) => {
-    setEditingUser(person);
+    // For CleanAdminDashboard, we just navigate to edit view
+    // The actual editing logic would be handled by the edit component
     setCurrentView('edit-user');
   };
 
