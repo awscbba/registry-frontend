@@ -518,41 +518,6 @@ export default function EnhancedAdminDashboard() {
     </nav>
   );
 
-              <button
-                onClick={() => setCurrentView('projects')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  currentView === 'projects'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                Projects
-              </button>
-            </div>
-          </div>
-
-          {/* System Health Indicator */}
-          <div className="flex items-center">
-            {systemHealth && (
-              <div className="flex items-center space-x-2 mr-4">
-                <div className={`w-3 h-3 rounded-full ${
-                  systemHealth.status === 'healthy' ? 'bg-green-500' :
-                  systemHealth.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
-                <span className="text-sm text-gray-600">
-                  System {PerformanceService.getHealthStatusBadge(systemHealth.status).text}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-
   const renderDashboardOverview = () => (
     <div className="space-y-6">
       {/* Header with refresh button */}
