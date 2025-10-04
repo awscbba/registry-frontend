@@ -14,7 +14,9 @@ export const StatsMenuDropdown: React.FC<StatsMenuDropdownProps> = ({
   onItemSelect,
   onClose
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200">

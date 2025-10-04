@@ -17,7 +17,7 @@ import DatabasePerformancePanel from '../performance/DatabasePerformancePanel';
 import QueryOptimizationPanel from '../performance/QueryOptimizationPanel';
 import ConnectionPoolMonitor from '../performance/ConnectionPoolMonitor';
 import DatabaseCharts from '../performance/DatabaseCharts';
-import performanceService, { PerformanceService } from '../../services/performanceService';
+import performanceService from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
 import { adminLogger } from '../../utils/logger';
 

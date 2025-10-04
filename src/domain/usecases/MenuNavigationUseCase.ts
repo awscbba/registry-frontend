@@ -1,4 +1,4 @@
-import { MenuItem, MenuItemType, StatsSubMenu, StatsSubMenuType } from '../entities/AdminDashboard';
+import { MenuItem, MenuItemType, StatsSubMenu } from '../entities/AdminDashboard';
 
 export interface MenuRepository {
   getCurrentMenuItem(): MenuItem;
