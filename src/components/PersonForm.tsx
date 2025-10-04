@@ -47,17 +47,27 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
   // Helper function to determine user role from person data
   const getUserRole = (person: any): string => {
-    if (!person) return 'user';
+    if (!person) {
+      return 'user';
+    }
     
     // Check roles array first (from RBAC system)
     if (person.roles && Array.isArray(person.roles)) {
-      if (person.roles.includes('super_admin') || person.roles.includes('SUPER_ADMIN')) return 'super_admin';
-      if (person.roles.includes('admin') || person.roles.includes('ADMIN')) return 'admin';
-      if (person.roles.includes('moderator') || person.roles.includes('MODERATOR')) return 'moderator';
+      if (person.roles.includes('super_admin') || person.roles.includes('SUPER_ADMIN')) {
+        return 'super_admin';
+      }
+      if (person.roles.includes('admin') || person.roles.includes('ADMIN')) {
+        return 'admin';
+      }
+      if (person.roles.includes('moderator') || person.roles.includes('MODERATOR')) {
+        return 'moderator';
+      }
     }
     
     // Fallback to isAdmin field
-    if (person.isAdmin) return 'admin';
+    if (person.isAdmin) {
+      return 'admin';
+    }
     
     return 'user';
   };
