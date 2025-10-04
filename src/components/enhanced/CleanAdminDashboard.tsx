@@ -13,7 +13,6 @@ import DatabaseCharts from '../performance/DatabaseCharts';
 import performanceService from '../../services/performanceService';
 import type { HealthStatus } from '../../types/performance';
 import { adminLogger } from '../../utils/logger';
-
 // Clean Architecture imports
 import { MenuNavigationUseCase, StatsMenuToggleUseCase } from '../../domain/usecases/MenuNavigationUseCase';
 import { MenuRepositoryImpl } from '../../infrastructure/repositories/MenuRepositoryImpl';
@@ -28,25 +27,6 @@ interface AdminStats {
   activeUsers: number;
 }
 
-interface AdminUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  isAdmin: boolean;
-  isActive: boolean;
-  createdAt: string;
-  phone?: string;
-  dateOfBirth?: string;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-  };
-  updatedAt?: string;
-}
 
 type AdminView = 'dashboard' | 'users' | 'projects' | 'performance' | 'cache' | 'database' | 
   'create-user' | 'edit-user' | 'view-user' | 'create-project' | 'edit-project' | 'view-project' | 
@@ -68,6 +48,7 @@ export default function CleanAdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<Person | null>(null);
 
   // Clean Architecture menu handlers
   const handleMenuNavigation = useCallback((type: MenuItemType) => {
