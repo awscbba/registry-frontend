@@ -455,7 +455,7 @@ export default function EnhancedAdminDashboard() {
               </button>
 
               {/* Stats Dropdown */}
-              <div className="relative">
+              <div className="relative inline-flex">
                 <button
                   onClick={() => setIsStatsMenuOpen(!isStatsMenuOpen)}
                   onMouseEnter={() => setIsStatsMenuOpen(true)}
