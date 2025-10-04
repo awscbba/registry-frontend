@@ -60,6 +60,7 @@ export default function EnhancedAdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [systemHealth, setSystemHealth] = useState<HealthStatus | null>(null);
+  const [isStatsMenuOpen, setIsStatsMenuOpen] = useState(false);
 
   // Fetch system health for quick overview
   const fetchSystemHealth = async () => {
@@ -428,72 +429,94 @@ export default function EnhancedAdminDashboard() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v0" />
-                </svg>
                 Dashboard
               </button>
               
               <button
-                onClick={() => setCurrentView('performance')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  currentView === 'performance'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Performance
-                {systemHealth && systemHealth.status !== 'healthy' && (
-                  <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    !
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setCurrentView('cache')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  currentView === 'cache'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                </svg>
-                Cache
-              </button>
-
-              <button
-                onClick={() => setCurrentView('database')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  currentView === 'database'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Database
-              </button>
-
-              <button
                 onClick={() => setCurrentView('users')}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  currentView === 'users'
+                  ['users', 'create-user', 'edit-user', 'view-user'].includes(currentView)
                     ? 'border-blue-500 text-gray-900'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
                 Users
               </button>
+
+              <button
+                onClick={() => setCurrentView('projects')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  ['projects', 'create-project', 'edit-project', 'view-project', 'view-project-subscribers'].includes(currentView)
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Projects
+              </button>
+
+              {/* Stats Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsStatsMenuOpen(!isStatsMenuOpen)}
+                  onMouseEnter={() => setIsStatsMenuOpen(true)}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    ['performance', 'cache', 'database', 'query-optimization', 'connection-pools', 'system-health'].includes(currentView)
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Stats
+                  <svg className={`ml-1 h-4 w-4 transition-transform duration-200 ${isStatsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isStatsMenuOpen && (
+                  <div 
+                    className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+                    onMouseLeave={() => setIsStatsMenuOpen(false)}
+                  >
+                    <div className="py-2">
+                      <button
+                        onClick={() => { setCurrentView('performance'); setIsStatsMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
+                      >
+                        <span className="text-lg mt-0.5">📊</span>
+                        <div>
+                          <div className="font-medium text-gray-900">Performance</div>
+                          <div className="text-sm text-gray-500 mt-0.5">System performance metrics and monitoring</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => { setCurrentView('cache'); setIsStatsMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
+                      >
+                        <span className="text-lg mt-0.5">⚡</span>
+                        <div>
+                          <div className="font-medium text-gray-900">Cache</div>
+                          <div className="text-sm text-gray-500 mt-0.5">Cache management and optimization</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => { setCurrentView('database'); setIsStatsMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 flex items-start space-x-3"
+                      >
+                        <span className="text-lg mt-0.5">🗄️</span>
+                        <div>
+                          <div className="font-medium text-gray-900">Database</div>
+                          <div className="text-sm text-gray-500 mt-0.5">Database performance and optimization</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
 
               <button
                 onClick={() => setCurrentView('projects')}
