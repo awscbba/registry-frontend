@@ -3,7 +3,6 @@ import { httpClient, getApiUrl } from '../../services/httpClient';
 import { projectApi } from '../../services/projectApi';
 import { getErrorObject } from '../../utils/logger';
 import type { Person } from '../../types/person';
-import type { Project } from '../../types/project';
 import PersonList from '../PersonList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
@@ -122,7 +121,7 @@ export default function CleanAdminDashboard() {
   };
 
   // Keep all existing handler functions (handlePersonEdit, handlePersonDelete, etc.)
-  const handlePersonEdit = (person: Person) => {
+  const handlePersonEdit = (_person: Person) => {
     // For CleanAdminDashboard, we just navigate to edit view
     // The actual editing logic would be handled by the edit component
     setCurrentView('edit-user');
