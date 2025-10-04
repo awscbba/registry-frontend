@@ -16,6 +16,7 @@ export interface User {
   lastName: string;
   isAdmin?: boolean;
   role?: string;
+  roles?: string[]; // For RBAC system
   requirePasswordChange?: boolean;
   isActive?: boolean;
   lastLoginAt?: string | null;
@@ -283,7 +284,24 @@ class AuthService {
     return !!(
       this.user.isAdmin || 
       this.user.role === 'admin' || 
-      this.user.role === 'administrator'
+      this.user.role === 'administrator' ||
+      this.user.roles?.includes('admin') ||
+      this.user.roles?.includes('super_admin')
+    );
+  }
+
+  /**
+   * Check if user has super admin privileges
+   */
+  isSuperAdmin(): boolean {
+    if (!this.isAuthenticated() || !this.user) {
+      return false;
+    }
+
+    // Check for super admin role from backend
+    return !!(
+      this.user.role === 'super_admin' ||
+      this.user.roles?.includes('super_admin')
     );
   }
 

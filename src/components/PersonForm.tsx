@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
 import { getComponentLogger } from '../utils/logger';
+import { authService } from '../services/authService';
 import ProjectSubscriptionManager from './ProjectSubscriptionManager';
 
 const logger = getComponentLogger('PersonForm');
@@ -50,6 +51,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     email: person?.email || '',
     phone: person?.phone || '',
     dateOfBirth: formatDateForInput(person?.dateOfBirth),
+    isAdmin: (person as any)?.isAdmin || false, // Cast to any since Person type might not have isAdmin
     address: {
       street: person?.address?.street || '',
       city: person?.address?.city || '',
@@ -385,6 +387,32 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           </div>
         </div>
 
+        {/* Admin Role Section - Only visible to super admins */}
+        {authService.isSuperAdmin() && (
+          <div className="form-section">
+            <h3 className="section-title">Permisos de Administrador</h3>
+            
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="isAdmin"
+                  checked={formData.isAdmin}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isAdmin: e.target.checked }))}
+                  disabled={isLoading}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-text">
+                  Otorgar permisos de administrador a este usuario
+                </span>
+              </label>
+              <p className="help-text">
+                Los administradores pueden gestionar usuarios, proyectos y acceder al panel de administración.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Project Subscriptions Section */}
         <ProjectSubscriptionManager
           personId={person?.id}
@@ -550,6 +578,35 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          cursor: pointer;
+          margin-bottom: 8px;
+        }
+
+        .checkbox-input {
+          width: 18px;
+          height: 18px;
+          margin: 0;
+          cursor: pointer;
+          accent-color: var(--accent-color);
+        }
+
+        .checkbox-text {
+          font-weight: 500;
+          color: var(--text-color);
+          line-height: 1.4;
+        }
+
+        .help-text {
+          font-size: 0.875rem;
+          color: #666;
+          margin: 0;
+          line-height: 1.4;
         }
 
         @media (max-width: 768px) {
