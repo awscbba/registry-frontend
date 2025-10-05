@@ -14,7 +14,7 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<string>(metrics[0]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const chartRef = useRef<any>(null);
 
   // Fetch performance history data

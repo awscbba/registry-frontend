@@ -46,7 +46,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   };
 
   // Helper function to determine user role from person data
-  const getUserRole = (person: any): string => {
+  const getUserRole = (person: Person | null): string => {
     if (!person) {
       return 'user';
     }
@@ -78,8 +78,8 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     email: person?.email || '',
     phone: person?.phone || '',
     dateOfBirth: formatDateForInput(person?.dateOfBirth),
-    isAdmin: (person as any)?.isAdmin || false, // Cast to any since Person type might not have isAdmin
-    userRole: getUserRole(person as any), // Add userRole field
+    isAdmin: (person as Person & { isAdmin?: boolean })?.isAdmin || false,
+    userRole: getUserRole(person),
     address: {
       street: person?.address?.street || '',
       city: person?.address?.city || '',

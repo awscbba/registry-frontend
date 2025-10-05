@@ -60,6 +60,6 @@ export function debugToken() {
 
 // Make it available globally for browser console (only in browser)
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   (window as any).debugToken = debugToken;
 }

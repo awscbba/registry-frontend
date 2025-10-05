@@ -44,7 +44,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       loadProject();
     }
     checkUserLoginStatus();
-  }, [projectId, project]);
+  }, [projectId, project, loadProject]);
 
   const checkUserLoginStatus = () => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -194,8 +194,9 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         notes: ''
       });
 
-    } catch (err: any) {
-      logger.error('Subscription error', { error: err });
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Subscription error', { error });
       
       // Extract error message from API response structure with better handling
       let errorMessage = 'Error desconocido al procesar la suscripción';

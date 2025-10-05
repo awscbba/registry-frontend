@@ -64,8 +64,20 @@ export default function UserLoginModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content user-login-modal" onClick={e => e.stopPropagation()}>
+    <div 
+      className="modal-overlay" 
+      onClick={handleClose}
+      onKeyDown={(e) => e.key === 'Escape' && handleClose()}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <div 
+        className="modal-content user-login-modal" 
+        onClick={e => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        role="document"
+        tabIndex={0}
+      >
         <div className="modal-header">
           <h2>Iniciar Sesión</h2>
           <button 
