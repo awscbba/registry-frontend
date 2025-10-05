@@ -316,6 +316,22 @@ class AuthService {
   }
 
   /**
+   * Check if user has super admin privileges
+   */
+  isSuperAdmin(): boolean {
+    if (!this.isAuthenticated() || !this.user) {
+      return false;
+    }
+
+    // Check for super_admin role in roles array
+    return !!(
+      this.user.roles?.includes('super_admin') ||
+      this.user.roles?.includes('SUPER_ADMIN') ||
+      this.user.role === 'super_admin'
+    );
+  }
+
+  /**
    * Refresh user data from backend to ensure we have latest admin status
    */
   async refreshUserData(): Promise<boolean> {
@@ -332,9 +348,22 @@ class AuthService {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          this.user = data.user;
+        const responseData = await response.json();
+        // Handle API response format (data.data.user or data.user)
+        const userData = responseData.success ? responseData.data : responseData.user || responseData;
+        
+        if (userData) {
+          this.user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            isAdmin: userData.isAdmin,
+            roles: userData.roles,
+            requirePasswordChange: userData.requirePasswordChange,
+            isActive: userData.isActive,
+            lastLoginAt: userData.lastLoginAt
+          };
           this.saveToStorage();
           return true;
         }
