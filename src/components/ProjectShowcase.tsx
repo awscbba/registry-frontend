@@ -3,8 +3,8 @@ import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
-import LoginForm from './LoginForm';
 import { debugToken } from '../utils/tokenDebug';
+import LoginForm from './LoginForm';
 
 type ViewMode = 'cards' | 'list' | 'icons';
 

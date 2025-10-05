@@ -181,6 +181,8 @@ export default [
       'dist/',
       'node_modules/',
       '.astro/',
+      '.amplify-hosting/',
+      'build/',
       'fallback/',
       '*.config.js',
       '*.config.ts',

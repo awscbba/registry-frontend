@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import EnhancedAdminDashboard from '../../src/components/enhanced/EnhancedAdminDashboard';
 import { projectApi } from '../../src/services/projectApi';
 

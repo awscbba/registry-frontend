@@ -315,21 +315,7 @@ class AuthService {
     );
   }
 
-  /**
-   * Check if user has super admin privileges
-   */
-  isSuperAdmin(): boolean {
-    if (!this.isAuthenticated() || !this.user) {
-      return false;
-    }
 
-    // Check for super_admin role in roles array
-    return !!(
-      this.user.roles?.includes('super_admin') ||
-      this.user.roles?.includes('SUPER_ADMIN') ||
-      this.user.role === 'super_admin'
-    );
-  }
 
   /**
    * Refresh user data from backend to ensure we have latest admin status
