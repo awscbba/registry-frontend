@@ -163,6 +163,7 @@ class AuthService {
             firstName: data.user.firstName,
             lastName: data.user.lastName,
             isAdmin: data.user.isAdmin,
+            roles: data.user.roles,
             requirePasswordChange: data.user.requirePasswordChange || data.require_password_change
           },
           message: 'Inicio de sesión exitoso'
