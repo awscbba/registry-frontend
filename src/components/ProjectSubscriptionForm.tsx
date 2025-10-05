@@ -9,12 +9,13 @@ import UserDashboard from './UserDashboard';
 
 interface ProjectSubscriptionFormProps {
   projectId: string;
+  project?: Project;
 }
 
 const logger = getComponentLogger('ProjectSubscriptionForm');
 
-export default function ProjectSubscriptionForm({ projectId }: ProjectSubscriptionFormProps) {
-  const [project, setProject] = useState<Project | null>(null);
+export default function ProjectSubscriptionForm({ projectId, project: initialProject }: ProjectSubscriptionFormProps) {
+  const [project, setProject] = useState<Project | null>(initialProject || null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,16 +36,16 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   });
 
   useEffect(() => {
-    // Initialize component state - respect dependency injection
-    if (project) {
-      // Use injected project data (SSR or props) - no additional state needed
-      // Project data flows through props following clean architecture
+    // If project is already provided (from SSR), skip API call
+    if (initialProject) {
+      setProject(initialProject);
+      setIsLoading(false);
     } else {
       // Fallback to repository pattern for data fetching
       loadProject();
     }
     checkUserLoginStatus();
-  }, [projectId, project, loadProject]);
+  }, [projectId, initialProject]);
 
   const checkUserLoginStatus = () => {
     setIsLoggedIn(authService.isAuthenticated());
