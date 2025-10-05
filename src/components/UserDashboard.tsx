@@ -5,7 +5,7 @@ interface UserDashboardProps {
   isOpen: boolean;
   onClose: () => void;
   currentProjectId?: string;
-  onSubscribeToProject?: (projectId: string, notes?: string) => Promise<any>;
+  onSubscribeToProject?: (projectId: string, notes?: string) => Promise<void>;
 }
 
 export default function UserDashboard({ 
@@ -120,8 +120,20 @@ export default function UserDashboard({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content user-dashboard" onClick={e => e.stopPropagation()}>
+    <div 
+      className="modal-overlay" 
+      onClick={onClose}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <div 
+        className="modal-content user-dashboard" 
+        onClick={e => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        role="document"
+        tabIndex={0}
+      >
         <div className="modal-header">
           <div className="header-info">
             <h2>Mi Panel de Usuario</h2>
