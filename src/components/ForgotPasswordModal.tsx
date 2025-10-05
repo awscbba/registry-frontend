@@ -63,7 +63,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
         onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
         role="dialog"
         tabIndex={0}
-        role="document"
       >
         <div className="modal-header">
           <h2>Restablecer Contraseña</h2>

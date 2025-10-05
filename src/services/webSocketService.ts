@@ -17,11 +17,11 @@ import { wsLogger } from '../utils/logger';
 
 class WebSocketService {
   private static instance: WebSocketService;
-  private connections: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  private connections: Map<string, any> = new Map();  
   private subscriptions: Map<string, WebSocketSubscription> = new Map();
-  private eventListeners: Map<WebSocketEventType, Set<(data: any) => void>> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
-  private reconnectTimers: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
-  private heartbeatTimers: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  private eventListeners: Map<WebSocketEventType, Set<(data: any) => void>> = new Map();  
+  private reconnectTimers: Map<string, any> = new Map();  
+  private heartbeatTimers: Map<string, any> = new Map();  
   
   private config: WebSocketConfig = {
     baseUrl: this.getWebSocketBaseUrl(),
