@@ -15,7 +15,11 @@ import Layout from '../layouts/Layout.astro';
       resultDiv.textContent = 'Loading...';
       
       try {
-        console.log('Testing API call...');
+        // Import logger for test page
+        const { getLogger } = await import('../utils/logger.ts');
+        const logger = getLogger('test-api');
+        
+        logger.info('Testing API call');
         const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
         const response = await fetch(`${API_BASE_URL}/v2/projects`, {
           headers: {
@@ -23,15 +27,20 @@ import Layout from '../layouts/Layout.astro';
           }
         });
         
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
         const data = await response.json();
-        console.log('Response data:', data);
+        logger.debug('API test response', { 
+          status: response.status, 
+          ok: response.ok,
+          // WARNING: This test page logs full response data - do not use with sensitive endpoints
+          data 
+        });
         
         resultDiv.textContent = `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
       } catch (error) {
-        console.error('API test error:', error);
+        // Import logger for error handling
+        const { getLogger } = await import('../utils/logger.ts');
+        const logger = getLogger('test-api');
+        logger.error('API test error', {}, error);
         resultDiv.textContent = `Error: ${error.message}`;
       }
     });

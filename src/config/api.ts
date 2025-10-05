@@ -33,11 +33,11 @@ export const API_CONFIG = {
     // Dashboard (v2)
     ADMIN_DASHBOARD: '/v2/admin/dashboard',
     
-    // Project Subscription Management (v2)
-    PROJECT_SUBSCRIBERS: (projectId: string) => `/v2/projects/${projectId}/subscribers`,
-    PROJECT_SUBSCRIBE: (projectId: string) => `/v2/projects/${projectId}/subscribers`,
-    PROJECT_SUBSCRIPTION_UPDATE: (projectId: string, subscriptionId: string) => `/v2/projects/${projectId}/subscribers/${subscriptionId}`,
-    PROJECT_UNSUBSCRIBE: (projectId: string, subscriptionId: string) => `/v2/projects/${projectId}/subscribers/${subscriptionId}`,
+    // Project Subscription Management (v2) - Updated to match actual backend endpoints
+    PROJECT_SUBSCRIBERS: (projectId: string) => `/v2/projects/${projectId}/subscriptions`,
+    PROJECT_SUBSCRIBE: (projectId: string) => `/v2/projects/${projectId}/subscriptions`,
+    PROJECT_SUBSCRIPTION_UPDATE: (projectId: string, subscriptionId: string) => `/v2/subscriptions/${subscriptionId}`,
+    PROJECT_UNSUBSCRIBE: (projectId: string, subscriptionId: string) => `/v2/subscriptions/${subscriptionId}`,
   },
   
   // Default headers

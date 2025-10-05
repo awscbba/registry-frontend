@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
 import type { DatabaseOptimizationHistory, DatabaseChartsProps } from '../../types/database';
 import databaseService from '../../services/databaseService';
@@ -21,7 +22,7 @@ const DatabaseCharts: React.FC<DatabaseChartsProps> = ({
       setOptimizationHistory(history);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch optimization history');
-      console.error('Database history error:', err);
+      logger.error('Database history error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

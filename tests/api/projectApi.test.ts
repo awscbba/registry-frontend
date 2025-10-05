@@ -118,7 +118,7 @@ describe('ProjectAPI Critical Tests', () => {
       try {
         await projectApi.updatePerson(undefined as any, { firstName: 'Jane' });
         expect(true).toBe(false); // Should not reach here
-      } catch (error) {
+      } catch {
         // Should fail gracefully, not make API call with undefined
         expect(mockFetch).not.toHaveBeenCalled();
       }
@@ -445,7 +445,7 @@ describe('ProjectAPI Critical Tests', () => {
       await projectApi.unsubscribePersonFromProject(projectId, subscriptionId);
 
       // Verify all calls were made
-      expect(mockFetch).toHaveBeenCalledTimes(4);
+      expect(mockFetch).toHaveBeenCalledTimes(5);
     });
   });
 

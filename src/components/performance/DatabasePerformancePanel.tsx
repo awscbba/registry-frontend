@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { DatabaseMetrics, DatabasePerformancePanelProps } from '../../types/database';
 import databaseService, { DatabaseService } from '../../services/databaseService';
+
+const logger = getComponentLogger('DatabasePerformancePanel');
 
 const DatabasePerformancePanel: React.FC<DatabasePerformancePanelProps> = ({
   refreshInterval = 30000,
@@ -21,7 +24,7 @@ const DatabasePerformancePanel: React.FC<DatabasePerformancePanelProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch database metrics');
-      console.error('Database metrics error:', err);
+      logger.error('Database metrics error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

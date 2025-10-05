@@ -1,52 +1,22 @@
 {
   "auditReportVersion": 2,
-  "vulnerabilities": {
-    "brace-expansion": {
-      "name": "brace-expansion",
-      "severity": "low",
-      "isDirect": false,
-      "via": [
-        {
-          "source": 1105444,
-          "name": "brace-expansion",
-          "dependency": "brace-expansion",
-          "title": "brace-expansion Regular Expression Denial of Service vulnerability",
-          "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw",
-          "severity": "low",
-          "cwe": [
-            "CWE-400"
-          ],
-          "cvss": {
-            "score": 3.1,
-            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
-          },
-          "range": ">=2.0.0 <=2.0.1"
-        }
-      ],
-      "effects": [],
-      "range": "2.0.0 - 2.0.1",
-      "nodes": [
-        "node_modules/brace-expansion"
-      ],
-      "fixAvailable": true
-    }
-  },
+  "vulnerabilities": {},
   "metadata": {
     "vulnerabilities": {
       "info": 0,
-      "low": 1,
+      "low": 0,
       "moderate": 0,
       "high": 0,
       "critical": 0,
-      "total": 1
+      "total": 0
     },
     "dependencies": {
-      "prod": 422,
-      "dev": 0,
-      "optional": 73,
-      "peer": 1,
+      "prod": 445,
+      "dev": 562,
+      "optional": 79,
+      "peer": 6,
       "peerOptional": 0,
-      "total": 495
+      "total": 1084
     }
   }
 }

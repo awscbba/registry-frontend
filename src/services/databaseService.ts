@@ -6,9 +6,11 @@ import type {
   DatabaseMetrics,
   DatabaseOptimizationHistory,
   ConnectionPoolMetrics,
-  QueryOptimizationResult,
   Recommendation
 } from '../types/database';
+import { getServiceLogger } from '../utils/logger';
+
+const logger = getServiceLogger('databaseService');
 
 class DatabaseService {
   private baseUrl: string;
@@ -23,7 +25,7 @@ class DatabaseService {
    */
   async getMetrics(): Promise<DatabaseMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/metrics`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/metrics`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +63,7 @@ class DatabaseService {
         timestamp: data.timestamp || new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching database metrics:', error);
+      logger.error('Error fetching database metrics', { error: error.message }, error);
       throw error;
     }
   }
@@ -72,7 +74,7 @@ class DatabaseService {
    */
   async getRecommendations(): Promise<Recommendation[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/recommendations`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/recommendations`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +89,7 @@ class DatabaseService {
       const data = await response.json();
       return data.recommendations || [];
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      logger.error('Error fetching recommendations', { error: error.message }, error);
       throw error;
     }
   }
@@ -98,7 +100,7 @@ class DatabaseService {
    */
   async getConnectionPoolStatus(): Promise<ConnectionPoolMetrics[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/connection-pool`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/connection-pool`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +115,7 @@ class DatabaseService {
       const data = await response.json();
       return data.pools || [];
     } catch (error) {
-      console.error('Error fetching connection pool status:', error);
+      logger.error('Error fetching connection pool status', { error: error.message }, error);
       throw error;
     }
   }
@@ -124,7 +126,7 @@ class DatabaseService {
    */
   async getQueryAnalysis(): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/query-analysis`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/query-analysis`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +141,7 @@ class DatabaseService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching query analysis:', error);
+      logger.error('Error fetching query analysis', { error: error.message }, error);
       throw error;
     }
   }
@@ -150,7 +152,7 @@ class DatabaseService {
    */
   async getOptimizationHistory(timeRange: string = '24h'): Promise<DatabaseOptimizationHistory> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/optimization-history?range=${timeRange}`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/optimization-history?range=${timeRange}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +171,7 @@ class DatabaseService {
         trends: data.trends || [],
       };
     } catch (error) {
-      console.error('Error fetching optimization history:', error);
+      logger.error('Error fetching optimization history', { error: error.message }, error);
       throw error;
     }
   }
@@ -180,7 +182,7 @@ class DatabaseService {
    */
   async applyRecommendation(recommendationId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/database/performance/apply-optimization`, {
+      const response = await fetch(`${this.baseUrl}/v2/admin/database/performance/apply-optimization`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +201,7 @@ class DatabaseService {
         message: data.message || 'Optimization applied successfully',
       };
     } catch (error) {
-      console.error('Error applying optimization:', error);
+      logger.error('Error applying optimization', { error: error.message }, error);
       throw error;
     }
   }

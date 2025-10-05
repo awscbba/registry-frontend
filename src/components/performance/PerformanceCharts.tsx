@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { PerformanceHistory, PerformanceChartsProps } from '../../types/performance';
 import performanceService from '../../services/performanceService';
+
+const logger = getComponentLogger('PerformanceCharts');
 
 const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   timeRange = '24h',
@@ -11,7 +14,8 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<string>(metrics[0]);
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
 
   // Fetch performance history data
   const fetchPerformanceHistory = async () => {
@@ -21,7 +25,7 @@ const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
       setPerformanceHistory(history);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch performance history');
-      console.error('Performance history error:', err);
+      logger.error('Performance history error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

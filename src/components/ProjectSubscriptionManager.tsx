@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import type { Project, Subscription } from '../types/project';
+import { getComponentLogger } from '../utils/logger';
+
+const logger = getComponentLogger('ProjectSubscriptionManager');
 
 interface ProjectSubscriptionManagerProps {
   personId?: string;
@@ -19,6 +22,22 @@ export default function ProjectSubscriptionManager({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Debug log to track component mounting and personId value
+  logger.info('ProjectSubscriptionManager mounted', { 
+    personId, 
+    personIdType: typeof personId,
+    isEditing,
+    hasPersonId: !!personId 
+  });
+  
+  // Component initialization debug
+  logger.debug('ProjectSubscriptionManager initialized', {
+    personId,
+    personIdType: typeof personId,
+    isEditing,
+    hasPersonId: !!personId
+  });
+
   // Load projects and subscriptions
   useEffect(() => {
     const loadData = async () => {
@@ -26,25 +45,64 @@ export default function ProjectSubscriptionManager({
       setError(null);
       
       try {
-        // Load all projects
+        // Load all projects and filter for pending/active/ongoing (projects available for admin assignment)
         const allProjects = await projectApi.getAllProjects();
-        setProjects(allProjects);
+        const filteredProjects = allProjects.filter(project => 
+          project.status === 'pending' || 
+          project.status === 'active' ||
+          project.status === 'ongoing'
+        );
+        setProjects(filteredProjects);
         
         // Load person's subscriptions if personId is provided
         if (personId) {
+          logger.debug('Loading subscriptions for person', { personId });
+          
           const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+          
+          logger.debug('Found subscriptions for person', { 
+            personId, 
+            subscriptionCount: personSubscriptions.length,
+            subscriptions: personSubscriptions,
+            rawData: personSubscriptions
+          });
           setSubscriptions(personSubscriptions);
           
-          // Set initially selected project IDs (only active subscriptions)
-          const activeSubscriptionProjectIds = personSubscriptions
-            .filter(sub => sub.status === 'active')
-            .map(sub => sub.projectId);
-          setSelectedProjectIds(activeSubscriptionProjectIds);
+          // Set initially selected project IDs (active and pending subscriptions)
+          const activeSubscriptions = personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending');
+          logger.debug('Active subscriptions filtered', {
+            personId,
+            activeSubscriptions,
+            subscriptionStructure: activeSubscriptions[0] || null,
+            allFieldsInFirstSub: activeSubscriptions[0] ? Object.keys(activeSubscriptions[0]) : []
+          });
+          
+          const currentSubscriptionProjectIds = activeSubscriptions.map(sub => {
+            logger.debug('Mapping project ID from subscription', {
+              subscription: sub,
+              projectId: sub.projectId,
+              allFields: Object.keys(sub)
+            });
+            // Field mapping transforms project_id to projectId (camelCase)
+            return sub.projectId;
+          });
+          
+          logger.debug('Setting selected project IDs', { 
+            personId,
+            allSubscriptions: personSubscriptions,
+            filteredSubscriptions: personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending'),
+            selectedProjectIds: currentSubscriptionProjectIds,
+            selectedProjectIdsDetailed: currentSubscriptionProjectIds.map(id => ({ projectId: id })),
+            totalSubscriptions: personSubscriptions.length
+          });
+          setSelectedProjectIds(currentSubscriptionProjectIds);
           
           // Notify parent component
           if (onSubscriptionsChange) {
-            onSubscriptionsChange(activeSubscriptionProjectIds);
+            onSubscriptionsChange(currentSubscriptionProjectIds);
           }
+        } else {
+          logger.warn('No personId provided for subscription loading');
         }
       } catch (err) {
         if (err instanceof ApiError) {
@@ -105,11 +163,16 @@ export default function ProjectSubscriptionManager({
 
   return (
     <div className="subscription-manager">
-      <h3>Suscripciones a Proyectos</h3>
+      <div className="header-section">
+        <h3>Suscripciones a Proyectos</h3>
+        <p className="projects-count">
+          Mostrando {projects.length} proyectos disponibles para asignación
+        </p>
+      </div>
       
       {projects.length === 0 ? (
         <div className="empty-state">
-          <p>No hay proyectos disponibles</p>
+          <p>No hay proyectos activos disponibles</p>
         </div>
       ) : (
         <div className="projects-list">
@@ -163,11 +226,21 @@ export default function ProjectSubscriptionManager({
           background: #f9fafb;
         }
 
+        .header-section {
+          margin-bottom: 1rem;
+        }
+
         .subscription-manager h3 {
-          margin: 0 0 1rem 0;
+          margin: 0 0 0.5rem 0;
           color: #374151;
           font-size: 1.1rem;
           font-weight: 600;
+        }
+
+        .projects-count {
+          margin: 0;
+          color: #6b7280;
+          font-size: 0.875rem;
         }
 
         .loading-state, .error-state, .empty-state {
@@ -199,6 +272,30 @@ export default function ProjectSubscriptionManager({
         .projects-list {
           display: grid;
           gap: 0.75rem;
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 1rem;
+          background: white;
+        }
+
+        .projects-list::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .projects-list::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+
+        .projects-list::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
 
         .project-item {

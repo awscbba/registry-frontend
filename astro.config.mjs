@@ -2,12 +2,11 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
+import awsAmplify from 'astro-aws-amplify';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'static',
-  build: {
-    assets: 'assets'
-  }
+  adapter: awsAmplify(),
+  output: 'server'
 });

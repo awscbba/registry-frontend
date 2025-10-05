@@ -110,11 +110,79 @@ export default [
       },
     },
   },
+  // Test files configuration
+  {
+    files: ['**/*.test.{js,jsx,ts,tsx}', '**/tests/**/*.{js,jsx,ts,tsx}', '**/__tests__/**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        // Jest globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly',
+        // Node.js globals
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        // Browser globals for testing
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        fetch: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        Response: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        HTMLSelectElement: 'readonly',
+        HTMLElement: 'readonly',
+        Event: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
+        React: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+      react,
+      'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
+      import: importPlugin,
+    },
+    rules: {
+      // More relaxed rules for test files
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-console': 'off', // Allow console in tests
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
   {
     ignores: [
       'dist/',
       'node_modules/',
       '.astro/',
+      '.amplify-hosting/',
+      'build/',
       'fallback/',
       '*.config.js',
       '*.config.ts',

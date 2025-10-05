@@ -7,6 +7,12 @@ export default {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^../config/api$': '<rootDir>/tests/__mocks__/api.ts',
     '^../../src/config/api$': '<rootDir>/tests/__mocks__/api.ts',
+    '^../utils/logger$': '<rootDir>/tests/__mocks__/logger.ts',
+    '^../../src/utils/logger$': '<rootDir>/tests/__mocks__/logger.ts',
+    '^../../utils/logger$': '<rootDir>/tests/__mocks__/logger.ts',
+    '^../services/authService$': '<rootDir>/tests/__mocks__/authService.ts',
+    '^../../src/services/authService$': '<rootDir>/tests/__mocks__/authService.ts',
+    '^./authService$': '<rootDir>/tests/__mocks__/authService.ts',
   },
   testMatch: [
     '<rootDir>/tests/**/*.test.{ts,tsx}',
@@ -24,6 +30,12 @@ export default {
     'ts-jest': {
       useESM: true,
       tsconfig: 'tsconfig.json'
+    },
+    'import.meta': {
+      env: {
+        DEV: false,
+        PROD: true
+      }
     }
   },
   transform: {

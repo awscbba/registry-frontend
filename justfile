@@ -18,6 +18,30 @@ setup-nodejs:
     echo "Current npm: $(npm --version 2>/dev/null || echo 'not available')"
     echo ""
     
+    # Check if we already have a compatible Node.js version (e.g., from NVM)
+    CURRENT_NODE_VERSION=$(node --version 2>/dev/null | sed 's/v//' || echo "0.0.0")
+    NODE_MAJOR=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f1)
+    NODE_MINOR=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f2)
+    NODE_PATCH=$(echo $CURRENT_NODE_VERSION | cut -d'.' -f3)
+    
+    echo "Detected Node.js version: $CURRENT_NODE_VERSION"
+    
+    # Check if current version meets requirements (>=18.20.8 or >=20.0.0)
+    # Simplified: if major >= 20 OR (major=18 AND minor>=20 AND patch>=8)
+    if [ "$NODE_MAJOR" -ge 20 ] || ([ "$NODE_MAJOR" -eq 18 ] && [ "$NODE_MINOR" -ge 20 ] && [ "$NODE_PATCH" -ge 8 ]); then
+        echo "✅ Current Node.js $CURRENT_NODE_VERSION meets requirements (>=18.20.8)"
+        echo "🎯 Skipping Node.js installation - using existing version"
+        
+        # Create environment configuration with current Node.js
+        echo "NODE_CMD=node" > .env.nodejs
+        echo "NPM_CMD=npm" >> .env.nodejs
+        echo "✅ Using current Node.js: $(which node)"
+        echo "✅ Using current npm: $(which npm)"
+        exit 0
+    fi
+    
+    echo "⚠️ Current Node.js $CURRENT_NODE_VERSION below requirements, upgrading..."
+    
     # Upgrade to Node.js 20+ for Astro 5.12.9 compatibility
     if command -v dnf >/dev/null 2>&1; then
         echo "📦 Using dnf to upgrade Node.js to 20+..."
@@ -319,6 +343,70 @@ quality:
     fi
     echo "  Bundle size: $(cat bundle-size.txt | cut -d'-' -f2 | cut -d'(' -f1 | xargs || echo "unknown")"
 
+# Deploy to AWS Amplify (SSR-enabled deployment via S3)
+deploy-amplify app_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🚀 Deploying to AWS Amplify via S3..."
+    
+    APP_ID="{{app_id}}"
+    BUCKET_NAME="amplify-deployments-${APP_ID}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    ZIP_NAME="amplify-deployment-${TIMESTAMP}.zip"
+    
+    echo "📦 Deployment configuration:"
+    echo "  Amplify App ID: $APP_ID"
+    echo "  S3 Bucket: $BUCKET_NAME"
+    echo "  Package: $ZIP_NAME"
+    echo "  Build output: dist/"
+    echo ""
+    
+    # Create deployment package
+    echo "📦 Creating deployment package..."
+    zip -r "$ZIP_NAME" dist/
+    
+    # Create S3 bucket if it doesn't exist
+    echo "📦 Ensuring S3 bucket exists..."
+    aws s3 mb "s3://$BUCKET_NAME" --region us-east-1 2>/dev/null || echo "Bucket already exists"
+    
+    # Upload to S3
+    echo "📤 Uploading to S3..."
+    aws s3 cp "$ZIP_NAME" "s3://$BUCKET_NAME/$ZIP_NAME" --region us-east-1
+    
+    # Get S3 URI
+    S3_URI="s3://$BUCKET_NAME/$ZIP_NAME"
+    echo "📍 S3 URI: $S3_URI"
+    
+    echo "🚀 Creating Amplify deployment from S3..."
+    aws amplify create-deployment \
+        --app-id "$APP_ID" \
+        --branch-name prod \
+        --region us-east-1 > deployment.json
+    
+    # Extract upload URL and deployment ID
+    UPLOAD_URL=$(cat deployment.json | grep -o '"uploadUrl":"[^"]*' | cut -d'"' -f4)
+    DEPLOYMENT_ID=$(cat deployment.json | grep -o '"deploymentId":"[^"]*' | cut -d'"' -f4)
+    
+    echo "📤 Uploading build artifacts to Amplify..."
+    curl -X PUT "$UPLOAD_URL" \
+        -H "Content-Type: application/zip" \
+        --data-binary "@$ZIP_NAME"
+    
+    echo "🚀 Starting Amplify deployment..."
+    aws amplify start-deployment \
+        --app-id "$APP_ID" \
+        --branch-name prod \
+        --deployment-id "$DEPLOYMENT_ID" \
+        --region us-east-1
+    
+    echo "✅ Amplify deployment initiated!"
+    echo "🌐 Amplify Console: https://console.aws.amazon.com/amplify/home#/$APP_ID"
+    echo "📊 S3 Source: $S3_URI"
+    echo "📊 Monitor deployment progress in the Amplify Console"
+    
+    # Cleanup local files
+    rm -f "$ZIP_NAME" deployment.json
+
 # Deploy to S3 + CloudFront (production deployment)
 deploy-aws:
     #!/usr/bin/env bash
@@ -456,7 +544,7 @@ ci-quality:
     echo "✅ CI quality pipeline completed (with any necessary fallbacks)"
 
 # Complete deployment pipeline (build + deploy)
-ci-deploy target="s3":
+ci-deploy target="s3" app_id="":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🚀 People Register Frontend - CI Deployment Pipeline"
@@ -496,8 +584,12 @@ ci-deploy target="s3":
     if [ "{{target}}" = "s3" ]; then
         just deploy-aws
     elif [ "{{target}}" = "amplify" ]; then
-        echo "ℹ️ Amplify deployment requires app-id parameter"
-        echo "Use: just deploy-amplify <app-id>"
+        if [ -z "{{app_id}}" ]; then
+            echo "❌ Amplify deployment requires app-id parameter"
+            echo "Use: just ci-deploy amplify <app-id>"
+            exit 1
+        fi
+        just deploy-amplify "{{app_id}}"
     else
         echo "❌ Unknown deployment target: {{target}}"
         echo "Available targets: s3, amplify"
@@ -861,6 +953,114 @@ analyze-fix:
     echo ""
     
     echo "✅ Auto-fix completed - run 'just analyze' to verify"
+
+# Fix TypeScript strict mode issues and logging
+fix-typescript:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Fixing TypeScript strict mode issues..."
+    
+    # Check if we have TypeScript errors
+    echo "🔍 Checking for TypeScript errors..."
+    if npm run type-check 2>/dev/null; then
+        echo "✅ No TypeScript errors found"
+        return 0
+    fi
+    
+    echo "⚠️ TypeScript errors detected, applying common fixes..."
+    
+    # Common fixes for unknown error types in catch blocks
+    echo "🔧 Analyzing error handling patterns..."
+    
+    # Find files with error.message access in catch blocks
+    echo "📋 Files needing error handling fixes:"
+    find src/ -name "*.ts" -o -name "*.tsx" | xargs grep -l "error\.message" | while read file; do
+        count=$(grep -c "error\.message" "$file" || echo "0")
+        echo "  $file: $count error.message occurrences"
+    done
+    
+    # Find files with logger calls using unknown error types
+    echo ""
+    echo "📋 Files needing logger call fixes:"
+    find src/ -name "*.ts" -o -name "*.tsx" | xargs grep -l "}, error)" | while read file; do
+        count=$(grep -c "}, error)" "$file" || echo "0")
+        echo "  $file: $count logger calls with unknown error types"
+    done
+    
+    echo ""
+    echo "📋 Required manual fixes:"
+    echo "  1. Replace 'error.message' with 'getErrorMessage(error)'"
+    echo "  2. Replace '}, error)' with '}, getErrorObject(error))'"
+    echo "  3. Add import: import { getErrorMessage, getErrorObject } from '../utils/logger'"
+    echo "  4. Use type assertions for unknown data: (data as any).property"
+    echo "  5. Add null checks: this.token?.split('.')[1]"
+    echo ""
+    echo "💡 Run 'just type-check' after making fixes to verify"
+
+# Clean up console.log statements and replace with structured logging
+cleanup-logging:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Cleaning up console.log statements..."
+    
+    # Find all console.log statements
+    echo "🔍 Scanning for console.log statements..."
+    CONSOLE_LOGS=$(find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.astro" | xargs grep -n "console\.log" 2>/dev/null | wc -l || echo "0")
+    
+    if [ "$CONSOLE_LOGS" -eq 0 ]; then
+        echo "✅ No console.log statements found"
+        return 0
+    fi
+    
+    echo "⚠️ Found $CONSOLE_LOGS console.log statements"
+    echo ""
+    echo "📋 Files with console.log statements:"
+    find src/ -name "*.ts" -o -name "*.tsx" -o -name "*.astro" | xargs grep -l "console\.log" 2>/dev/null | while read file; do
+        count=$(grep -c "console\.log" "$file" 2>/dev/null || echo "0")
+        echo "  $file: $count occurrences"
+        grep -n "console\.log" "$file" 2>/dev/null | head -3 | sed 's/^/    /' || true
+        total_count=$(grep -c "console\.log" "$file" 2>/dev/null || echo "0")
+        if [ "$total_count" -gt 3 ]; then
+            echo "    ... and $(($total_count - 3)) more"
+        fi
+        echo ""
+    done
+    
+    echo "📋 Recommended replacements:"
+    echo "  console.log('info message') → logger.info('info message')"
+    echo "  console.log('debug info') → logger.debug('debug info')"
+    echo "  console.error('error') → logger.error('error', {}, error)"
+    echo "  console.warn('warning') → logger.warn('warning')"
+    echo ""
+    echo "💡 Add logger import: import { getLogger } from '../utils/logger'"
+    echo "💡 Create logger instance: const logger = getLogger('component-name')"
+
+# Complete logging and TypeScript cleanup
+fix-code-quality:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Complete code quality fixes..."
+    echo "================================"
+    
+    echo "Step 1/4: Cleaning up console.log statements..."
+    just cleanup-logging
+    echo ""
+    
+    echo "Step 2/4: Fixing TypeScript issues..."
+    just fix-typescript
+    echo ""
+    
+    echo "Step 3/4: Running linting fixes..."
+    just lint-fix
+    echo ""
+    
+    echo "Step 4/4: Formatting code..."
+    just format
+    echo ""
+    
+    echo "✅ Code quality fixes completed"
+    echo "💡 Run 'just analyze' to verify all fixes"
+    echo "💡 Run 'just build' to test compilation"
 
 # Security and dependency auditing
 audit:

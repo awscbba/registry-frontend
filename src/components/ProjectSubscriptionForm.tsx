@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { projectApi, ApiError } from '../services/projectApi';
+import { getComponentLogger, getErrorMessage, getErrorObject } from '../utils/logger';
+import { projectApi } from '../services/projectApi';
 import { authService } from '../services/authService';
-import type { Project, SubscriptionCreate } from '../types/project';
+import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
@@ -9,6 +10,8 @@ import UserDashboard from './UserDashboard';
 interface ProjectSubscriptionFormProps {
   projectId: string;
 }
+
+const logger = getComponentLogger('ProjectSubscriptionForm');
 
 export default function ProjectSubscriptionForm({ projectId }: ProjectSubscriptionFormProps) {
   const [project, setProject] = useState<Project | null>(null);
@@ -32,9 +35,16 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   });
 
   useEffect(() => {
-    loadProject();
+    // Initialize component state - respect dependency injection
+    if (project) {
+      // Use injected project data (SSR or props) - no additional state needed
+      // Project data flows through props following clean architecture
+    } else {
+      // Fallback to repository pattern for data fetching
+      loadProject();
+    }
     checkUserLoginStatus();
-  }, [projectId]);
+  }, [projectId, project]);
 
   const checkUserLoginStatus = () => {
     setIsLoggedIn(authService.isAuthenticated());
@@ -54,16 +64,14 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
   const getProjectSlug = (project: Project): string => {
     const name = project.name.toLowerCase();
     
-    // Map known projects to their expected slugs
+    // Map known projects to their expected slugs only if needed
     if (name.includes('aws workshop')) {
       return 'aws-workshop-2025';
     } else if (name.includes('serverless bootcamp')) {
       return 'serverless-bootcamp';
-    } else if (name.includes('testproy') || name.includes('test')) {
-      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
     }
     
-    // Fallback to generated slug
+    // Use natural slug generation for all other projects
     return nameToSlug(project.name);
   };
 
@@ -74,21 +82,34 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
       
       // First, get all projects to find the one matching the slug
       const allProjects = await projectApi.getPublicProjects();
+      logger.info('Client-side project lookup', { 
+        projectId, 
+        projectIdType: typeof projectId,
+        totalProjects: allProjects.length,
+        projectNames: allProjects.map(p => p.name)
+      });
       
       // Find project by slug
       const matchingProject = allProjects.find(p => {
         const projectSlug = getProjectSlug(p);
+        logger.info('Slug comparison', { 
+          projectName: p.name, 
+          generatedSlug: projectSlug, 
+          targetSlug: projectId,
+          match: projectSlug === projectId 
+        });
         return projectSlug === projectId;
       });
       
       if (!matchingProject) {
+        logger.error('No matching project found', { projectId, availableProjects: allProjects.map(p => ({ name: p.name, slug: getProjectSlug(p) })) });
         setError('Proyecto no encontrado');
         return;
       }
       
       setProject(matchingProject);
     } catch (err) {
-      console.error('Error loading project:', err);
+      logger.error('Error loading project', { project_id: projectId, error: getErrorMessage(err) }, getErrorObject(err));
       setError('Error al cargar el proyecto');
     } finally {
       setIsLoading(false);
@@ -116,22 +137,44 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
     setSuccess(null);
 
     try {
-      // Use the service layer for consistent API calls and error handling
-      const subscriptionData: SubscriptionCreate = {
-        person: {
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email
-        },
-        projectId: project!.id,
-        notes: formData.notes || undefined
+      // Enterprise validation before API call
+      if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim()) {
+        throw new Error('Required fields missing: firstName, lastName, and email are mandatory');
+      }
+
+      if (!project?.id) {
+        throw new Error('Invalid project: Project ID is required');
+      }
+
+      // Use proper business logic for public subscription creation
+      const publicSubscriptionData = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone || '',
+        dateOfBirth: formData.dateOfBirth || '1990-01-01',
+        projectId: project.id,
+        address: {
+          street: formData.address?.street || '',
+          city: formData.address?.city || '',
+          state: formData.address?.state || '',
+          postalCode: formData.address?.postalCode || '',
+          country: formData.address?.country || ''
+        }
       };
 
-      const result = await projectApi.createSubscription(subscriptionData);
+      logger.info('Creating public subscription', { 
+        projectId: project.id, 
+        personEmail: formData.email,
+        event_type: 'public_subscription_create_attempt'
+      });
+
+      const result = await projectApi.createSubscription(publicSubscriptionData);
       
       // Handle success based on API response
-      if (result && typeof result === 'object' && 'person_created' in result) {
-        if (result.person_created) {
-          if (result.email_sent) {
+      if (result && typeof result === 'object' && 'personCreated' in result) {
+        if (result.personCreated) {
+          if (result.emailSent) {
             setSuccess('¡Suscripción enviada exitosamente! 🎉\n\nTu cuenta ha sido creada y se ha enviado un email de bienvenida con tus credenciales de acceso. Revisa tu bandeja de entrada (y la carpeta de spam) para encontrar tus datos de inicio de sesión.\n\nUna vez que recibas el email, podrás iniciar sesión y cambiar tu contraseña temporal por una de tu elección.');
           } else {
             setSuccess('¡Suscripción enviada exitosamente! 🎉\n\nTu cuenta ha sido creada, pero no pudimos enviar el email de bienvenida. Por favor contacta al administrador para obtener tus credenciales de acceso.\n\nTu solicitud está pendiente de aprobación por un administrador.');
@@ -151,20 +194,46 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         notes: ''
       });
 
-    } catch (err) {
-      if (err instanceof ApiError) {
-        // Handle specific API errors with user-friendly messages
-        if (err.message.includes('already subscribed') || err.message.includes('ya suscrito')) {
-          setLoginMessage('Ya tienes una suscripción a este proyecto. Inicia sesión para ver el estado de tu suscripción.');
-          setShowLoginModal(true);
-        } else if (err.message.includes('account exists') || err.message.includes('cuenta existe')) {
-          setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
-          setShowLoginModal(true);
-        } else {
-          setError(`Error al procesar suscripción: ${err.message}`);
+    } catch (err: any) {
+      logger.error('Subscription error', { error: err });
+      
+      // Extract error message from API response structure with better handling
+      let errorMessage = 'Error desconocido al procesar la suscripción';
+      
+      try {
+        if (err?.error?.message) {
+          // API error response format: { error: { message: "...", code: "..." } }
+          errorMessage = err.error.message;
+        } else if (err?.message) {
+          // Standard Error object
+          errorMessage = err.message;
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err && typeof err === 'object') {
+          // Handle cases where err is an object but doesn't have expected structure
+          errorMessage = 'Error de conexión al procesar la suscripción';
         }
+      } catch {
+        // If error parsing fails, use default message
+        errorMessage = 'Error de conexión al procesar la suscripción';
+      }
+
+      // Handle specific error cases with user-friendly messages
+      if (errorMessage.includes('already exists') || errorMessage.includes('Subscription already exists')) {
+        setLoginMessage('Ya tienes una suscripción a este proyecto. Inicia sesión para ver el estado de tu suscripción.');
+        setShowLoginModal(true);
+      } else if (errorMessage.includes('account exists') || errorMessage.includes('cuenta existe')) {
+        setLoginMessage('Ya tienes una cuenta registrada con este email. Inicia sesión para suscribirte al proyecto.');
+        setShowLoginModal(true);
+      } else if (errorMessage.includes("can't be used in 'await' expression") || errorMessage.includes('HTTP_400')) {
+        // Handle the specific backend async error with user-friendly message
+        setError('Error temporal del servidor. Por favor intenta nuevamente en unos momentos.');
       } else {
-        setError('Error desconocido al procesar la suscripción');
+        // Show user-friendly error message, but limit length to avoid showing raw JSON
+        const displayMessage = errorMessage.length > 200 
+          ? 'Error al procesar la suscripción. Por favor verifica tus datos e intenta nuevamente.'
+          : errorMessage;
+        setError(`Error al procesar suscripción: ${displayMessage}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -204,7 +273,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
         <div className="error-state">
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={loadProject} className={BUTTON_CLASSES.secondary}>
+          <button onClick={loadProject} className={BUTTON_CLASSES.SECONDARY}>
             Reintentar
           </button>
         </div>
@@ -250,11 +319,11 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
           <div className="project-details">
             <div className="detail-item">
               <span className="detail-label">Fecha de inicio:</span>
-              <span className="detail-value">{new Date(project.startDate).toLocaleDateString()}</span>
+              <span className="detail-value">{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No especificada'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Fecha de fin:</span>
-              <span className="detail-value">{new Date(project.endDate).toLocaleDateString()}</span>
+              <span className="detail-value">{project.endDate ? new Date(project.endDate).toLocaleDateString() : 'No especificada'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Participantes máximos:</span>
@@ -284,7 +353,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
             <div className="auth-actions">
               <button 
                 onClick={handleShowUserDashboard}
-                className={BUTTON_CLASSES.primary}
+                className={BUTTON_CLASSES.PRIMARY}
               >
                 Ver Mi Panel de Usuario
               </button>
@@ -394,7 +463,7 @@ export default function ProjectSubscriptionForm({ projectId }: ProjectSubscripti
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={BUTTON_CLASSES.primary}
+                  className={BUTTON_CLASSES.PRIMARY}
                 >
                   {isSubmitting ? 'Enviando solicitud...' : 'Enviar Solicitud de Suscripción'}
                 </button>

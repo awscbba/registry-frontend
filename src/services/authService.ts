@@ -6,6 +6,8 @@
  */
 
 import { API_CONFIG } from '../config/api';
+import { authLogger, getErrorMessage, getErrorObject } from '../utils/logger';
+import { transformSubscriptions } from '../utils/fieldMapping';
 
 export interface User {
   id: string;
@@ -14,6 +16,7 @@ export interface User {
   lastName: string;
   isAdmin?: boolean;
   role?: string;
+  roles?: string[]; // For RBAC system
   requirePasswordChange?: boolean;
   isActive?: boolean;
   lastLoginAt?: string | null;
@@ -43,12 +46,15 @@ export interface UserSubscription {
 
 // Consistent localStorage keys
 const AUTH_TOKEN_KEY = 'userAuthToken';
+const REFRESH_TOKEN_KEY = 'userRefreshToken';
 const USER_DATA_KEY = 'userData';
 
 class AuthService {
   private static instance: AuthService;
   private token: string | null = null;
+  private refreshToken: string | null = null;
   private user: User | null = null;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -65,13 +71,14 @@ class AuthService {
 
   private loadFromStorage(): void {
     this.token = localStorage.getItem(AUTH_TOKEN_KEY);
+    this.refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const userDataStr = localStorage.getItem(USER_DATA_KEY);
     
     if (userDataStr) {
       try {
         this.user = JSON.parse(userDataStr);
       } catch (error) {
-        console.warn('Failed to parse stored user data:', error);
+        authLogger.warn('Failed to parse stored user data', { error: getErrorMessage(error) });
         this.clearStorage();
       }
     }
@@ -82,16 +89,33 @@ class AuthService {
       return;
     }
 
-    if (this.token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, this.token);
-    } else {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-    }
+    try {
+      if (this.token) {
+        localStorage.setItem(AUTH_TOKEN_KEY, this.token);
+        // eslint-disable-next-line no-console
+        console.log('✅ Token saved to localStorage:', this.token.substring(0, 50) + '...');
+      } else {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        // eslint-disable-next-line no-console
+        console.log('❌ No token to save, removed from localStorage');
+      }
 
-    if (this.user) {
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(this.user));
-    } else {
-      localStorage.removeItem(USER_DATA_KEY);
+      if (this.refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken);
+      } else {
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      }
+
+      if (this.user) {
+        localStorage.setItem(USER_DATA_KEY, JSON.stringify(this.user));
+        // eslint-disable-next-line no-console
+        console.log('✅ User saved to localStorage:', this.user.email);
+      } else {
+        localStorage.removeItem(USER_DATA_KEY);
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Error saving to localStorage:', error);
     }
   }
 
@@ -101,6 +125,7 @@ class AuthService {
     }
     
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_DATA_KEY);
     
     // Also clear any legacy keys for cleanup
@@ -123,25 +148,30 @@ class AuthService {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const responseData = await response.json();
+        
+        // Handle new API response format with nested data
+        const data = responseData.success ? responseData.data : responseData;
         
         // Convert admin login response format to match LoginResponse interface
         const loginResponse: LoginResponse = {
           success: true,
-          token: data.access_token,
+          token: data.accessToken || data.access_token,
           user: {
             id: data.user.id,
             email: data.user.email,
             firstName: data.user.firstName,
             lastName: data.user.lastName,
             isAdmin: data.user.isAdmin,
-            requirePasswordChange: data.require_password_change
+            roles: data.user.roles,
+            requirePasswordChange: data.user.requirePasswordChange || data.require_password_change
           },
           message: 'Inicio de sesión exitoso'
         };
 
-        // Store token and user data
-        this.token = loginResponse.token!;
+        // Store token, refresh token, and user data
+        this.token = data.accessToken || data.access_token;
+        this.refreshToken = data.refreshToken || data.refresh_token;
         this.user = loginResponse.user!;
         this.saveToStorage();
 
@@ -155,7 +185,7 @@ class AuthService {
         };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      authLogger.error('Login error', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error de conexión. Por favor, intenta nuevamente.',
@@ -188,7 +218,9 @@ class AuthService {
    */
   logout(): void {
     this.token = null;
+    this.refreshToken = null;
     this.user = null;
+    this.refreshPromise = null;
     this.clearStorage();
   }
 
@@ -210,7 +242,7 @@ class AuthService {
 
     try {
       // Decode JWT token to get expiration time
-      const payload = JSON.parse(atob(this.token.split('.')[1]));
+      const payload = JSON.parse(atob(this.token!.split('.')[1]));
       const exp = payload.exp;
       
       if (!exp) {
@@ -222,7 +254,7 @@ class AuthService {
       
       return Math.max(0, remaining);
     } catch (error) {
-      console.warn('Failed to decode token for time remaining:', error);
+      authLogger.warn('Failed to decode token for time remaining', { error: getErrorMessage(error) });
       return 0;
     }
   }
@@ -231,7 +263,13 @@ class AuthService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return this.token !== null && this.user !== null;
+    if (!this.token || !this.user) {
+      return false;
+    }
+    
+    // Check if token is expired
+    const timeRemaining = this.getTokenTimeRemaining();
+    return timeRemaining > 0;
   }
 
   /**
@@ -247,9 +285,37 @@ class AuthService {
     return !!(
       this.user.isAdmin || 
       this.user.role === 'admin' || 
-      this.user.role === 'administrator'
+      this.user.role === 'administrator' ||
+      this.user.roles?.includes('admin') ||
+      this.user.roles?.includes('super_admin')
     );
   }
+
+  /**
+   * Check if user has super admin privileges
+   */
+  isSuperAdmin(): boolean {
+    if (!this.isAuthenticated() || !this.user) {
+      return false;
+    }
+
+    // Debug current user data
+    // console.log('Current user data for super admin check:', {
+    //   user: this.user,
+    //   roles: this.user.roles,
+    //   role: this.user.role,
+    //   isAdmin: this.user.isAdmin
+    // });
+
+    // Check for super admin role from backend
+    return !!(
+      this.user.role === 'super_admin' ||
+      this.user.roles?.includes('super_admin') ||
+      this.user.roles?.includes('SUPER_ADMIN')
+    );
+  }
+
+
 
   /**
    * Refresh user data from backend to ensure we have latest admin status
@@ -268,9 +334,22 @@ class AuthService {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          this.user = data.user;
+        const responseData = await response.json();
+        // Handle API response format (data.data.user or data.user)
+        const userData = responseData.success ? responseData.data : responseData.user || responseData;
+        
+        if (userData) {
+          this.user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            isAdmin: userData.isAdmin,
+            roles: userData.roles,
+            requirePasswordChange: userData.requirePasswordChange,
+            isActive: userData.isActive,
+            lastLoginAt: userData.lastLoginAt
+          };
           this.saveToStorage();
           return true;
         }
@@ -280,7 +359,7 @@ class AuthService {
         return false;
       }
     } catch (error) {
-      console.warn('Failed to refresh user data:', error);
+      authLogger.warn('Failed to refresh user data', { error: getErrorMessage(error) });
       return false;
     }
     
@@ -302,6 +381,87 @@ class AuthService {
   }
 
   /**
+   * Get current refresh token
+   */
+  getRefreshToken(): string | null {
+    return this.refreshToken;
+  }
+
+  /**
+   * Refresh the access token using the refresh token
+   */
+  async refreshAccessToken(): Promise<string | null> {
+    // If there's already a refresh in progress, wait for it
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    if (!this.refreshToken) {
+      authLogger.warn('No refresh token available', { event_type: 'refresh_token_missing' });
+      this.logout();
+      return null;
+    }
+
+    this.refreshPromise = this.performTokenRefresh();
+    const result = await this.refreshPromise;
+    this.refreshPromise = null;
+    return result;
+  }
+
+  private async performTokenRefresh(): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refresh_token: this.refreshToken,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.token = data.access_token;
+        this.saveToStorage();
+        authLogger.info('Token refreshed successfully', { event_type: 'token_refresh' });
+        return this.token;
+      } else {
+        authLogger.warn('Token refresh failed', { 
+          status: response.status, 
+          event_type: 'token_refresh_failed' 
+        });
+        // Refresh token is invalid or expired, logout user
+        this.logout();
+        return null;
+      }
+    } catch (error) {
+      authLogger.error('Token refresh error', { error: getErrorMessage(error) }, getErrorObject(error));
+      // On network error, don't logout but return null
+      return null;
+    }
+  }
+
+  /**
+   * Get a valid access token, refreshing if necessary
+   */
+  async getValidToken(): Promise<string | null> {
+    if (!this.token) {
+      return null;
+    }
+
+    // Check if token is expired or about to expire (within 5 minutes)
+    const timeRemaining = this.getTokenTimeRemaining();
+    if (timeRemaining > 300) { // More than 5 minutes remaining
+      return this.token;
+    }
+
+    // Token is expired or about to expire, try to refresh
+    authLogger.info('Token expired or expiring soon, refreshing...', { event_type: 'token_expiry_detected' });
+    return await this.refreshAccessToken();
+  }
+
+  /**
    * Validate token with backend and refresh user data
    */
   async validateToken(): Promise<boolean> {
@@ -310,27 +470,17 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          this.user = data.user;
-          this.saveToStorage();
-        }
-        return true;
-      } else {
-        // Token is invalid, clear storage
-        this.logout();
-        return false;
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/me`, { skipRefresh: true });
+      
+      if (data && typeof data === 'object' && 'user' in data) {
+        this.user = (data as any).user;
+        this.saveToStorage();
       }
+      return true;
     } catch (error) {
-      console.warn('Token validation failed:', error);
+      authLogger.warn('Token validation failed', { error: getErrorMessage(error) });
       // On network error, don't logout but return false
       return false;
     }
@@ -345,21 +495,14 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/subscriptions`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        }
-      });
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user subscriptions');
-      }
-
-      const data = await response.json();
-      return data.subscriptions || [];
+      const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
+      return transformSubscriptions(subscriptions);
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
+      authLogger.error('Error fetching subscriptions', { error: getErrorMessage(error) }, getErrorObject(error));
       throw error;
     }
   }
@@ -367,32 +510,20 @@ class AuthService {
   /**
    * Subscribe to a project
    */
-  async subscribeToProject(projectId: string, notes?: string): Promise<any> {
+  async subscribeToProject(projectId: string, notes?: string): Promise<unknown> {
     if (!this.isAuthenticated() || !this.token) {
       throw new Error('User not authenticated');
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          ...API_CONFIG.DEFAULT_HEADERS
-        },
-        body: JSON.stringify({
-          projectId,
-          notes: notes || undefined
-        })
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/user/subscribe`, {
+        projectId,
+        notes: notes || undefined
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Subscription failed');
-      }
-
-      return response.json();
     } catch (error) {
-      console.error('Error subscribing to project:', error);
+      authLogger.error('Error subscribing to project', { error: getErrorMessage(error) }, getErrorObject(error));
       throw error;
     }
   }
@@ -409,7 +540,7 @@ class AuthService {
       const subscriptions = await this.getUserSubscriptions();
       return subscriptions.find(sub => sub.projectId === projectId) || null;
     } catch (error) {
-      console.warn('Failed to check project subscription:', error);
+      authLogger.warn('Failed to check project subscription', { error: getErrorMessage(error) });
       return null;
     }
   }
@@ -419,21 +550,18 @@ class AuthService {
    */
   async forgotPassword(email: string): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/forgot-password`, 
+        { email }, 
+        { skipAuth: true }
+      );
       return {
-        success: data.success || false,
-        message: data.message,
+        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
+        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Unknown response',
       };
     } catch (error) {
-      console.error('Error requesting password reset:', error);
+      authLogger.error('Error requesting password reset', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
@@ -446,24 +574,17 @@ class AuthService {
    */
   async validateResetToken(token: string): Promise<{ valid: boolean; expires_at?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/validate-reset-token/${token}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        return { valid: false };
-      }
-
-      const data = await response.json();
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/validate-reset-token/${token}`, 
+        { skipAuth: true }
+      );
       return {
-        valid: data.valid || false,
-        expires_at: data.expires_at,
+        valid: (data && typeof data === 'object' && 'valid' in data) ? (data as any).valid || false : false,
+        expires_at: (data && typeof data === 'object' && 'expires_at' in data) ? (data as any).expires_at : undefined,
       };
     } catch (error) {
-      console.error('Error validating reset token:', error);
+      authLogger.error('Error validating reset token', { error: getErrorMessage(error) }, getErrorObject(error));
       return { valid: false };
     }
   }
@@ -473,32 +594,22 @@ class AuthService {
    */
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/reset-password`, 
+        {
           reset_token: token,
           new_password: newPassword,
-        }),
-      });
-
-      const data = await response.json();
+        }, 
+        { skipAuth: true }
+      );
       
-      if (!response.ok) {
-        return {
-          success: false,
-          message: data.detail || data.message || 'Error al restablecer la contraseña',
-        };
-      }
-
       return {
-        success: data.success || false,
-        message: data.message,
+        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
+        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Unknown response',
       };
     } catch (error) {
-      console.error('Error resetting password:', error);
+      authLogger.error('Error resetting password', { error: getErrorMessage(error) }, getErrorObject(error));
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
@@ -524,7 +635,21 @@ export function addRequiredAuthHeaders(): Record<string, string> {
   return { 'Authorization': `Bearer ${token}` };
 }
 
+// Helper function for adding auth headers with automatic refresh
+export async function addAuthHeadersWithRefresh(): Promise<Record<string, string>> {
+  const token = await authService.getValidToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+export async function addRequiredAuthHeadersWithRefresh(): Promise<Record<string, string>> {
+  const token = await authService.getValidToken();
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  return { 'Authorization': `Bearer ${token}` };
+}
+
 // Make authService available globally for debugging and direct access
 if (typeof window !== 'undefined') {
-  (window as any).authService = authService;
+  (window as unknown as { authService: typeof authService }).authService = authService;
 }

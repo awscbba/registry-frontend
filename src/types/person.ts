@@ -14,6 +14,7 @@ export interface Person {
   phone: string;
   dateOfBirth: string;
   address: Address;
+  isAdmin?: boolean; // Added for admin role management
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +26,7 @@ export interface PersonCreate {
   phone: string;
   dateOfBirth: string;
   address: Address;
+  isAdmin?: boolean; // Added for admin role management
 }
 
 export interface PersonUpdate {
@@ -34,4 +36,6 @@ export interface PersonUpdate {
   phone?: string;
   dateOfBirth?: string;
   address?: Address;
+  isAdmin?: boolean; // Added for admin role management
+  userRole?: string; // Added for RBAC role management
 }

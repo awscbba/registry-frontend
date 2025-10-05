@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import type { Person, PersonCreate, PersonUpdate } from '../types/person';
+import { getComponentLogger } from '../utils/logger';
+import { authService } from '../services/authService';
 import ProjectSubscriptionManager from './ProjectSubscriptionManager';
+
+const logger = getComponentLogger('PersonForm');
 
 interface PersonFormProps {
   person?: Person;
@@ -10,12 +14,72 @@ interface PersonFormProps {
 }
 
 export default function PersonForm({ person, onSubmit, onCancel, isLoading = false }: PersonFormProps) {
+  // Debug log to track PersonForm rendering and person prop
+  logger.info('PersonForm rendered', { 
+    hasPerson: !!person,
+    personId: person?.id,
+    personIdType: typeof person?.id,
+    isLoading,
+    personData: person ? { id: person.id, firstName: person.firstName, lastName: person.lastName } : null
+  });
+  
+  // Component initialization debug
+  logger.debug('PersonForm initialized', {
+    hasPerson: !!person,
+    personId: person?.id,
+    personIdType: typeof person?.id,
+    isLoading,
+    personData: person ? { id: person.id, firstName: person.firstName, lastName: person.lastName } : null
+  });
+
+  // Helper function to format date for HTML date input (YYYY-MM-DD)
+  const formatDateForInput = (dateString?: string): string => {
+    if (!dateString) {
+      return '';
+    }
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
+    // If it's a datetime string, extract just the date part
+    return dateString.split('T')[0];
+  };
+
+  // Helper function to determine user role from person data
+  const getUserRole = (person: any): string => {
+    if (!person) {
+      return 'user';
+    }
+    
+    // Check roles array first (from RBAC system)
+    if (person.roles && Array.isArray(person.roles)) {
+      if (person.roles.includes('super_admin') || person.roles.includes('SUPER_ADMIN')) {
+        return 'super_admin';
+      }
+      if (person.roles.includes('admin') || person.roles.includes('ADMIN')) {
+        return 'admin';
+      }
+      if (person.roles.includes('moderator') || person.roles.includes('MODERATOR')) {
+        return 'moderator';
+      }
+    }
+    
+    // Fallback to isAdmin field
+    if (person.isAdmin) {
+      return 'admin';
+    }
+    
+    return 'user';
+  };
+
   const [formData, setFormData] = useState({
     firstName: person?.firstName || '',
     lastName: person?.lastName || '',
     email: person?.email || '',
     phone: person?.phone || '',
-    dateOfBirth: person?.dateOfBirth || '',
+    dateOfBirth: formatDateForInput(person?.dateOfBirth),
+    isAdmin: (person as any)?.isAdmin || false, // Cast to any since Person type might not have isAdmin
+    userRole: getUserRole(person as any), // Add userRole field
     address: {
       street: person?.address?.street || '',
       city: person?.address?.city || '',
@@ -351,6 +415,54 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           </div>
         </div>
 
+        {/* Debug Section - Temporary */}
+        <div className="form-section" style={{backgroundColor: '#f0f0f0', padding: '10px', margin: '10px 0'}}>
+          <h3 className="section-title">Debug Info (Temporary)</h3>
+          <p><strong>Is Authenticated:</strong> {authService.isAuthenticated() ? 'Yes' : 'No'}</p>
+          <p><strong>Is Admin:</strong> {authService.isAdmin() ? 'Yes' : 'No'}</p>
+          <p><strong>Is Super Admin:</strong> {authService.isSuperAdmin() ? 'Yes' : 'No'}</p>
+          <p><strong>Current User:</strong> {JSON.stringify(authService.user, null, 2)}</p>
+        </div>
+
+        {/* User Role Section - Only visible to super admins */}
+        {authService.isSuperAdmin() && (
+          <div className="form-section">
+            <h3 className="section-title">Rol de Usuario</h3>
+            
+            <div className="form-group">
+              <label htmlFor="userRole" className="form-label">
+                Rol del Usuario *
+              </label>
+              <select
+                id="userRole"
+                name="userRole"
+                value={formData.userRole}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    userRole: newRole,
+                    isAdmin: newRole === 'admin' || newRole === 'super_admin' || newRole === 'moderator'
+                  }));
+                }}
+                disabled={isLoading}
+                className="form-control"
+              >
+                <option value="user">Usuario Regular</option>
+                <option value="moderator">Moderador</option>
+                <option value="admin">Administrador</option>
+                <option value="super_admin">Super Administrador</option>
+              </select>
+              <p className="help-text">
+                <strong>Usuario Regular:</strong> Acceso básico a la plataforma.<br/>
+                <strong>Moderador:</strong> Puede moderar contenido y proyectos.<br/>
+                <strong>Administrador:</strong> Puede gestionar usuarios y proyectos.<br/>
+                <strong>Super Administrador:</strong> Acceso completo, puede asignar roles.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Project Subscriptions Section */}
         <ProjectSubscriptionManager
           personId={person?.id}
@@ -516,6 +628,35 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          cursor: pointer;
+          margin-bottom: 8px;
+        }
+
+        .checkbox-input {
+          width: 18px;
+          height: 18px;
+          margin: 0;
+          cursor: pointer;
+          accent-color: var(--accent-color);
+        }
+
+        .checkbox-text {
+          font-weight: 500;
+          color: var(--text-color);
+          line-height: 1.4;
+        }
+
+        .help-text {
+          font-size: 0.875rem;
+          color: #666;
+          margin: 0;
+          line-height: 1.4;
         }
 
         @media (max-width: 768px) {

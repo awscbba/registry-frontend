@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { ConnectionPoolMetrics, ConnectionPoolMonitorProps } from '../../types/database';
 import databaseService, { DatabaseService } from '../../services/databaseService';
 
+const logger = getComponentLogger('ConnectionPoolMonitor');
+
 const ConnectionPoolMonitor: React.FC<ConnectionPoolMonitorProps> = ({
-  showAllPools = true,
+  showAllPools: _showAllPools = true,
   alertThreshold = 0.8,
   refreshInterval = 15000
 }) => {
@@ -21,7 +24,7 @@ const ConnectionPoolMonitor: React.FC<ConnectionPoolMonitorProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch connection pool status');
-      console.error('Connection pool error:', err);
+      logger.error('Connection pool error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { CacheStats, CacheManagementProps } from '../../types/performance';
 import performanceService, { PerformanceService } from '../../services/performanceService';
+
+const logger = getComponentLogger('CacheManagementPanel');
 
 const CacheManagementPanel: React.FC<CacheManagementProps> = ({
   showControls = true,
@@ -21,7 +24,7 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
       setCacheStats(stats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch cache stats');
-      console.error('Cache stats error:', err);
+      logger.error('Cache stats error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }
@@ -143,13 +146,13 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
                 </div>
                 <div className="text-sm text-gray-600">Hit Rate</div>
                 <div className={`text-xs mt-1 ${
-                  cacheStats.hitRate > 0.8 ? 'text-green-600' :
-                  cacheStats.hitRate > 0.6 ? 'text-blue-600' :
-                  cacheStats.hitRate > 0.4 ? 'text-yellow-600' : 'text-red-600'
+                  cacheStats.hitRate > 80 ? 'text-green-600' :
+                  cacheStats.hitRate > 60 ? 'text-blue-600' :
+                  cacheStats.hitRate > 40 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
-                  {cacheStats.hitRate > 0.8 ? 'Excellent' :
-                   cacheStats.hitRate > 0.6 ? 'Good' :
-                   cacheStats.hitRate > 0.4 ? 'Fair' : 'Poor'}
+                  {cacheStats.hitRate > 80 ? 'Excellent' :
+                   cacheStats.hitRate > 60 ? 'Good' :
+                   cacheStats.hitRate > 40 ? 'Fair' : 'Poor'}
                 </div>
               </div>
               
@@ -165,7 +168,7 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
               
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {(cacheStats.cacheSize / 1024 / 1024).toFixed(1)}MB
+                  {typeof cacheStats.cacheSize === 'string' ? cacheStats.cacheSize : `${(cacheStats.cacheSize / 1024 / 1024).toFixed(1)}MB`}
                 </div>
                 <div className="text-sm text-gray-600">Cache Size</div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -197,11 +200,11 @@ const CacheManagementPanel: React.FC<CacheManagementProps> = ({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full ${
-                      cacheStats.hitRate > 0.8 ? 'bg-green-500' :
-                      cacheStats.hitRate > 0.6 ? 'bg-blue-500' :
-                      cacheStats.hitRate > 0.4 ? 'bg-yellow-500' : 'bg-red-500'
+                      cacheStats.hitRate > 80 ? 'bg-green-500' :
+                      cacheStats.hitRate > 60 ? 'bg-blue-500' :
+                      cacheStats.hitRate > 40 ? 'bg-yellow-500' : 'bg-red-500'
                     }`}
-                    style={{ width: `${cacheStats.hitRate * 100}%` }}
+                    style={{ width: `${Math.min(cacheStats.hitRate, 100)}%` }}
                   ></div>
                 </div>
               </div>

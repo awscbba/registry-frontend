@@ -7,6 +7,7 @@ export interface PerformanceMetrics {
   slowestEndpoints: EndpointMetric[];
   systemHealth: HealthStatus;
   activeRequests: number;
+  totalRequests: number;
   timestamp: string;
 }
 
@@ -20,10 +21,11 @@ export interface EndpointMetric {
 }
 
 export interface HealthStatus {
-  status: 'healthy' | 'warning' | 'critical';
+  status: 'healthy' | 'warning' | 'critical' | 'error';
   score: number;
   issues: HealthIssue[];
   uptime: number;
+  error?: string; // Error message when status is 'error'
 }
 
 export interface HealthIssue {

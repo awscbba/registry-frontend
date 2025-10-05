@@ -1,5 +1,6 @@
 // WebSocket Service for Real-time Performance Monitoring
 // Integrates with backend Performance Optimization Phase 3 Week 1
+/* eslint-disable no-undef */
 
 import { API_CONFIG } from '../config/api';
 import type {
@@ -7,20 +8,20 @@ import type {
   WebSocketConnectionStatus,
   WebSocketSubscription,
   WebSocketConfig,
-  WebSocketEvent,
   WebSocketEventType,
   PerformanceStreamData,
   AlertStreamData,
   DatabaseStreamData
 } from '../types/websocket';
+import { wsLogger } from '../utils/logger';
 
 class WebSocketService {
   private static instance: WebSocketService;
-  private connections: Map<string, WebSocket> = new Map();
+  private connections: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
   private subscriptions: Map<string, WebSocketSubscription> = new Map();
-  private eventListeners: Map<WebSocketEventType, Set<(data: any) => void>> = new Map();
-  private reconnectTimers: Map<string, NodeJS.Timeout> = new Map();
-  private heartbeatTimers: Map<string, NodeJS.Timeout> = new Map();
+  private eventListeners: Map<WebSocketEventType, Set<(data: any) => void>> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  private reconnectTimers: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  private heartbeatTimers: Map<string, any> = new Map(); // eslint-disable-line @typescript-eslint/no-explicit-any
   
   private config: WebSocketConfig = {
     baseUrl: this.getWebSocketBaseUrl(),
@@ -111,8 +112,8 @@ class WebSocketService {
           clientId: null
         });
 
-        ws.onopen = (event) => {
-          console.log(`WebSocket connected: ${connectionId}`);
+        ws.onopen = (_event) => {
+          wsLogger.info('WebSocket connected', { connection_id: connectionId, event_type: 'ws_connected' });
           this.connections.set(connectionId, ws);
           
           this.setConnectionStatus(connectionId, {
@@ -134,23 +135,37 @@ class WebSocketService {
             const message: WebSocketMessage = JSON.parse(event.data);
             this.handleMessage(connectionId, message);
           } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
+            wsLogger.error('Failed to parse WebSocket message', { 
+              connection_id: connectionId, 
+              error: error.message 
+            }, error);
           }
         };
 
         ws.onclose = (event) => {
-          console.log(`WebSocket closed: ${connectionId}`, event.code, event.reason);
+          wsLogger.info('WebSocket closed', { 
+            connection_id: connectionId, 
+            code: event.code, 
+            reason: event.reason,
+            event_type: 'ws_closed'
+          });
           this.handleConnectionClose(connectionId, event);
         };
 
         ws.onerror = (error) => {
-          console.error(`WebSocket error: ${connectionId}`, error);
+          wsLogger.error('WebSocket connection error', { 
+            connection_id: connectionId, 
+            error: error.message 
+          }, error);
           this.handleConnectionError(connectionId, error);
           reject(error);
         };
 
       } catch (error) {
-        console.error(`Failed to create WebSocket connection: ${connectionId}`, error);
+        wsLogger.error('Failed to create WebSocket connection', { 
+          connection_id: connectionId, 
+          error: error.message 
+        }, error);
         reject(error);
       }
     });
@@ -208,7 +223,10 @@ class WebSocketService {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message));
     } else {
-      console.warn(`Cannot send message: WebSocket ${connectionId} not connected`);
+      wsLogger.warn('Cannot send message: WebSocket not connected', { 
+        connection_id: connectionId, 
+        event_type: 'ws_send_failed' 
+      });
     }
   }
 
@@ -250,7 +268,11 @@ class WebSocketService {
    * Handle incoming WebSocket messages
    */
   private handleMessage(connectionId: string, message: WebSocketMessage): void {
-    console.log(`WebSocket message received from ${connectionId}:`, message);
+    wsLogger.debug('WebSocket message received', { 
+      connection_id: connectionId, 
+      message_type: message.type,
+      event_type: 'ws_message_received'
+    });
 
     // Update client ID if provided
     if (message.clientId) {
@@ -291,11 +313,19 @@ class WebSocketService {
         break;
 
       case 'error':
-        console.error(`WebSocket error from ${connectionId}:`, message.data);
+        wsLogger.error('WebSocket error message received', { 
+          connection_id: connectionId, 
+          error_data: message.data, 
+          event_type: 'ws_error_message' 
+        });
         break;
 
       default:
-        console.log(`Unknown message type from ${connectionId}:`, message.type);
+        wsLogger.warn('Unknown WebSocket message type', { 
+          connection_id: connectionId, 
+          message_type: message.type,
+          event_type: 'ws_unknown_message'
+        });
     }
   }
 
@@ -357,7 +387,12 @@ class WebSocketService {
     }
 
     const delay = this.config.reconnectInterval * Math.pow(2, status.reconnectAttempts);
-    console.log(`Scheduling reconnect for ${connectionId} in ${delay}ms (attempt ${status.reconnectAttempts + 1})`);
+    wsLogger.info('Scheduling WebSocket reconnect', { 
+      connection_id: connectionId, 
+      delay_ms: delay, 
+      attempt: status.reconnectAttempts + 1,
+      event_type: 'ws_reconnect_scheduled'
+    });
 
     const timer = setTimeout(async () => {
       try {
@@ -379,13 +414,20 @@ class WebSocketService {
             url = `${this.config.baseUrl}/admin/database/performance/live-stream`;
             break;
           default:
-            console.error(`Unknown connection ID for reconnect: ${connectionId}`);
+            wsLogger.error('Unknown connection ID for reconnect', { 
+              connection_id: connectionId, 
+              event_type: 'ws_reconnect_unknown_id' 
+            });
             return;
         }
 
         await this.connect(connectionId, url);
       } catch (error) {
-        console.error(`Reconnection failed for ${connectionId}:`, error);
+        wsLogger.error('WebSocket reconnection failed', { 
+          connection_id: connectionId, 
+          error: error.message, 
+          event_type: 'ws_reconnect_failed' 
+        }, error);
         this.scheduleReconnect(connectionId);
       }
     }, delay);
@@ -430,7 +472,11 @@ class WebSocketService {
         try {
           callback(data);
         } catch (error) {
-          console.error(`Error in WebSocket event listener for ${event}:`, error);
+          wsLogger.error('Error in WebSocket event listener', { 
+            event, 
+            error: error.message, 
+            event_type: 'ws_listener_error' 
+          }, error);
         }
       });
     }

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { 
   PerformanceMetrics, 
   PerformanceAnalytics,
   PerformanceDashboardProps 
 } from '../../types/performance';
 import performanceService, { PerformanceService } from '../../services/performanceService';
+
+const logger = getComponentLogger('PerformanceDashboard');
 
 const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   refreshInterval = 30000, // 30 seconds default
@@ -31,7 +34,7 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch performance data');
-      console.error('Performance dashboard error:', err);
+      logger.error('Performance dashboard error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }

@@ -42,12 +42,15 @@ export interface ProjectUpdate {
 
 export interface Subscription {
   id: string;
-  projectId: string;
-  personId: string;
+  projectId: string;    // Changed from project_id
+  personId: string;     // Changed from person_id
   status: 'active' | 'cancelled' | 'pending';
-  subscribedAt: string;
-  subscribedBy: string;
-  notes?: string;
+  personEmail?: string; // Changed from person_email
+  personName?: string;  // Changed from person_name
+  emailSent?: boolean;  // Changed from email_sent
+  createdAt?: string | null; // Changed from created_at
+  updatedAt?: string | null; // Changed from updated_at
+  notes?: string | null;
 }
 
 export interface SubscriptionCreate {
@@ -63,15 +66,15 @@ export interface ProjectSubscriber {
   personId: string;
   projectId: string;
   status: 'active' | 'cancelled' | 'pending';
-  subscribedAt: string;
-  subscribedBy?: string;
-  notes?: string;
-  person: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  subscriptionDate: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  // Enriched person fields from backend
+  personName: string;
+  personEmail: string;
+  personFirstName: string;
+  personLastName: string;
 }
 
 export interface AdminDashboard {

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import performanceService from '../../services/performanceService';
+import { getComponentLogger } from '../../utils/logger';
+
+const logger = getComponentLogger('PerformanceTest');
 
 const PerformanceTest: React.FC = () => {
   const [testResults, setTestResults] = useState<any>({});
@@ -11,20 +14,28 @@ const PerformanceTest: React.FC = () => {
     setError(null);
     
     try {
-      console.log(`Running test: ${testName}`);
+      logger.info(`Running performance test: ${testName}`, { test_name: testName, event_type: 'test_started' });
       const result = await testFunction();
       setTestResults((prev: any) => ({
         ...prev,
         [testName]: { success: true, data: result, timestamp: new Date().toISOString() }
       }));
-      console.log(`✅ ${testName} passed:`, result);
+      logger.info(`Performance test passed: ${testName}`, { 
+        test_name: testName, 
+        result_data: result,
+        event_type: 'test_passed'
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setTestResults((prev: any) => ({
         ...prev,
         [testName]: { success: false, error: errorMessage, timestamp: new Date().toISOString() }
       }));
-      console.error(`❌ ${testName} failed:`, err);
+      logger.error(`Performance test failed: ${testName}`, { 
+        test_name: testName, 
+        error: errorMessage, 
+        event_type: 'test_failed' 
+      }, (err));
       setError(`${testName}: ${errorMessage}`);
     } finally {
       setLoading(false);

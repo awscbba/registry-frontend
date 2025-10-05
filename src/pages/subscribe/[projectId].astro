@@ -1,81 +1,167 @@
 ---
+// Server-side rendering for dynamic project subscription pages
 import Layout from '../../layouts/Layout.astro';
 import ProjectSubscriptionForm from '../../components/ProjectSubscriptionForm';
 
-// Generate static paths for all projects
-
-export async function getStaticPaths() {
-  // Helper function to convert project name to URL-friendly slug
-  function nameToSlug(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single
-      .trim();
-  }
-
-  // Mapping function to get consistent slugs for known projects
-  function getProjectSlug(project: any): string {
-    const name = project.name.toLowerCase();
-    
-    // Map known projects to their expected slugs
-    if (name.includes('aws workshop')) {
-      return 'aws-workshop-2025';
-    } else if (name.includes('serverless bootcamp')) {
-      return 'serverless-bootcamp';
-    } else if (name.includes('testproy') || name.includes('test')) {
-      return 'cloud-fundamentals'; // Map test project to cloud-fundamentals
-    }
-    
-    // Fallback to generated slug
-    return nameToSlug(project.name);
-  }
-
-  try {
-    // Fetch projects from the API at build time
-    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-    const response = await fetch(`${API_BASE_URL}/v2/projects`);
-    
-    if (response.ok) {
-      const data = await response.json();
-      // Handle v2 API format, legacy object format, and array format
-      const projects = (data && data.data && Array.isArray(data.data)) ? data.data : 
-                      (Array.isArray(data) ? data : data.projects || []);
-      
-      console.log('Projects found for static generation:', projects.map(p => ({ name: p.name, status: p.status, slug: getProjectSlug(p) })));
-      
-      // Generate paths for ALL projects (not just active ones) to avoid 404s
-      const paths = projects.map((project: any) => ({
-        params: { projectId: getProjectSlug(project) },
-        props: { project }
-      }));
-      
-      console.log(`Generated ${paths.length} static paths for project subscriptions`);
-      return paths;
-    } else {
-      console.warn('Failed to fetch projects for static generation, using fallback paths');
-    }
-  } catch (error) {
-    console.warn('Error fetching projects for static generation:', error);
-  }
-  
-  // Fallback paths if API is not available at build time
-  return [
-    { params: { projectId: 'aws-workshop-2025' }, props: { project: null } },
-    { params: { projectId: 'cloud-fundamentals' }, props: { project: null } },
-    { params: { projectId: 'serverless-bootcamp' }, props: { project: null } },
-  ];
-}
-
+// Get project data server-side for any project slug
 const { projectId } = Astro.params;
-const { project } = Astro.props;
+let projectData = null;
+let error = null;
 
-if (!projectId) {
-  return Astro.redirect('/');
+try {
+  const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+  const response = await fetch(`${API_BASE_URL}/v2/projects`);
+  
+  if (response.ok) {
+    const data = await response.json();
+    const projects = (data && data.data && Array.isArray(data.data)) ? data.data : 
+                    (Array.isArray(data) ? data : data.projects || []);
+    
+    // Find project by slug (server-side)
+    projectData = projects.find((p: any) => {
+      const slug = p.name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      return slug === projectId;
+    });
+  }
+} catch (e) {
+  error = `Failed to load project: ${e.message}`;
 }
 ---
 
-<Layout title={`Suscribirse - ${projectId}`}>
-	<ProjectSubscriptionForm client:load projectId={projectId} project={project} />
+<Layout title={`Subscribe to ${projectData?.name || 'Project'}`}>
+  <main class="subscription-page">
+    <div class="container">
+      {error ? (
+        <div class="error-message">
+          <h1>Unable to Load Projects</h1>
+          <p>{error}</p>
+          <p>Please try again later or contact support.</p>
+          <a href="/" class="btn-back">← Back to Projects</a>
+        </div>
+      ) : projectData ? (
+        <div class="subscription-content">
+          <div class="subscription-header">
+            <h1>Subscribe to {projectData.name}</h1>
+            <p class="project-description">{projectData.description}</p>
+            <div class="project-details">
+              <span class="project-dates">
+                {projectData.startDate} - {projectData.endDate}
+              </span>
+              <span class="project-participants">
+                {projectData.currentParticipants || 0} / {projectData.maxParticipants} participants
+              </span>
+            </div>
+          </div>
+          
+          <ProjectSubscriptionForm 
+            project={projectData}
+            projectId={projectId}
+            client:load 
+          />
+        </div>
+      ) : (
+        <div class="not-found-message">
+          <h1>Project Not Found</h1>
+          <p>The project "{projectId}" could not be found.</p>
+          <p>It may have been removed or the link may be incorrect.</p>
+          <a href="/" class="btn-back">← View All Projects</a>
+        </div>
+      )}
+    </div>
+  </main>
 </Layout>
+
+<style>
+  .subscription-page {
+    min-height: 100vh;
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .subscription-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .subscription-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .subscription-header h1 {
+    color: #2d3748;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .project-description {
+    color: #718096;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .project-details {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: #4a5568;
+  }
+
+  .error-message,
+  .not-found-message {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .error-message h1 {
+    color: #e53e3e;
+    margin-bottom: 1rem;
+  }
+
+  .not-found-message h1 {
+    color: #d69e2e;
+    margin-bottom: 1rem;
+  }
+
+  .btn-back {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: #3182ce;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-back:hover {
+    background: #2c5aa0;
+  }
+
+  @media (max-width: 640px) {
+    .project-details {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .subscription-header h1 {
+      font-size: 2rem;
+    }
+  }
+</style>

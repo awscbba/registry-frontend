@@ -236,28 +236,27 @@
         </div>
     </main>
 
-    <script>
-        // Debug logging function
-        function debugLog(message, data = null) {
-            console.log(`[Dashboard Debug] ${message}`, data || '');
-        }
+    <script type="module">
+        // Import logger
+        import { getLogger } from '../utils/logger.ts';
+        const logger = getLogger('dashboard');
 
         // Check if user is logged in with enhanced validation
         async function checkAuth() {
-            debugLog('Starting authentication check...');
+            logger.debug('Starting authentication check');
             
             const token = localStorage.getItem('userAuthToken');
-            debugLog('Token from localStorage:', token ? 'present' : 'missing');
+            logger.debug('Token check', { hasToken: !!token });
             
             if (!token) {
-                debugLog('No token found, redirecting to login');
+                logger.info('No token found, redirecting to login');
                 window.location.href = '/login';
                 return false;
             }
 
             // Validate token with backend
             try {
-                debugLog('Validating token with backend...');
+                logger.debug('Validating token with backend');
                 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
                 const response = await fetch(`${API_BASE_URL}/auth/me`, {
                     headers: {
@@ -266,10 +265,10 @@
                     }
                 });
 
-                debugLog('Token validation response status:', response.status);
+                logger.debug('Token validation response', { status: response.status });
 
                 if (!response.ok) {
-                    debugLog('Token validation failed, clearing storage and redirecting');
+                    logger.warn('Token validation failed, clearing storage and redirecting');
                     // Token is invalid, clear storage and redirect
                     localStorage.removeItem('userAuthToken');
                     localStorage.removeItem('userData');
@@ -279,16 +278,16 @@
 
                 // Token is valid, update user data if needed
                 const userData = await response.json();
-                debugLog('Token validation successful, user data:', userData);
+                logger.debug('Token validation successful', { userData });
                 
                 if (userData.user) {
                     localStorage.setItem('userData', JSON.stringify(userData.user));
-                    debugLog('Updated userData in localStorage');
+                    logger.debug('Updated userData in localStorage');
                 }
 
                 return true;
             } catch (error) {
-                debugLog('Token validation error (network issue):', error.message);
+                logger.warn('Token validation error (network issue)', {}, error);
                 // On network error, allow access but don't update data
                 // This prevents logout on temporary network issues
                 return true;
@@ -297,7 +296,7 @@
 
         // Logout function
         function logout() {
-            debugLog('Logging out user...');
+            logger.info('Logging out user');
             // Use the unified auth service for logout
             if (typeof window !== 'undefined') {
                 // Clear all possible localStorage keys for complete cleanup
@@ -308,52 +307,52 @@
                 localStorage.removeItem('auth_token'); // Legacy cleanup
                 localStorage.removeItem('current_user'); // Legacy cleanup
             }
-            debugLog('Cleared localStorage, redirecting to login');
+            logger.info('Cleared localStorage, redirecting to login');
             window.location.href = '/login';
         }
 
         // Load user dashboard with proper async handling
         async function loadUserDashboard() {
-            debugLog('Loading user dashboard...');
+            logger.debug('Loading user dashboard');
             
             // Add a small delay to ensure any login process has completed
             await new Promise(resolve => setTimeout(resolve, 100));
             
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) {
-                debugLog('Authentication failed, stopping dashboard load');
+                logger.warn('Authentication failed, stopping dashboard load');
                 return;
             }
 
             try {
                 // Get user data from localStorage
                 const userDataStr = localStorage.getItem('userData');
-                debugLog('UserData from localStorage:', userDataStr);
+                logger.debug('UserData from localStorage', { hasUserData: !!userDataStr });
                 
                 const userData = JSON.parse(userDataStr || '{}');
                 const userEmail = userData.email;
                 
                 if (userEmail) {
                     document.getElementById('user-email').textContent = userEmail;
-                    debugLog('Set user email in header:', userEmail);
+                    logger.debug('Set user email in header', { userEmail });
                 } else {
                     document.getElementById('user-email').textContent = 'Usuario';
-                    debugLog('No email found, using default');
+                    logger.debug('No email found, using default');
                 }
                 
                 // Check if user is admin and show admin link
                 if (userData.isAdmin) {
-                    debugLog('User is admin, showing admin link');
+                    logger.debug('User is admin, showing admin link');
                     const adminLink = document.getElementById('admin-link');
                     if (adminLink) {
                         adminLink.style.display = 'inline-block';
                     }
                 } else {
-                    debugLog('User is not admin, admin link remains hidden');
+                    logger.debug('User is not admin, admin link remains hidden');
                 }
 
                 // Try to load the UserDashboard component
-                debugLog('Loading dashboard component...');
+                logger.debug('Loading dashboard component');
                 const module = await import('/src/components/UserDashboard.tsx');
                 const UserDashboard = module.default;
                 
@@ -385,10 +384,10 @@
                     </div>
                 `;
                 
-                debugLog('Dashboard content loaded successfully');
+                logger.info('Dashboard content loaded successfully');
                 
             } catch (error) {
-                debugLog('Error loading user dashboard:', error);
+                logger.error('Error loading user dashboard', {}, error);
                 console.error('Error loading user dashboard:', error);
                 const container = document.getElementById('user-dashboard-mount');
                 container.innerHTML = `
@@ -411,7 +410,7 @@
 
         // Initialize dashboard when page loads with proper error handling
         document.addEventListener('DOMContentLoaded', async () => {
-            debugLog('DOM loaded, initializing dashboard...');
+            logger.info('DOM loaded, initializing dashboard');
             
             // Check for legacy authentication and migrate if needed
             if (typeof window !== 'undefined') {
@@ -419,7 +418,7 @@
                 const legacyUserEmail = localStorage.getItem('userEmail');
                 
                 if (legacyAuthToken && !localStorage.getItem('userAuthToken')) {
-                    debugLog('Migrating legacy authentication data...');
+                    logger.info('Migrating legacy authentication data');
                     localStorage.setItem('userAuthToken', legacyAuthToken);
                     
                     if (legacyUserEmail) {
@@ -435,14 +434,14 @@
                     // Clean up legacy keys
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('userEmail');
-                    debugLog('Legacy authentication data migrated successfully');
+                    logger.info('Legacy authentication data migrated successfully');
                 }
             }
             
             try {
                 await loadUserDashboard();
             } catch (error) {
-                debugLog('Fatal error during dashboard initialization:', error);
+                logger.error('Fatal error during dashboard initialization', {}, error);
                 console.error('Fatal error during dashboard initialization:', error);
             }
         });
@@ -450,10 +449,10 @@
         // Add visibility change handler to re-validate auth when user returns to tab
         document.addEventListener('visibilitychange', async () => {
             if (!document.hidden) {
-                debugLog('Tab became visible, re-checking auth...');
+                logger.debug('Tab became visible, re-checking auth');
                 const isAuthenticated = await checkAuth();
                 if (!isAuthenticated) {
-                    debugLog('Auth check failed on tab focus');
+                    logger.warn('Auth check failed on tab focus');
                 }
             }
         });

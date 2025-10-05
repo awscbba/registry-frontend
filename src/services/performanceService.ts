@@ -1,7 +1,6 @@
 // Performance Service - Integration with backend Performance Optimization APIs
 // Connects to 7 performance endpoints from Phase 1
 
-import { API_CONFIG } from '../config/api';
 import type {
   PerformanceMetrics,
   CacheStats,
@@ -10,44 +9,45 @@ import type {
   EndpointMetric,
   HealthStatus
 } from '../types/performance';
+import { getServiceLogger } from '../utils/logger';
+import { httpClient, getApiUrl } from './httpClient';
+
+const logger = getServiceLogger('PerformanceService');
 
 class PerformanceService {
-  private baseUrl: string;
-
   constructor() {
-    // Use existing API configuration
-    this.baseUrl = API_CONFIG.BASE_URL;
+    // No need to store baseUrl, using httpClient with getApiUrl
   }
 
   /**
    * Get current performance metrics
-   * Endpoint: GET /admin/performance/metrics
+   * Endpoint: GET /admin/performance/dashboard
    */
   async getMetrics(): Promise<PerformanceMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/metrics`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance metrics: ${response.statusText}`);
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/dashboard')) as any;
+      const data = response.success ? response.data : response;
+      
+      // Get cache data from dedicated cache stats endpoint
+      let cacheHitRate = 0;
+      try {
+        const cacheStats = await this.getCacheStats();
+        cacheHitRate = cacheStats.hitRate / 100; // Convert percentage to decimal for comparison logic
+      } catch {
+        // Cache stats not available, use default
       }
-
-      const data = await response.json();
+      
       return {
-        responseTime: data.average_response_time || 0,
-        cacheHitRate: data.cache_hit_rate || 0,
-        slowestEndpoints: data.slowest_endpoints || [],
-        systemHealth: data.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
-        activeRequests: data.active_requests || 0,
-        timestamp: data.timestamp || new Date().toISOString(),
+        responseTime: data?.performance?.average_response_time_ms || data?.health?.metrics?.responseTimeMs || 0,
+        cacheHitRate,
+        slowestEndpoints: data?.slowest_endpoints || [],
+        systemHealth: data?.health || data?.system_health || { status: 'healthy', score: 100, issues: [], uptime: 0 },
+        activeRequests: data?.health?.metrics?.activeRequests || 0,
+        totalRequests: data?.performance?.total_requests || 0,
+        timestamp: data?.timestamp || new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
+      logger.error('Error fetching performance metrics', { error: error.message }, error);
       throw error;
     }
   }
@@ -58,39 +58,28 @@ class PerformanceService {
    */
   async getCacheStats(): Promise<CacheStats> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/stats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch cache stats: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/cache/stats')) as any;
+      const data = response.success ? response.data : response;
       return {
-        hitRate: data.hit_rate || 0,
-        missRate: data.miss_rate || 0,
-        totalRequests: data.total_requests || 0,
-        cacheSize: data.cache_size || 0,
+        hitRate: data?.hitRate || data?.hit_rate || 0,
+        missRate: data?.missRate || data?.miss_rate || 0,
+        totalRequests: data?.totalRequests || data?.total_requests || 0,
+        cacheSize: data?.cacheSize || data?.cache_size || 0,
         ttlStats: {
-          averageTTL: data.ttl_stats?.average_ttl || 0,
-          expiredKeys: data.ttl_stats?.expired_keys || 0,
-          activeKeys: data.ttl_stats?.active_keys || 0,
-          memoryUsage: data.ttl_stats?.memory_usage || 0,
+          averageTTL: data?.ttl_stats?.average_ttl || 0,
+          expiredKeys: data?.ttl_stats?.expired_keys || 0,
+          activeKeys: data?.ttl_stats?.active_keys || 0,
+          memoryUsage: data?.ttl_stats?.memory_usage || 0,
         },
         performance: {
-          averageHitTime: data.performance?.average_hit_time || 0,
-          averageMissTime: data.performance?.average_miss_time || 0,
-          performanceImpact: data.performance?.performance_impact || 0,
-          efficiency: data.performance?.efficiency || 0,
+          averageHitTime: data?.performance?.average_hit_time || 0,
+          averageMissTime: data?.performance?.average_miss_time || 0,
+          performanceImpact: data?.performance?.performance_impact || 0,
+          efficiency: data?.performance?.efficiency || 0,
         },
       };
     } catch (error) {
-      console.error('Error fetching cache stats:', error);
+      logger.error('Error fetching cache stats', { error: error.message }, error);
       throw error;
     }
   }
@@ -101,22 +90,11 @@ class PerformanceService {
    */
   async getSlowestEndpoints(): Promise<EndpointMetric[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/slowest-endpoints`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch slowest endpoints: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.endpoints || [];
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/slowest-endpoints')) as any;
+      const data = response.success ? response.data : response;
+      return data?.endpoints || [];
     } catch (error) {
-      console.error('Error fetching slowest endpoints:', error);
+      logger.error('Error fetching slowest endpoints', { error: error.message }, error);
       throw error;
     }
   }
@@ -127,28 +105,27 @@ class PerformanceService {
    */
   async getHealthStatus(): Promise<HealthStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch health status: ${response.statusText}`);
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
+      
+      // Handle different response structures
+      let data = response;
+      if (response.success && response.data) {
+        data = response.data;
+      } else if (response.data && !response.success) {
+        data = response.data;
       }
-
-      const data = await response.json();
+      
+      // Extract health data from various possible structures
+      const healthData = data.health || data.system_health || data;
+      
       return {
-        status: data.status || 'healthy',
-        score: data.score || 100,
-        issues: data.issues || [],
-        uptime: data.uptime || 0,
+        status: healthData?.status || data?.status || 'healthy',
+        score: healthData?.overallScore || data?.overallScore || healthData?.score || data?.score || 100,
+        issues: healthData?.issues || data?.issues || [],
+        uptime: data?.components?.api?.uptime_seconds || healthData?.uptime || data?.uptime || 0,
       };
     } catch (error) {
-      console.error('Error fetching health status:', error);
-      throw error;
+      throw new Error(`Health check failed: ${error.message || 'API unreachable'}`);
     }
   }
 
@@ -158,33 +135,22 @@ class PerformanceService {
    */
   async getAnalytics(): Promise<PerformanceAnalytics> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/analytics`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance analytics: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/analytics')) as any;
+      const data = response.success ? response.data : response;
       return {
-        summary: data.summary || {
+        summary: data?.summary || {
           totalRequests: 0,
           averageResponseTime: 0,
           overallCacheHitRate: 0,
           systemHealthScore: 100,
           performanceGrade: 'A',
         },
-        trends: data.trends || [],
-        recommendations: data.recommendations || [],
-        alerts: data.alerts || [],
+        trends: data?.trends || [],
+        recommendations: data?.recommendations || [],
+        alerts: data?.alerts || [],
       };
     } catch (error) {
-      console.error('Error fetching performance analytics:', error);
+      logger.error('Error fetching performance analytics', { error: error.message }, error);
       throw error;
     }
   }
@@ -195,26 +161,15 @@ class PerformanceService {
    */
   async getPerformanceHistory(timeRange: string = '24h'): Promise<PerformanceHistory> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/history?range=${timeRange}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch performance history: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await httpClient.getJson(getApiUrl(`/v2/admin/performance/history?range=${timeRange}`)) as any;
+      const data = response.success ? response.data : response;
       return {
-        timeRange: data.time_range || timeRange,
-        dataPoints: data.data_points || [],
-        trends: data.trends || [],
+        timeRange: data?.time_range || timeRange,
+        dataPoints: data?.data_points || [],
+        trends: data?.trends || [],
       };
     } catch (error) {
-      console.error('Error fetching performance history:', error);
+      logger.error('Error fetching performance history', { error: error.message }, error);
       throw error;
     }
   }
@@ -226,27 +181,13 @@ class PerformanceService {
   async clearCache(cacheType?: string): Promise<{ success: boolean; message: string }> {
     try {
       const body = cacheType ? { cache_type: cacheType } : {};
-      
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/clear`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to clear cache: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await httpClient.postJson(getApiUrl('/v2/admin/performance/cache/clear'), body) as any;
       return {
-        success: data.success || false,
-        message: data.message || 'Cache cleared successfully',
+        success: response.success || false,
+        message: response.message || response.data?.message || 'Cache cleared successfully',
       };
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      logger.error('Error clearing cache', { error: error.message }, error);
       throw error;
     }
   }
@@ -255,39 +196,21 @@ class PerformanceService {
    * Get cache health status
    * Endpoint: GET /admin/performance/cache/health
    */
-  async getCacheHealth(): Promise<{ status: string; details: any }> {
+  async getCacheHealth(): Promise<{ status: string; details: Record<string, unknown> }> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/performance/cache/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch cache health: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/cache/health')) as any;
+      const data = response.success ? response.data : response;
       return {
-        status: data.status || 'healthy',
-        details: data.details || {},
+        status: data?.status || 'healthy',
+        details: data?.details || {},
       };
     } catch (error) {
-      console.error('Error fetching cache health:', error);
+      logger.error('Error fetching cache health', { error: error.message }, error);
       throw error;
     }
   }
 
-  /**
-   * Get authorization header for API requests
-   */
-  private getAuthHeader(): string {
-    // Get token from localStorage (consistent with existing authService)
-    const token = localStorage.getItem('userAuthToken');
-    return token ? `Bearer ${token}` : '';
-  }
+
 
   /**
    * Format response time for display
@@ -303,7 +226,8 @@ class PerformanceService {
    * Format cache hit rate as percentage
    */
   static formatCacheHitRate(rate: number): string {
-    return `${(rate * 100).toFixed(1)}%`;
+    // API already returns percentage values (e.g., 85.2), so don't multiply by 100
+    return `${rate.toFixed(1)}%`;
   }
 
   /**
@@ -333,6 +257,8 @@ class PerformanceService {
         return { color: '#f59e0b', text: 'Warning' };
       case 'critical':
         return { color: '#ef4444', text: 'Critical' };
+      case 'error':
+        return { color: '#dc2626', text: 'Error' };
       default:
         return { color: '#6b7280', text: 'Unknown' };
     }

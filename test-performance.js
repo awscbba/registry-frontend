@@ -75,9 +75,9 @@ try {
   };
 
   const getPerformanceStatusColor = (responseTime, cacheHitRate) => {
-    if (responseTime < 100 && cacheHitRate > 0.8) return '#10b981'; // Excellent - Green
-    if (responseTime < 300 && cacheHitRate > 0.6) return '#3b82f6'; // Good - Blue
-    if (responseTime < 500 && cacheHitRate > 0.4) return '#f59e0b'; // Warning - Yellow
+    if (responseTime < 100 && cacheHitRate > 0.8) {return '#10b981';} // Excellent - Green
+    if (responseTime < 300 && cacheHitRate > 0.6) {return '#3b82f6';} // Good - Blue
+    if (responseTime < 500 && cacheHitRate > 0.4) {return '#f59e0b';} // Warning - Yellow
     return '#ef4444'; // Critical - Red
   };
 

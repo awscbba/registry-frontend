@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { getComponentLogger } from '../../utils/logger';
 import type { Recommendation, QueryOptimizationPanelProps } from '../../types/database';
 import databaseService, { DatabaseService } from '../../services/databaseService';
+
+const logger = getComponentLogger('QueryOptimizationPanel');
 
 const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
   showRecommendations = true,
@@ -11,7 +14,7 @@ const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [applyingOptimization, setApplyingOptimization] = useState<string | null>(null);
-  const [appliedOptimizations, setAppliedOptimizations] = useState<Set<string>>(new Set());
+  const [, setAppliedOptimizations] = useState<Set<string>>(new Set());
 
   // Fetch optimization recommendations
   const fetchRecommendations = async () => {
@@ -21,7 +24,7 @@ const QueryOptimizationPanel: React.FC<QueryOptimizationPanelProps> = ({
       setRecommendations(data.slice(0, maxRecommendations));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
-      console.error('Recommendations error:', err);
+      logger.error('Recommendations error', { error: logger.error(err) }, (err));
     } finally {
       setLoading(false);
     }
