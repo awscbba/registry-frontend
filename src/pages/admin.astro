@@ -1,8 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import EnhancedAdminDashboard from '../components/enhanced/EnhancedAdminDashboard.tsx';
+import ReactTest from '../components/ReactTest.tsx';
 ---
 
 <Layout title="Enhanced Admin Dashboard - AWS User Group Cochabamba">
+	<ReactTest client:load />
 	<EnhancedAdminDashboard client:load />
 </Layout>
