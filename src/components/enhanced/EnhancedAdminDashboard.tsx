@@ -8,7 +8,7 @@ import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project'
 import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
-import EnhancedProjectForm from '../EnhancedProjectForm';
+import { EnhancedProjectForm } from '../EnhancedProjectForm';
 import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
