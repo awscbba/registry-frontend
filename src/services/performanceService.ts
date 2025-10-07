@@ -11,6 +11,7 @@ import type {
 } from '../types/performance';
 import { getServiceLogger } from '../utils/logger';
 import { httpClient, getApiUrl } from './httpClient';
+import { authService } from './authService';
 
 const logger = getServiceLogger('PerformanceService');
 
