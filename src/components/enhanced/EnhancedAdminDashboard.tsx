@@ -100,12 +100,23 @@ export default function EnhancedAdminDashboard() {
       setIsLoading(true);
       setError(null);
 
+      // Check authentication first
+      if (!authService.isAuthenticated()) {
+        setError('Session expired. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
       // Fetch admin statistics - enterprise services should work correctly
       const statsResponse = await httpClient.getJson(getApiUrl('/v2/admin/stats')) as {
         success?: boolean;
         data?: { overview?: Record<string, number> };
         overview?: Record<string, number>;
       };
+      
+      if (!statsResponse) {
+        throw new Error('No response from admin stats endpoint');
+      }
       
       const statsData = statsResponse.success ? 
         (statsResponse.data || {}) : 

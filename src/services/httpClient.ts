@@ -72,11 +72,10 @@ export class HttpClient {
           body,
         });
       } else {
-        // Refresh failed, redirect to login
-        logger.warn('Token refresh failed, redirecting to login', { event_type: 'token_refresh_failed' });
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+        // Refresh failed, force logout but don't redirect immediately
+        logger.warn('Token refresh failed, forcing logout', { event_type: 'token_refresh_failed' });
+        authService.forceLogout();
+        // Don't redirect here - let the component handle it
       }
     }
 
