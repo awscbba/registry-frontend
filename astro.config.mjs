@@ -8,5 +8,5 @@ import awsAmplify from 'astro-aws-amplify';
 export default defineConfig({
   integrations: [react(), tailwind()],
   adapter: awsAmplify(),
-  output: 'hybrid'
+  output: 'server'
 });
