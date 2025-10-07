@@ -8,7 +8,7 @@ import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project'
 import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
-import ProjectForm from '../ProjectForm';
+import EnhancedProjectForm from '../EnhancedProjectForm';
 import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
@@ -733,7 +733,7 @@ export default function EnhancedAdminDashboard() {
                 {selectedProject ? 'Edit Project' : 'Create New Project'}
               </h2>
             </div>
-            <ProjectForm
+            <EnhancedProjectForm
               project={selectedProject ?? undefined}
               onSubmit={handleProjectSubmit}
               onCancel={handleProjectCancel}
