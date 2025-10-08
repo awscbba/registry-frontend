@@ -17,7 +17,7 @@ const logger = getApiLogger('EnhancedProjectShowcase');
 export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = ({
   project,
   currentUserId,
-  onSubscribe,
+  onSubscribe: _onSubscribe,
   className = '',
 }) => {
   const [enhancedProject] = useState<EnhancedProject>(project);
@@ -29,9 +29,6 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  console.log('EnhancedProjectShowcase rendering with project:', project.name);
-  console.log('Is client:', isClient);
 
   // Load enhanced project data and submissions
   useEffect(() => {
@@ -73,15 +70,23 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     });
   };
 
+  const handleFormSubmissionError = (error: Error) => {
+    logger.error('Form submission failed', { error, projectId: project.id });
+  };
+
   const handleSubscribe = () => {
-    if (!isClient) return;
+    if (!isClient) {
+      return;
+    }
     
     const token = localStorage.getItem('token');
     if (!token) {
+      // eslint-disable-next-line no-alert
       alert('Please log in to subscribe to this project.');
       window.location.href = '/login';
       return;
     }
+    // eslint-disable-next-line no-alert
     alert('Subscription functionality will be implemented here.');
   };
 
@@ -207,7 +212,7 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                       Subscribe Now
                     </button>
                     <p className="text-xs text-blue-600 mt-2">
-                      You'll receive email notifications about project updates
+                      You&apos;ll receive email notifications about project updates
                     </p>
                   </div>
                 </div>
