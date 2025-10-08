@@ -143,19 +143,14 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
     };
   }
 
-  const hasFormSchema = enhancedProject.formSchema && 
-    (enhancedProject.formSchema.fields.length > 0 || enhancedProject.formSchema.richTextDescription);
-
   const userSubmission = currentUserId 
     ? submissions.find(s => s.personId === currentUserId)
     : null;
 
-  // Debug logging
+  // Client-side form schema handling
   if (isClient) {
     console.log('Project data:', project);
     console.log('Enhanced project:', enhancedProject);
-    console.log('Has form schema:', hasFormSchema);
-    console.log('Form schema:', enhancedProject.formSchema);
     
     // Add sample form schema for testing if none exists
     if (!enhancedProject.formSchema) {
@@ -197,7 +192,14 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
       };
       console.log('Added sample form schema for testing');
     }
+    
+    console.log('Has form schema:', enhancedProject.formSchema && 
+      (enhancedProject.formSchema.fields.length > 0 || enhancedProject.formSchema.richTextDescription));
+    console.log('Form schema:', enhancedProject.formSchema);
   }
+
+  const hasFormSchema = isClient && enhancedProject.formSchema && 
+    (enhancedProject.formSchema.fields.length > 0 || enhancedProject.formSchema.richTextDescription);
 
   return (
     <div className={className}>
