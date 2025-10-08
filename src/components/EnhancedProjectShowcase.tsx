@@ -23,6 +23,13 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   const [enhancedProject, setEnhancedProject] = useState<EnhancedProject>(project);
   const [submissions, setSubmissions] = useState<ProjectSubmission[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    notes: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Ensure client-side rendering and inject form schema
   useEffect(() => {
@@ -116,18 +123,68 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
     logger.error('Form submission failed', { error, projectId: project.id });
   };
 
-  const handleSubscribe = () => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!isClient) {
       return;
     }
-    
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.alert('Please log in to subscribe to this project.');
-      window.location.href = '/login';
+
+    // Validate required fields
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      window.alert('Por favor completa todos los campos requeridos (Nombre, Apellido, Email)');
       return;
     }
-    window.alert('Subscription functionality will be implemented here.');
+
+    setIsSubmitting(true);
+    
+    try {
+      // Use the same API structure as ProjectSubscriptionForm
+      const subscriptionData = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: '',
+        dateOfBirth: '1990-01-01',
+        projectId: project.id,
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          postalCode: '',
+          country: ''
+        }
+      };
+
+      // Import projectApi dynamically to avoid SSR issues
+      const { projectApi } = await import('../services/projectApi');
+      const result = await projectApi.createSubscription(subscriptionData);
+      
+      // Show success message
+      window.alert('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
+      
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        notes: ''
+      });
+      
+    } catch (error) {
+      console.error('Subscription error:', error);
+      window.alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderRichTextDescription = (description: string) => {
@@ -204,7 +261,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
               <p className="text-sm text-gray-600 mb-6">Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
               
               {/* Basic Subscription Form - Always Show */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+              <form onSubmit={handleSubscribe} className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Información Básica</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -214,9 +271,13 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                       </label>
                       <input
                         type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Tu nombre"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     
@@ -226,9 +287,13 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                       </label>
                       <input
                         type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Tu apellido"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -239,9 +304,13 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                     </label>
                     <input
                       type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="tu@email.com"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   
@@ -250,13 +319,31 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                       Notas adicionales
                     </label>
                     <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Información adicional que quieras compartir (opcional)"
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
-              </div>
+
+                {/* Submit Button */}
+                <div className="text-center mt-6">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Enviando...' : 'Enviar Solicitud de Suscripción'}
+                  </button>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Un administrador revisará tu solicitud y te notificará por email
+                  </p>
+                </div>
+              </form>
 
               {/* Dynamic Form Fields - Show if available */}
               {hasFormSchema && enhancedProject.formSchema?.fields.length > 0 && (
@@ -271,19 +358,6 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                   />
                 </div>
               )}
-
-              {/* Submit Button */}
-              <div className="text-center">
-                <button
-                  onClick={handleSubscribe}
-                  className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Enviar Solicitud de Suscripción
-                </button>
-                <p className="text-xs text-gray-600 mt-2">
-                  Un administrador revisará tu solicitud y te notificará por email
-                </p>
-              </div>
 
               {/* Existing User Notice */}
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
