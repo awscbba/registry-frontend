@@ -5,6 +5,7 @@ import { projectApi } from '../../services/projectApi';
 import { getErrorMessage, getErrorObject } from '../../utils/logger';
 import type { PersonUpdate, Person, PersonCreate } from '../../types/person';
 import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project';
+import type { FormSchema } from '../../types/dynamicForm';
 import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
@@ -212,9 +213,68 @@ export default function EnhancedAdminDashboard() {
     }
   };
 
+  // Helper function to inject formSchema for projects that don't have it
+  const getProjectWithFormSchema = (project: Project): Project => {
+    if (project.formSchema) {
+      return project;
+    }
+    
+    // Add fallback formSchema for certification projects
+    if (project.name.toLowerCase().includes('certification') || project.name.toLowerCase().includes('developer')) {
+      return {
+        ...project,
+        formSchema: {
+          version: '1.0',
+          richTextDescription: `## About This Certification Program
+
+This is an **intensive certification program** for AWS developers and cloud practitioners.
+
+### What You'll Learn:
+- Advanced AWS services and architecture
+- Best practices for cloud development
+- Security and compliance frameworks
+- Real-world project implementation
+
+### Program Format:
+- Structured learning modules
+- Hands-on labs and projects
+- Practice exams and assessments
+- Mentorship and guidance
+
+*Perfect for developers looking to advance their AWS expertise!*`,
+          fields: [
+            {
+              id: 'experience',
+              type: 'poll_single' as const,
+              question: 'What is your current AWS certification level?',
+              options: ['No certifications', 'Cloud Practitioner', 'Associate level', 'Professional level'],
+              required: true
+            },
+            {
+              id: 'focus_areas',
+              type: 'poll_multiple' as const,
+              question: 'Which AWS services do you want to focus on?',
+              options: ['Serverless (Lambda, API Gateway)', 'Containers (ECS, EKS)', 'DevOps (CodePipeline, CloudFormation)', 'Data Analytics (Redshift, EMR)', 'Machine Learning (SageMaker, Bedrock)'],
+              required: false
+            },
+            {
+              id: 'goals',
+              type: 'poll_single' as const,
+              question: 'What is your primary goal?',
+              options: ['Career advancement', 'Skill development', 'Project requirements', 'Personal interest'],
+              required: true
+            }
+          ]
+        }
+      };
+    }
+    
+    return project;
+  };
+
   // Project Management Handlers
   const handleProjectEdit = (project: Project) => {
-    setSelectedProject(project);
+    setSelectedProject(getProjectWithFormSchema(project));
     setCurrentView('edit-project');
   };
 
@@ -242,14 +302,17 @@ export default function EnhancedAdminDashboard() {
     }
   };
 
-  const handleProjectSubmit = async (projectData: ProjectCreate | ProjectUpdate) => {
+  const handleProjectSubmit = async (projectData: ProjectCreate | ProjectUpdate, formSchema?: FormSchema) => {
     try {
+      // Add formSchema to project data if provided
+      const projectWithSchema = formSchema ? { ...projectData, formSchema } : projectData;
+      
       if (selectedProject) {
         // Update existing project
-        await projectApi.updateProject(selectedProject.id, projectData as ProjectUpdate);
+        await projectApi.updateProject(selectedProject.id, projectWithSchema as ProjectUpdate);
       } else {
         // Create new project
-        await projectApi.createProject(projectData as ProjectCreate);
+        await projectApi.createProject(projectWithSchema as ProjectCreate);
       }
       
       await fetchAdminData(); // Refresh projects list
