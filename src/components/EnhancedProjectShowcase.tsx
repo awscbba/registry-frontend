@@ -158,7 +158,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
     console.log('Form schema:', enhancedProject.formSchema);
     
     // Add sample form schema for testing if none exists
-    if (!enhancedProject.formSchema && project.name.includes('Study Club')) {
+    if (!enhancedProject.formSchema) {
       enhancedProject.formSchema = {
         version: '1.0',
         richTextDescription: `## About This Study Club
