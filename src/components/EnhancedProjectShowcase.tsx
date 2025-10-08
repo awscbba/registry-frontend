@@ -23,11 +23,22 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   const [enhancedProject] = useState<EnhancedProject>(project);
   const [showForm, setShowForm] = useState(false);
   const [submissions, setSubmissions] = useState<ProjectSubmission[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  console.log('EnhancedProjectShowcase rendering with project:', project.name);
+  console.log('Is client:', isClient);
 
   // Load enhanced project data and submissions
   useEffect(() => {
-    loadProjectSubmissions();
-  }, [project.id]);
+    if (isClient) {
+      loadProjectSubmissions();
+    }
+  }, [project.id, isClient]);
 
   const loadProjectSubmissions = async () => {
     try {
@@ -62,8 +73,16 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     });
   };
 
-  const handleFormSubmissionError = (error: Error) => {
-    logger.error('Form submission failed', { error, projectId: project.id });
+  const handleSubscribe = () => {
+    if (!isClient) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to subscribe to this project.');
+      window.location.href = '/login';
+      return;
+    }
+    alert('Subscription functionality will be implemented here.');
   };
 
   const renderRichTextDescription = (description: string) => {
@@ -117,15 +136,6 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                 )}
               </div>
             </div>
-
-            {onSubscribe && (
-              <button
-                onClick={onSubscribe}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Subscribe
-              </button>
-            )}
           </div>
         </div>
 
@@ -137,41 +147,74 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
           </div>
         )}
 
-        {/* Dynamic Form */}
-        {hasFormSchema && enhancedProject.formSchema!.fields.length > 0 && (
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Project Form</h2>
-              
-              {currentUserId && (
-                <button
-                  onClick={() => setShowForm(!showForm)}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  {showForm ? 'Hide Form' : userSubmission ? 'View/Edit Response' : 'Fill Form'}
-                </button>
-              )}
-            </div>
-
-            {userSubmission && !showForm && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
-                <p className="text-sm text-green-700">
-                  ✓ You submitted a response on {new Date(userSubmission.createdAt).toLocaleDateString()}
-                </p>
+        {/* Subscription Form Section */}
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscribe to Project</h2>
+          
+          {!isClient ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="text-center">
+                <p className="text-gray-600">Loading subscription form...</p>
               </div>
-            )}
+            </div>
+          ) : (
+            <>
+              {/* Enhanced Dynamic Form */}
+              {hasFormSchema && enhancedProject.formSchema!.fields.length > 0 ? (
+                <div>
+                  {currentUserId && (
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-sm text-gray-600">Complete the form below to subscribe</p>
+                      <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        {showForm ? 'Hide Form' : userSubmission ? 'View/Edit Response' : 'Fill Form'}
+                      </button>
+                    </div>
+                  )}
 
-            {(showForm || !currentUserId) && (
-              <DynamicFormRenderer
-                projectId={project.id}
-                personId={currentUserId}
-                formSchema={enhancedProject.formSchema!}
-                onSubmissionSuccess={handleFormSubmissionSuccess}
-                onSubmissionError={handleFormSubmissionError}
-              />
-            )}
-          </div>
-        )}
+                  {userSubmission && !showForm && (
+                    <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+                      <p className="text-sm text-green-700">
+                        ✓ You submitted a response on {new Date(userSubmission.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {(showForm || !currentUserId) && (
+                    <DynamicFormRenderer
+                      projectId={project.id}
+                      personId={currentUserId}
+                      formSchema={enhancedProject.formSchema!}
+                      onSubmissionSuccess={handleFormSubmissionSuccess}
+                      onSubmissionError={handleFormSubmissionError}
+                    />
+                  )}
+                </div>
+              ) : (
+                /* Basic Subscription Form */
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-blue-900 mb-2">Ready to Join?</h3>
+                    <p className="text-blue-700 mb-4">
+                      Click the button below to subscribe to this project and receive updates.
+                    </p>
+                    <button
+                      onClick={handleSubscribe}
+                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Subscribe Now
+                    </button>
+                    <p className="text-xs text-blue-600 mt-2">
+                      You'll receive email notifications about project updates
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Submission Statistics */}
         {hasFormSchema && submissions.length > 0 && (
