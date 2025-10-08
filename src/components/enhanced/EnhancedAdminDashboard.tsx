@@ -219,57 +219,15 @@ export default function EnhancedAdminDashboard() {
       return project;
     }
     
-    // Add fallback formSchema for certification projects
-    if (project.name.toLowerCase().includes('certification') || project.name.toLowerCase().includes('developer')) {
-      return {
-        ...project,
-        formSchema: {
-          version: '1.0',
-          richTextDescription: `## About This Certification Program
-
-This is an **intensive certification program** for AWS developers and cloud practitioners.
-
-### What You'll Learn:
-- Advanced AWS services and architecture
-- Best practices for cloud development
-- Security and compliance frameworks
-- Real-world project implementation
-
-### Program Format:
-- Structured learning modules
-- Hands-on labs and projects
-- Practice exams and assessments
-- Mentorship and guidance
-
-*Perfect for developers looking to advance their AWS expertise!*`,
-          fields: [
-            {
-              id: 'experience',
-              type: 'poll_single' as const,
-              question: 'What is your current AWS certification level?',
-              options: ['No certifications', 'Cloud Practitioner', 'Associate level', 'Professional level'],
-              required: true
-            },
-            {
-              id: 'focus_areas',
-              type: 'poll_multiple' as const,
-              question: 'Which AWS services do you want to focus on?',
-              options: ['Serverless (Lambda, API Gateway)', 'Containers (ECS, EKS)', 'DevOps (CodePipeline, CloudFormation)', 'Data Analytics (Redshift, EMR)', 'Machine Learning (SageMaker, Bedrock)'],
-              required: false
-            },
-            {
-              id: 'goals',
-              type: 'poll_single' as const,
-              question: 'What is your primary goal?',
-              options: ['Career advancement', 'Skill development', 'Project requirements', 'Personal interest'],
-              required: true
-            }
-          ]
-        }
-      };
-    }
-    
-    return project;
+    // Add empty formSchema for any project that doesn't have one
+    return {
+      ...project,
+      formSchema: {
+        version: '1.0',
+        richTextDescription: '',
+        fields: []
+      }
+    };
   };
 
   // Project Management Handlers
