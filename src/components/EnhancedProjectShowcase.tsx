@@ -35,13 +35,21 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   useEffect(() => {
     setIsClient(true);
     
-    // Set enhanced project with existing formSchema if available
-    if (project.formSchema) {
-      setEnhancedProject(prev => ({
-        ...prev,
-        formSchema: project.formSchema
-      }));
-    }
+    // Set enhanced project with formSchema (existing or fallback)
+    const fallbackFormSchema: FormSchema = {
+      version: '1.0',
+      richTextDescription: '',
+      fields: [
+        { id: 'certificationLevel', type: 'select', label: 'AWS Certification Level', required: true, options: ['Associate', 'Professional', 'Specialty'] },
+        { id: 'focusAreas', type: 'multiselect', label: 'Focus Areas', required: false, options: ['Compute', 'Storage', 'Database', 'Networking', 'Security'] },
+        { id: 'goals', type: 'textarea', label: 'Learning Goals', required: false }
+      ]
+    };
+
+    setEnhancedProject(prev => ({
+      ...prev,
+      formSchema: project.formSchema || fallbackFormSchema
+    }));
   }, [project.formSchema]);
 
   // Load enhanced project data and submissions

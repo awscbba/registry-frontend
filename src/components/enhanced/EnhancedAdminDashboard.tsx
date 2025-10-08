@@ -219,13 +219,17 @@ export default function EnhancedAdminDashboard() {
       return project;
     }
     
-    // Add empty formSchema for any project that doesn't have one
+    // Add fallback formSchema for any project that doesn't have one
     return {
       ...project,
       formSchema: {
         version: '1.0',
         richTextDescription: '',
-        fields: []
+        fields: [
+          { id: 'certificationLevel', type: 'select', label: 'AWS Certification Level', required: true, options: ['Associate', 'Professional', 'Specialty'] },
+          { id: 'focusAreas', type: 'multiselect', label: 'Focus Areas', required: false, options: ['Compute', 'Storage', 'Database', 'Networking', 'Security'] },
+          { id: 'goals', type: 'textarea', label: 'Learning Goals', required: false }
+        ]
       }
     };
   };
