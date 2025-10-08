@@ -234,10 +234,10 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
         </div>
 
         {/* Rich Text Description */}
-        {hasFormSchema && enhancedProject.formSchema!.richTextDescription && (
+        {isClient && hasFormSchema && enhancedProject.formSchema && enhancedProject.formSchema.richTextDescription && (
           <div className="p-6 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Project Details</h2>
-            {renderRichTextDescription(enhancedProject.formSchema!.richTextDescription)}
+            {renderRichTextDescription(enhancedProject.formSchema.richTextDescription)}
           </div>
         )}
 
@@ -254,7 +254,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
           ) : (
             <>
               {/* Enhanced Dynamic Form */}
-              {hasFormSchema && enhancedProject.formSchema!.fields.length > 0 ? (
+              {hasFormSchema && enhancedProject.formSchema && enhancedProject.formSchema.fields.length > 0 ? (
                 <div>
                   {currentUserId && (
                     <div className="flex items-center justify-between mb-4">
@@ -280,7 +280,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                     <DynamicFormRenderer
                       projectId={project.id}
                       personId={currentUserId}
-                      formSchema={enhancedProject.formSchema!}
+                      formSchema={enhancedProject.formSchema}
                       onSubmissionSuccess={handleFormSubmissionSuccess}
                       onSubmissionError={handleFormSubmissionError}
                     />
