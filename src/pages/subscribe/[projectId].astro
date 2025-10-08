@@ -43,8 +43,7 @@ try {
       ) : projectData ? (
         <div class="subscription-content">
           <EnhancedProjectShowcase 
-            projects={[projectData]}
-            showSubscriptionForm={true}
+            project={projectData}
             client:load 
           />
         </div>
