@@ -110,6 +110,14 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     ? submissions.find(s => s.personId === currentUserId)
     : null;
 
+  // Debug logging
+  if (isClient) {
+    console.log('Project data:', project);
+    console.log('Enhanced project:', enhancedProject);
+    console.log('Has form schema:', hasFormSchema);
+    console.log('Form schema:', enhancedProject.formSchema);
+  }
+
   return (
     <div className={className}>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -196,22 +204,75 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                   )}
                 </div>
               ) : (
-                /* Basic Subscription Form */
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-blue-900 mb-2">Ready to Join?</h3>
-                    <p className="text-blue-700 mb-4">
-                      Click the button below to subscribe to this project and receive updates.
-                    </p>
-                    <button
-                      onClick={handleSubscribe}
-                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Subscribe Now
-                    </button>
-                    <p className="text-xs text-blue-600 mt-2">
-                      You&apos;ll receive email notifications about project updates
-                    </p>
+                /* Basic Subscription Form with Test Form Builder */
+                <div className="space-y-6">
+                  {/* Basic Subscription */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div className="text-center">
+                      <h3 className="text-lg font-medium text-blue-900 mb-2">Ready to Join?</h3>
+                      <p className="text-blue-700 mb-4">
+                        Click the button below to subscribe to this project and receive updates.
+                      </p>
+                      <button
+                        onClick={handleSubscribe}
+                        className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Subscribe Now
+                      </button>
+                      <p className="text-xs text-blue-600 mt-2">
+                        You&apos;ll receive email notifications about project updates
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Test Dynamic Form */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-green-900 mb-4">Test Dynamic Form</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          What is your experience level with AWS?
+                        </label>
+                        <div className="space-y-2">
+                          <label className="flex items-center">
+                            <input type="radio" name="experience" value="beginner" className="mr-2" />
+                            Beginner
+                          </label>
+                          <label className="flex items-center">
+                            <input type="radio" name="experience" value="intermediate" className="mr-2" />
+                            Intermediate
+                          </label>
+                          <label className="flex items-center">
+                            <input type="radio" name="experience" value="advanced" className="mr-2" />
+                            Advanced
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Which topics interest you? (Select all that apply)
+                        </label>
+                        <div className="space-y-2">
+                          <label className="flex items-center">
+                            <input type="checkbox" value="compute" className="mr-2" />
+                            Compute Services (EC2, Lambda)
+                          </label>
+                          <label className="flex items-center">
+                            <input type="checkbox" value="storage" className="mr-2" />
+                            Storage Services (S3, EBS)
+                          </label>
+                          <label className="flex items-center">
+                            <input type="checkbox" value="database" className="mr-2" />
+                            Database Services (RDS, DynamoDB)
+                          </label>
+                        </div>
+                      </div>
+
+                      <button className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        Submit Form Response
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
