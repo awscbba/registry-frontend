@@ -35,56 +35,14 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   useEffect(() => {
     setIsClient(true);
     
-    // Inject sample form schema for projects if none exists
-    if (!project.formSchema && (project.name.includes('Study Club') || project.name.includes('Developer Certification') || project.name.includes('Certification'))) {
+    // Set enhanced project with existing formSchema if available
+    if (project.formSchema) {
       setEnhancedProject(prev => ({
         ...prev,
-        formSchema: {
-          version: '1.0',
-          richTextDescription: `## About This Certification Program
-
-This is an **intensive certification program** for AWS developers and cloud practitioners.
-
-### What You'll Learn:
-- Advanced AWS services and architecture
-- Best practices for cloud development
-- Security and compliance frameworks
-- Real-world project implementation
-
-### Program Format:
-- Structured learning modules
-- Hands-on labs and projects
-- Practice exams and assessments
-- Mentorship and guidance
-
-*Perfect for developers looking to advance their AWS expertise!*`,
-          fields: [
-            {
-              id: 'experience',
-              type: 'poll_single' as const,
-              question: 'What is your current AWS certification level?',
-              options: ['No certifications', 'Cloud Practitioner', 'Associate level', 'Professional level'],
-              required: true
-            },
-            {
-              id: 'focus_areas',
-              type: 'poll_multiple' as const,
-              question: 'Which AWS services do you want to focus on?',
-              options: ['Serverless (Lambda, API Gateway)', 'Containers (ECS, EKS)', 'DevOps (CodePipeline, CloudFormation)', 'Data Analytics (Redshift, EMR)', 'Machine Learning (SageMaker, Bedrock)'],
-              required: false
-            },
-            {
-              id: 'goals',
-              type: 'poll_single' as const,
-              question: 'What is your primary goal?',
-              options: ['Career advancement', 'Skill development', 'Project requirements', 'Personal interest'],
-              required: true
-            }
-          ]
-        }
+        formSchema: project.formSchema
       }));
     }
-  }, [project.name, project.formSchema]);
+  }, [project.formSchema]);
 
   // Load enhanced project data and submissions
   useEffect(() => {
