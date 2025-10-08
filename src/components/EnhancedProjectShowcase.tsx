@@ -166,7 +166,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
 
       // Import projectApi dynamically to avoid SSR issues
       const { projectApi } = await import('../services/projectApi');
-      const result = await projectApi.createSubscription(subscriptionData);
+      await projectApi.createSubscription(subscriptionData);
       
       // Show success message
       window.alert('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
@@ -180,7 +180,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
       });
       
     } catch (error) {
-      console.error('Subscription error:', error);
+      logger.error('Subscription error:', error);
       window.alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
     } finally {
       setIsSubmitting(false);
