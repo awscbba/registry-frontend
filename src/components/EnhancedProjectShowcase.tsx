@@ -207,112 +207,71 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscribe to Project</h2>
               
-              {/* Enhanced Dynamic Form */}
-              {hasFormSchema && enhancedProject.formSchema?.fields.length > 0 ? (
-                <div>
-                  {currentUserId && (
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm text-gray-600">Complete the form below to subscribe</p>
-                      <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        {showForm ? 'Hide Form' : userSubmission ? 'View/Edit Response' : 'Fill Form'}
-                      </button>
-                    </div>
-                  )}
-
-                  {userSubmission && !showForm && (
-                    <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
-                      <p className="text-sm text-green-700">
-                        ✓ You submitted a response on {new Date(userSubmission.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-
-                  {(showForm || !currentUserId) && (
-                    <DynamicFormRenderer
-                      projectId={project.id}
-                      personId={currentUserId}
-                      formSchema={enhancedProject.formSchema}
-                      onSubmissionSuccess={handleFormSubmissionSuccess}
-                      onSubmissionError={handleFormSubmissionError}
+              {/* Basic Subscription Form - Always Show */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Tu nombre"
                     />
-                  )}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Apellidos <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Tus apellidos"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Comentarios
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Comentarios adicionales (opcional)"
+                    />
+                  </div>
                 </div>
-              ) : (
-                /* Basic Subscription Form with Test Form Builder */
-                <div className="space-y-6">
-                  {/* Basic Subscription */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <div className="text-center">
-                      <h3 className="text-lg font-medium text-blue-900 mb-2">Ready to Join?</h3>
-                      <p className="text-blue-700 mb-4">
-                        Click the button below to subscribe to this project and receive updates.
-                      </p>
-                      <button
-                        onClick={handleSubscribe}
-                        className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        Subscribe Now
-                      </button>
-                      <p className="text-xs text-blue-600 mt-2">
-                        You&apos;ll receive email notifications about project updates
-                      </p>
-                    </div>
-                  </div>
+              </div>
 
-                  {/* Test Dynamic Form */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-green-900 mb-4">Test Dynamic Form</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          What is your experience level with AWS?
-                        </label>
-                        <div className="space-y-2">
-                          <label className="flex items-center">
-                            <input type="radio" name="experience" value="beginner" className="mr-2" />
-                            Beginner
-                          </label>
-                          <label className="flex items-center">
-                            <input type="radio" name="experience" value="intermediate" className="mr-2" />
-                            Intermediate
-                          </label>
-                          <label className="flex items-center">
-                            <input type="radio" name="experience" value="advanced" className="mr-2" />
-                            Advanced
-                          </label>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Which topics interest you? (Select all that apply)
-                        </label>
-                        <div className="space-y-2">
-                          <label className="flex items-center">
-                            <input type="checkbox" value="compute" className="mr-2" />
-                            Compute Services (EC2, Lambda)
-                          </label>
-                          <label className="flex items-center">
-                            <input type="checkbox" value="storage" className="mr-2" />
-                            Storage Services (S3, EBS)
-                          </label>
-                          <label className="flex items-center">
-                            <input type="checkbox" value="database" className="mr-2" />
-                            Database Services (RDS, DynamoDB)
-                          </label>
-                        </div>
-                      </div>
-
-                      <button className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-                        Submit Form Response
-                      </button>
-                    </div>
-                  </div>
+              {/* Dynamic Form Fields - Show if available */}
+              {hasFormSchema && enhancedProject.formSchema?.fields.length > 0 && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+                  <DynamicFormRenderer
+                    projectId={project.id}
+                    personId={currentUserId}
+                    formSchema={enhancedProject.formSchema}
+                    onSubmissionSuccess={handleFormSubmissionSuccess}
+                    onSubmissionError={handleFormSubmissionError}
+                  />
                 </div>
               )}
+
+              {/* Submit Button */}
+              <div className="text-center">
+                <button
+                  onClick={handleSubscribe}
+                  className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Subscribe to Project
+                </button>
+                <p className="text-xs text-gray-600 mt-2">
+                  You&apos;ll receive email notifications about project updates
+                </p>
+              </div>
             </div>
 
             {/* Submission Statistics */}
