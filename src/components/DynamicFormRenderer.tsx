@@ -10,6 +10,7 @@ interface DynamicFormRendererProps {
   onSubmissionSuccess?: (submission: ProjectSubmission) => void;
   onSubmissionError?: (error: Error) => void;
   className?: string;
+  hideSubmitButton?: boolean;
 }
 
 const logger = getApiLogger('DynamicFormRenderer');
@@ -21,6 +22,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
   onSubmissionSuccess,
   onSubmissionError,
   className = '',
+  hideSubmitButton = false,
 }) => {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -198,25 +200,27 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         {formSchema.fields.map(renderField)}
 
-        <div className="pt-4 border-t border-gray-200">
-          <button
-            type="submit"
-            disabled={isSubmitting || !personId}
-            className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-              isSubmitting || !personId
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
-            }`}
-          >
-            {isSubmitting ? 'Submitting...' : existingSubmission ? 'Update Response' : 'Submit Response'}
-          </button>
-          
-          {!personId && (
-            <p className="mt-2 text-sm text-gray-500 text-center">
-              Please log in to submit your response.
-            </p>
-          )}
-        </div>
+        {!hideSubmitButton && (
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={isSubmitting || !personId}
+              className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
+                isSubmitting || !personId
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
+              }`}
+            >
+              {isSubmitting ? 'Submitting...' : existingSubmission ? 'Update Response' : 'Submit Response'}
+            </button>
+            
+            {!personId && (
+              <p className="mt-2 text-sm text-gray-500 text-center">
+                Please log in to submit your response.
+              </p>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );

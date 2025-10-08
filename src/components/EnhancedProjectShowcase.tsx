@@ -201,18 +201,25 @@ This is an **intensive certification program** for AWS developers and cloud prac
   };
 
   const renderRichTextDescription = (description: string) => {
-    // Simple markdown rendering
+    // Enhanced markdown rendering
     const html = description
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mb-2 mt-4">$1</h2>')
-      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mb-2 mt-4">$1</h1>')
-      .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mb-2 mt-3">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mb-3 mt-4">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mb-3 mt-4">$1</h1>')
+      .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 list-disc">$1</li>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
       .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 shadow-sm" />')
+      .replace(/\n\n/g, '</p><p class="mb-2">')
       .replace(/\n/g, '<br />');
 
-    return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />;
+    // Wrap in paragraphs and lists
+    const wrappedHtml = `<div class="prose max-w-none"><p class="mb-2">${html}</p></div>`
+      .replace(/<p class="mb-2"><li/g, '<ul class="list-disc ml-4 mb-4"><li')
+      .replace(/<\/li><\/p>/g, '</li></ul>');
+
+    return <div dangerouslySetInnerHTML={{ __html: wrappedHtml }} />;
   };
 
   const hasFormSchema = isClient && enhancedProject.formSchema && 
@@ -343,19 +350,21 @@ This is an **intensive certification program** for AWS developers and cloud prac
                   </div>
                 </div>
 
-                {/* Submit Button */}
-                <div className="text-center mt-6">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Enviando...' : 'Enviar Solicitud de Suscripción'}
-                  </button>
-                  <p className="text-xs text-gray-600 mt-2">
-                    Un administrador revisará tu solicitud y te notificará por email
-                  </p>
-                </div>
+                {/* Submit Button - Only show if no dynamic form */}
+                {!(hasFormSchema && enhancedProject.formSchema?.fields.length > 0) && (
+                  <div className="text-center mt-6">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? 'Enviando...' : 'Enviar Solicitud de Suscripción'}
+                    </button>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Un administrador revisará tu solicitud y te notificará por email
+                    </p>
+                  </div>
+                )}
               </form>
 
               {/* Dynamic Form Fields - Show if available */}
@@ -368,7 +377,25 @@ This is an **intensive certification program** for AWS developers and cloud prac
                     formSchema={enhancedProject.formSchema}
                     onSubmissionSuccess={handleFormSubmissionSuccess}
                     onSubmissionError={handleFormSubmissionError}
+                    hideSubmitButton={true}
                   />
+                </div>
+              )}
+
+              {/* Submit Button - Show after dynamic form */}
+              {hasFormSchema && enhancedProject.formSchema?.fields.length > 0 && (
+                <div className="text-center mb-6">
+                  <button
+                    type="button"
+                    onClick={handleSubscribe}
+                    disabled={isSubmitting}
+                    className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Enviando...' : 'Enviar Solicitud de Suscripción'}
+                  </button>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Un administrador revisará tu solicitud y te notificará por email
+                  </p>
                 </div>
               )}
 
