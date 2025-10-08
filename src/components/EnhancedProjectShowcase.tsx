@@ -103,6 +103,46 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
+  // Add sample form schema for testing if none exists and client-side
+  if (isClient && !enhancedProject.formSchema && project.name.includes('Study Club')) {
+    enhancedProject.formSchema = {
+      version: '1.0',
+      richTextDescription: `## About This Study Club
+
+This is an **intensive study group** for the AWS Cloud Practitioner certification exam.
+
+### What You'll Learn:
+- Core AWS services and concepts
+- Cloud computing fundamentals  
+- AWS pricing and billing
+- Security and compliance basics
+
+### Study Format:
+- Weekly 2-hour sessions
+- Hands-on practice exercises
+- Mock exams and review
+- Group discussions and Q&A
+
+*Perfect for beginners looking to start their AWS journey!*`,
+      fields: [
+        {
+          id: 'experience',
+          type: 'poll_single' as const,
+          question: 'What is your current AWS experience level?',
+          options: ['Complete beginner', 'Some exposure', 'Basic knowledge', 'Intermediate'],
+          required: true
+        },
+        {
+          id: 'topics',
+          type: 'poll_multiple' as const,
+          question: 'Which topics are you most interested in?',
+          options: ['Compute (EC2, Lambda)', 'Storage (S3, EBS)', 'Databases (RDS, DynamoDB)', 'Networking (VPC, CloudFront)', 'Security (IAM, KMS)'],
+          required: false
+        }
+      ]
+    };
+  }
+
   const hasFormSchema = enhancedProject.formSchema && 
     (enhancedProject.formSchema.fields.length > 0 || enhancedProject.formSchema.richTextDescription);
 
@@ -116,6 +156,47 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     console.log('Enhanced project:', enhancedProject);
     console.log('Has form schema:', hasFormSchema);
     console.log('Form schema:', enhancedProject.formSchema);
+    
+    // Add sample form schema for testing if none exists
+    if (!enhancedProject.formSchema && project.name.includes('Study Club')) {
+      enhancedProject.formSchema = {
+        version: '1.0',
+        richTextDescription: `## About This Study Club
+
+This is an **intensive study group** for the AWS Cloud Practitioner certification exam.
+
+### What You'll Learn:
+- Core AWS services and concepts
+- Cloud computing fundamentals  
+- AWS pricing and billing
+- Security and compliance basics
+
+### Study Format:
+- Weekly 2-hour sessions
+- Hands-on practice exercises
+- Mock exams and review
+- Group discussions and Q&A
+
+*Perfect for beginners looking to start their AWS journey!*`,
+        fields: [
+          {
+            id: 'experience',
+            type: 'poll_single' as const,
+            question: 'What is your current AWS experience level?',
+            options: ['Complete beginner', 'Some exposure', 'Basic knowledge', 'Intermediate'],
+            required: true
+          },
+          {
+            id: 'topics',
+            type: 'poll_multiple' as const,
+            question: 'Which topics are you most interested in?',
+            options: ['Compute (EC2, Lambda)', 'Storage (S3, EBS)', 'Databases (RDS, DynamoDB)', 'Networking (VPC, CloudFront)', 'Security (IAM, KMS)'],
+            required: false
+          }
+        ]
+      };
+      console.log('Added sample form schema for testing');
+    }
   }
 
   return (
