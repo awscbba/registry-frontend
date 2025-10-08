@@ -35,12 +35,19 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   useEffect(() => {
     setIsClient(true);
     
+    // Debug: Log project data
+    console.log('Project data:', project);
+    console.log('Project formSchema:', project.formSchema);
+    
     // Set enhanced project with existing formSchema if available
     if (project.formSchema) {
+      console.log('Setting formSchema from project');
       setEnhancedProject(prev => ({
         ...prev,
         formSchema: project.formSchema
       }));
+    } else {
+      console.log('No formSchema found in project');
     }
   }, [project.formSchema]);
 
