@@ -200,42 +200,59 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
 
             {/* Subscription Form Section */}
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscribe to Project</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Solicitar Suscripción</h2>
+              <p className="text-sm text-gray-600 mb-6">Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
               
               {/* Basic Subscription Form - Always Show */}
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Información Básica</h3>
                 <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Tu nombre"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Apellido <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Tu apellido"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre <span className="text-red-500">*</span>
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
+                      type="email"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Tu nombre"
+                      placeholder="tu@email.com"
+                      required
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Apellidos <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Tus apellidos"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Comentarios
+                      Notas adicionales
                     </label>
                     <textarea
-                      rows={3}
+                      rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Comentarios adicionales (opcional)"
+                      placeholder="Información adicional que quieras compartir (opcional)"
                     />
                   </div>
                 </div>
@@ -244,7 +261,7 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
               {/* Dynamic Form Fields - Show if available */}
               {hasFormSchema && enhancedProject.formSchema?.fields.length > 0 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Información Adicional</h3>
                   <DynamicFormRenderer
                     projectId={project.id}
                     personId={currentUserId}
@@ -261,10 +278,24 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
                   onClick={handleSubscribe}
                   className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Subscribe to Project
+                  Enviar Solicitud de Suscripción
                 </button>
                 <p className="text-xs text-gray-600 mt-2">
-                  You&apos;ll receive email notifications about project updates
+                  Un administrador revisará tu solicitud y te notificará por email
+                </p>
+              </div>
+
+              {/* Existing User Notice */}
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  ¿Ya tienes una cuenta? 
+                  <button 
+                    type="button"
+                    className="ml-1 text-blue-600 hover:text-blue-800 underline"
+                    onClick={() => window.alert('Funcionalidad de login será implementada')}
+                  >
+                    Inicia sesión aquí
+                  </button>
                 </p>
               </div>
             </div>
