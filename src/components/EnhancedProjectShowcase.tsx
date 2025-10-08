@@ -81,13 +81,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     
     const token = localStorage.getItem('token');
     if (!token) {
-      // eslint-disable-next-line no-alert
-      alert('Please log in to subscribe to this project.');
+      window.alert('Please log in to subscribe to this project.');
       window.location.href = '/login';
       return;
     }
-    // eslint-disable-next-line no-alert
-    alert('Subscription functionality will be implemented here.');
+    window.alert('Subscription functionality will be implemented here.');
   };
 
   const renderRichTextDescription = (description: string) => {
