@@ -21,7 +21,6 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   className = '',
 }) => {
   const [enhancedProject, setEnhancedProject] = useState<EnhancedProject>(project);
-  const [showForm, setShowForm] = useState(false);
   const [submissions, setSubmissions] = useState<ProjectSubmission[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -145,10 +144,6 @@ This is an **intensive study group** for the AWS Cloud Practitioner certificatio
 
     return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />;
   };
-
-  const userSubmission = currentUserId 
-    ? submissions.find(s => s.personId === currentUserId)
-    : null;
 
   const hasFormSchema = isClient && enhancedProject.formSchema && 
     (enhancedProject.formSchema.fields.length > 0 || enhancedProject.formSchema.richTextDescription);
