@@ -3,8 +3,6 @@ import type { Project, ProjectCreate, ProjectUpdate } from '../types/project';
 import type { FormSchema } from '../types/dynamicForm';
 import { getApiLogger } from '../utils/logger';
 import { FormBuilder } from './FormBuilder';
-import RichTextEditor from './RichTextEditor';
-import ImageUpload from './ImageUpload';
 
 interface EnhancedProjectFormProps {
   project?: Project;
