@@ -35,43 +35,50 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   useEffect(() => {
     setIsClient(true);
     
-    // Inject sample form schema for Study Club projects if none exists
-    if (!project.formSchema && project.name.includes('Study Club')) {
+    // Inject sample form schema for projects if none exists
+    if (!project.formSchema && (project.name.includes('Study Club') || project.name.includes('Developer Certification') || project.name.includes('Certification'))) {
       setEnhancedProject(prev => ({
         ...prev,
         formSchema: {
           version: '1.0',
-          richTextDescription: `## About This Study Club
+          richTextDescription: `## About This Certification Program
 
-This is an **intensive study group** for the AWS Cloud Practitioner certification exam.
+This is an **intensive certification program** for AWS developers and cloud practitioners.
 
 ### What You'll Learn:
-- Core AWS services and concepts
-- Cloud computing fundamentals  
-- AWS pricing and billing
-- Security and compliance basics
+- Advanced AWS services and architecture
+- Best practices for cloud development
+- Security and compliance frameworks
+- Real-world project implementation
 
-### Study Format:
-- Weekly 2-hour sessions
-- Hands-on practice exercises
-- Mock exams and review
-- Group discussions and Q&A
+### Program Format:
+- Structured learning modules
+- Hands-on labs and projects
+- Practice exams and assessments
+- Mentorship and guidance
 
-*Perfect for beginners looking to start their AWS journey!*`,
+*Perfect for developers looking to advance their AWS expertise!*`,
           fields: [
             {
               id: 'experience',
               type: 'poll_single' as const,
-              question: 'What is your current AWS experience level?',
-              options: ['Complete beginner', 'Some exposure', 'Basic knowledge', 'Intermediate'],
+              question: 'What is your current AWS certification level?',
+              options: ['No certifications', 'Cloud Practitioner', 'Associate level', 'Professional level'],
               required: true
             },
             {
-              id: 'topics',
+              id: 'focus_areas',
               type: 'poll_multiple' as const,
-              question: 'Which topics are you most interested in?',
-              options: ['Compute (EC2, Lambda)', 'Storage (S3, EBS)', 'Databases (RDS, DynamoDB)', 'Networking (VPC, CloudFront)', 'Security (IAM, KMS)'],
+              question: 'Which AWS services do you want to focus on?',
+              options: ['Serverless (Lambda, API Gateway)', 'Containers (ECS, EKS)', 'DevOps (CodePipeline, CloudFormation)', 'Data Analytics (Redshift, EMR)', 'Machine Learning (SageMaker, Bedrock)'],
               required: false
+            },
+            {
+              id: 'goals',
+              type: 'poll_single' as const,
+              question: 'What is your primary goal?',
+              options: ['Career advancement', 'Skill development', 'Project requirements', 'Personal interest'],
+              required: true
             }
           ]
         }
