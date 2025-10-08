@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Project } from '../types/project';
-import type { EnhancedProject, ProjectSubmission } from '../types/dynamicForm';
+import type { EnhancedProject, ProjectSubmission, FormSchema } from '../types/dynamicForm';
 import { getApiLogger } from '../utils/logger';
 import { dynamicFormApi } from '../services/dynamicFormApi';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
