@@ -20,11 +20,11 @@ export interface Project {
 export interface ProjectCreate {
   name: string;
   description: string;
+  startDate: string;
+  endDate: string;
+  maxParticipants: number;
   status?: 'pending' | 'active' | 'ongoing' | 'completed' | 'cancelled';
   createdBy?: string;
-  maxParticipants?: number;
-  startDate?: string;
-  endDate?: string;
   registrationEndDate?: string;
   isEnabled?: boolean;
 }

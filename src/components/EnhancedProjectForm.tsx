@@ -25,7 +25,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
     name: project?.name || '',
     description: project?.description || '',
     status: project?.status || 'pending',
-    maxParticipants: project?.maxParticipants || undefined,
+    maxParticipants: project?.maxParticipants || 50,
     startDate: project?.startDate || '',
     endDate: project?.endDate || '',
     registrationEndDate: project?.registrationEndDate || '',
@@ -66,6 +66,21 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
 
     if (!projectData.description?.trim()) {
       logger.error('Project description is required');
+      return;
+    }
+
+    if (!projectData.startDate) {
+      logger.error('Start date is required');
+      return;
+    }
+
+    if (!projectData.endDate) {
+      logger.error('End date is required');
+      return;
+    }
+
+    if (!projectData.maxParticipants || projectData.maxParticipants < 1) {
+      logger.error('Max participants is required and must be at least 1');
       return;
     }
 
@@ -139,7 +154,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Participants
+                Max Participants *
               </label>
               <input
                 type="number"
@@ -147,30 +162,34 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                 onChange={(e) => handleInputChange('maxParticipants', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 min="1"
+                max="1000"
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
+                Start Date *
               </label>
               <input
                 type="date"
                 value={projectData.startDate}
                 onChange={(e) => handleInputChange('startDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
+                End Date *
               </label>
               <input
                 type="date"
                 value={projectData.endDate}
                 onChange={(e) => handleInputChange('endDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
               />
             </div>
 
