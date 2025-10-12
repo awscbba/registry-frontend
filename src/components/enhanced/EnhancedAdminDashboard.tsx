@@ -269,8 +269,12 @@ export default function EnhancedAdminDashboard() {
         // Update existing project
         await projectApi.updateProject(selectedProject.id, projectWithSchema as ProjectUpdate);
       } else {
-        // Create new project
-        await projectApi.createProject(projectWithSchema as ProjectCreate);
+        // Create new project - use enhanced endpoint when there's form schema or rich text
+        if (formSchema || projectData.richTextDescription) {
+          await projectApi.createEnhancedProject(projectWithSchema as ProjectCreate, formSchema);
+        } else {
+          await projectApi.createProject(projectWithSchema as ProjectCreate);
+        }
       }
       
       await fetchAdminData(); // Refresh projects list

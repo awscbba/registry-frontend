@@ -116,6 +116,35 @@ export const projectApi = {
     }
   },
 
+  async createEnhancedProject(project: ProjectCreate, formSchema?: any): Promise<Project> {
+    // Use enhanced endpoint when there's rich text or form schema
+    const enhancedData = {
+      ...project,
+      formSchema: formSchema,
+      richTextDescription: formSchema?.richTextDescription
+    };
+
+    const response = await fetch(getApiUrl('/v2/projects/enhanced'), {
+      method: 'POST',
+      headers: {
+        ...addRequiredAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(enhancedData)
+    });
+
+    const data = await handleApiResponse(response);
+
+    // Handle v2 response format
+    if (data && data.success && data.data) {
+      return transformProject(data.data);
+    } else if (data && typeof data === 'object' && data.id) {
+      return transformProject(data);
+    } else {
+      throw new ApiError(500, 'Failed to create enhanced project');
+    }
+  },
+
   async updateProject(id: string, project: ProjectUpdate): Promise<Project> {
     const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
       method: 'PUT',
