@@ -178,13 +178,16 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         {/* Rich Text Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Project Description (Rich Text)
+            Project Description (Rich Text) - Max 10,000 characters
           </label>
           <RichTextEditor
             value={schema.richTextDescription}
             onChange={(value) => updateSchema({ richTextDescription: value })}
             placeholder="Enter a detailed description of your project. You can use markdown formatting and upload images."
           />
+          <p className="mt-1 text-xs text-gray-500">
+            {schema.richTextDescription.length}/10,000 characters
+          </p>
         </div>
 
         {/* Form Fields */}
