@@ -41,7 +41,9 @@ const PROJECT_FIELD_MAP: Record<string, string> = {
   'created_at': 'createdAt',
   'updated_at': 'updatedAt',
   'created_by': 'createdBy',
-  'updated_by': 'updatedBy'
+  'updated_by': 'updatedBy',
+  'form_schema': 'formSchema',
+  'rich_text': 'richText'
 } as const;
 
 /**
