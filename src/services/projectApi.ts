@@ -121,7 +121,7 @@ export const projectApi = {
     const enhancedData = {
       ...project,
       formSchema: formSchema,
-      richTextDescription: formSchema?.richTextDescription
+      richTextDescription: project.richTextDescription || formSchema?.richTextDescription
     };
 
     const response = await fetch(getApiUrl('/v2/projects/enhanced'), {
