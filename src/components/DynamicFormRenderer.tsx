@@ -66,7 +66,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
     e.preventDefault();
     
     if (!personId) {
-      onSubmissionError?.(new Error('User must be logged in to submit form'));
+      onSubmissionError?.(new Error('Debes iniciar sesión para enviar el formulario'));
       return;
     }
 
@@ -76,7 +76,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       .map(field => field.question);
 
     if (missingFields.length > 0) {
-      onSubmissionError?.(new Error(`Please fill in required fields: ${missingFields.join(', ')}`));
+      onSubmissionError?.(new Error(`Por favor completa los campos requeridos: ${missingFields.join(', ')}`));
       return;
     }
 
@@ -181,7 +181,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
   if (!formSchema.fields || formSchema.fields.length === 0) {
     return (
       <div className={`text-gray-500 text-center py-8 ${className}`}>
-        No form fields configured for this project.
+        No hay campos de formulario configurados para este proyecto.
       </div>
     );
   }
@@ -191,8 +191,8 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       {existingSubmission && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
           <p className="text-sm text-blue-700">
-            You have already submitted a response on {new Date(existingSubmission.createdAt).toLocaleDateString()}.
-            You can update your responses below.
+            Ya has enviado una respuesta el {new Date(existingSubmission.createdAt).toLocaleDateString()}.
+            Puedes actualizar tus respuestas a continuación.
           </p>
         </div>
       )}
@@ -211,12 +211,12 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
                   : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
               }`}
             >
-              {isSubmitting ? 'Submitting...' : existingSubmission ? 'Update Response' : 'Submit Response'}
+              {isSubmitting ? 'Enviando...' : existingSubmission ? 'Actualizar Respuesta' : 'Enviar Respuesta'}
             </button>
             
             {!personId && (
               <p className="mt-2 text-sm text-gray-500 text-center">
-                Please log in to submit your response.
+                Por favor inicia sesión para enviar tu respuesta.
               </p>
             )}
           </div>

@@ -656,7 +656,16 @@ export function addRequiredAuthHeaders(): Record<string, string> {
   if (!token) {
     throw new Error('Authentication required');
   }
-  return { 'Authorization': `Bearer ${token}` };
+  
+  const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
+  
+  // Add user name header for backend tracking
+  const user = authService.getCurrentUser();
+  if (user) {
+    headers['X-User-Name'] = `${user.firstName} ${user.lastName}`;
+  }
+  
+  return headers;
 }
 
 // Helper function for adding auth headers with automatic refresh
