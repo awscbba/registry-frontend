@@ -25,7 +25,7 @@
             padding: 1rem;
         }
 
-        .login-container {
+        .page-container {
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -68,14 +68,11 @@
             font-size: 0.9rem;
         }
 
-        .form-section {
-            margin-bottom: 1.5rem;
-        }
-
         .info-text {
             text-align: center;
             font-size: 0.9rem;
             color: #718096;
+            margin-top: 1.5rem;
         }
 
         .info-text p {
@@ -93,7 +90,7 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="page-container">
         <!-- Logo Section -->
         <div class="logo-section">
             <div class="logo">
@@ -105,19 +102,36 @@
             <p class="subtitle">AWS User Group Cochabamba</p>
         </div>
 
-        <!-- Form Section -->
-        <div class="form-section">
-            <div id="login-form-mount">
-                <!-- Form will be mounted here -->
-            </div>
-        </div>
+        <!-- React Login Form -->
+        <div id="login-form-root"></div>
 
         <!-- Info Text -->
         <div class="info-text">
-            <p>¿No tienes cuenta? <a href="/" style="color: #4299e1;">Regístrate aquí</a></p>
+            <p>¿No tienes cuenta? <a href="/">Regístrate aquí</a></p>
             <p>¿Problemas para acceder? Contacta al administrador.</p>
         </div>
     </div>
+
+    <script type="module">
+        import React from 'react';
+        import { createRoot } from 'react-dom/client';
+        import LoginForm from '../components/LoginForm.tsx';
+
+        // Mount the React LoginForm component
+        const container = document.getElementById('login-form-root');
+        if (container) {
+            const root = createRoot(container);
+            
+            const handleLoginSuccess = () => {
+                // Redirect to dashboard on successful login
+                window.location.href = '/dashboard';
+            };
+
+            root.render(React.createElement(LoginForm, { onLoginSuccess: handleLoginSuccess }));
+        }
+    </script>
+</body>
+</html>
 
     <script type="module">
         // Import logger
