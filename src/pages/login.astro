@@ -180,13 +180,13 @@
                     
                     const data = await response.json();
                     
-                    if (response.ok && data.access_token) {
+                    if (response.ok && data.success && data.data && data.data.accessToken) {
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
                         // Store auth data
-                        localStorage.setItem('userAuthToken', data.access_token);
-                        if (data.user) {
-                            localStorage.setItem('userData', JSON.stringify(data.user));
+                        localStorage.setItem('userAuthToken', data.data.accessToken);
+                        if (data.data.user) {
+                            localStorage.setItem('userData', JSON.stringify(data.data.user));
                         }
                         
                         // Redirect to dashboard
