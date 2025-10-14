@@ -11,6 +11,7 @@ import type {
 } from '../types/performance';
 import { getServiceLogger } from '../utils/logger';
 import { httpClient, getApiUrl } from './httpClient';
+import { authService } from './authService';
 
 const logger = getServiceLogger('PerformanceService');
 
@@ -105,6 +106,16 @@ class PerformanceService {
    */
   async getHealthStatus(): Promise<HealthStatus> {
     try {
+      // Check authentication first
+      if (!authService.isAuthenticated()) {
+        return {
+          status: 'error',
+          message: 'Authentication required',
+          services: {},
+          timestamp: new Date().toISOString()
+        };
+      }
+
       const response = await httpClient.getJson(getApiUrl('/v2/admin/performance/health')) as any;
       
       // Handle different response structures

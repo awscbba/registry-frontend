@@ -59,6 +59,15 @@ class AuthService {
   constructor() {
     if (typeof window !== 'undefined') {
       this.loadFromStorage();
+      this.validateStoredTokens();
+    }
+  }
+
+  private validateStoredTokens(): void {
+    // Check if stored token is expired
+    if (this.token && this.getTokenTimeRemaining() <= 0) {
+      authLogger.info('Stored token is expired, clearing', { event_type: 'token_expired_on_load' });
+      this.logout();
     }
   }
 
@@ -410,6 +419,11 @@ class AuthService {
 
   private async performTokenRefresh(): Promise<string | null> {
     try {
+      authLogger.info('Attempting token refresh', { 
+        hasRefreshToken: !!this.refreshToken,
+        event_type: 'token_refresh_start' 
+      });
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
@@ -420,15 +434,25 @@ class AuthService {
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      
+      authLogger.info('Token refresh response', { 
+        status: response.status,
+        success: data.success,
+        hasAccessToken: !!data.access_token,
+        event_type: 'token_refresh_response' 
+      });
+
+      if (response.ok && data.success && data.access_token) {
         this.token = data.access_token;
         this.saveToStorage();
         authLogger.info('Token refreshed successfully', { event_type: 'token_refresh' });
         return this.token;
       } else {
         authLogger.warn('Token refresh failed', { 
-          status: response.status, 
+          status: response.status,
+          success: data.success,
+          error: data.error,
           event_type: 'token_refresh_failed' 
         });
         // Refresh token is invalid or expired, logout user

@@ -77,7 +77,7 @@ export const projectApi = {
   },
 
   async getProject(id: string): Promise<Project> {
-    const response = await fetch(getApiUrl(`/v2/projects/${id}`), {
+    const response = await fetch(getApiUrl(`/v2/projects/${id}/enhanced`), {
       method: 'GET',
       headers: addAuthHeaders()
     });

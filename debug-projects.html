@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Project URLs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .project { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Project URLs</h1>
+    <p>This will test the actual project URL generation and show any mismatches.</p>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Simulate the nameToSlug function from the components
+        function nameToSlug(name) {
+            return name
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                .replace(/-+/g, '-') // Replace multiple hyphens with single
+                .replace(/^-+|-+$/g, '') // Remove leading and trailing dashes
+                .trim();
+        }
+        
+        // Simulate the getProjectSlug function
+        function getProjectSlug(project) {
+            const name = project.name.toLowerCase();
+            
+            // Map known projects to their expected slugs
+            if (name.includes('aws workshop')) {
+                return 'aws-workshop-2025';
+            } else if (name.includes('serverless bootcamp')) {
+                return 'serverless-bootcamp';
+            }
+            
+            // Use natural slug generation for all projects
+            return nameToSlug(project.name);
+        }
+        
+        // Simulate Astro page matching
+        function astroPageSlug(name) {
+            return name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+        
+        // Test with various project names that might exist
+        const testProjects = [
+            { name: 'AWS Workshop 2025' },
+            { name: 'AWS Workshop 2025!' },
+            { name: 'Serverless Bootcamp' },
+            { name: 'Serverless Bootcamp 2024' },
+            { name: 'Test Project' },
+            { name: 'Community Event' },
+            { name: 'DevOps Workshop' },
+            { name: 'Cloud Computing Basics' }
+        ];
+        
+        const resultsDiv = document.getElementById('results');
+        
+        testProjects.forEach(project => {
+            const generatedSlug = getProjectSlug(project);
+            const astroSlug = astroPageSlug(project.name);
+            const naturalSlug = nameToSlug(project.name);
+            
+            const match = generatedSlug === astroSlug;
+            
+            const projectDiv = document.createElement('div');
+            projectDiv.className = 'project';
+            projectDiv.innerHTML = `
+                <h3>Project: "${project.name}"</h3>
+                <p><strong>Generated URL:</strong> /subscribe/${generatedSlug}/</p>
+                <p><strong>Astro matches:</strong> ${astroSlug}</p>
+                <p><strong>Natural slug:</strong> ${naturalSlug}</p>
+                <p class="${match ? 'success' : 'error'}">
+                    <strong>Match:</strong> ${match ? '✅ YES' : '❌ NO'}
+                </p>
+                ${!match ? `<p class="error"><strong>Issue:</strong> Generated "${generatedSlug}" but Astro expects "${astroSlug}"</p>` : ''}
+            `;
+            
+            resultsDiv.appendChild(projectDiv);
+        });
+        
+        // Add instructions
+        const instructionsDiv = document.createElement('div');
+        instructionsDiv.innerHTML = `
+            <h2>🔧 How to fix:</h2>
+            <ol>
+                <li>Check the actual project names in your database/API</li>
+                <li>Update the hardcoded mappings in getProjectSlug functions</li>
+                <li>Or remove hardcoded mappings and use natural slug generation for all projects</li>
+            </ol>
+            
+            <h2>📋 To test with real data:</h2>
+            <ol>
+                <li>Open browser dev tools</li>
+                <li>Go to your main site</li>
+                <li>Run: <code>console.log(JSON.stringify(projects, null, 2))</code></li>
+                <li>Copy the real project names and test them here</li>
+            </ol>
+        `;
+        
+        resultsDiv.appendChild(instructionsDiv);
+    </script>
+</body>
+</html>
