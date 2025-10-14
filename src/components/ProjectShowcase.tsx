@@ -92,16 +92,7 @@ export default function ProjectShowcase() {
 
   // Mapping function to get consistent slugs for known projects
   const getProjectSlug = (project: Project): string => {
-    const name = project.name.toLowerCase();
-    
-    // Map known projects to their expected slugs
-    if (name.includes('aws workshop')) {
-      return 'aws-workshop-2025';
-    } else if (name.includes('serverless bootcamp')) {
-      return 'serverless-bootcamp';
-    }
-    
-    // Use natural slug generation for all projects
+    // Use natural slug generation for all projects - no hardcoded mappings
     return nameToSlug(project.name);
   };
 

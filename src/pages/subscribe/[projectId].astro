@@ -20,8 +20,10 @@ try {
     // Find project by slug (server-side)
     projectData = projects.find((p: any) => {
       const slug = p.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters (same as React components)
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single
+        .replace(/^-+|-+$/g, ''); // Remove leading and trailing dashes
       return slug === projectId;
     });
   }
