@@ -238,12 +238,17 @@
 
     <script>
         // Import enterprise logger (bundled by Vite)
-        import('/src/scripts/logger-client.ts').then(() => {
+        import('/src/utils/enterprise-dashboard-logger.js').then((module) => {
+            window.dashboardLogger = module.dashboardLogger;
             window.dashboardLogger.info('Dashboard page loaded, initializing');
         });
         
         // Fallback for immediate logging
-        console.log('Dashboard page loaded, initializing');
+        if (window.dashboardLogger) {
+            window.dashboardLogger.info('Dashboard page loaded, initializing');
+        } else {
+            console.log('Dashboard page loaded, initializing');
+        }
 
         // Check if user is logged in with enhanced validation
         async function checkAuth() {
