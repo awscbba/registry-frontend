@@ -114,16 +114,13 @@
 </body>
 </html>
 
-    <script type="module">
-        // Import logger
-        import { getLogger } from '../utils/logger.ts';
-        const logger = getLogger('login');
-        
-        logger.info('Login page loaded, setting up form');
+    <script>
+        // Simple console logging instead of complex logger
+        console.log('Login page loaded, setting up form');
         
         // API Configuration
         const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-        const LOGIN_ENDPOINT = '/auth/login'; // Unified login endpoint
+        const LOGIN_ENDPOINT = '/auth/login';
         
         // Create the form immediately
         const container = document.getElementById('login-form-mount');
@@ -136,10 +133,10 @@
                            placeholder="tu@email.com">
                 </div>
                 <div style="margin-bottom: 1.5rem;">
-                    <label for="password" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Contraseña temporal:</label>
+                    <label for="password" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">Contraseña:</label>
                     <input type="password" id="password" name="password" required 
                            style="width: 100%; padding: 0.75rem; border: 1px solid #d2d6dc; border-radius: 0.375rem; font-size: 1rem;"
-                           placeholder="Ingresa tu contraseña temporal">
+                           placeholder="Ingresa tu contraseña">
                 </div>
                 <button type="submit" 
                         style="width: 100%; background: #4299e1; color: white; padding: 0.75rem; border: none; border-radius: 0.375rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s;"
@@ -151,29 +148,17 @@
             <div id="login-message" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
         `;
 
-        // Set up the form handler immediately after creating the form
-        logger.debug('Form created, setting up event handler');
-        
         // Get form elements
         const form = document.getElementById('simple-login-form');
         const messageDiv = document.getElementById('login-message');
         
-        if (!form) {
-            logger.error('Login form not found');
-        } else if (!messageDiv) {
-            logger.error('Message div not found');
-        } else {
-            logger.debug('Form and message div found, attaching event listener');
-            
+        if (form && messageDiv) {
             // Add form submission handler
             form.addEventListener('submit', async function(e) {
-                logger.info('Form submitted');
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                
-                logger.debug('Login attempt', { email, passwordLength: password.length });
                 
                 if (!email || !password) {
                     messageDiv.style.display = 'block';
@@ -185,10 +170,7 @@
                 messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
                 
                 try {
-                    const loginUrl = `${API_BASE_URL}${LOGIN_ENDPOINT}`;
-                    logger.debug('Making login request', { loginUrl });
-                    
-                    const response = await fetch(loginUrl, {
+                    const response = await fetch(API_BASE_URL + LOGIN_ENDPOINT, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -197,57 +179,28 @@
                     });
                     
                     const data = await response.json();
-                    logger.debug('Login response received', {
-                        status: response.status,
-                        ok: response.ok,
-                        success: response.ok,
-                        hasToken: !!data.access_token,
-                        hasUser: !!data.user,
-                        userEmail: data.user?.email
-                    });
                     
                     if (response.ok && data.access_token) {
-                        logger.info('Login successful', { userEmail: data.user?.email });
-                        
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
-                        // Store auth data with correct keys to match dashboard
-                        if (data.access_token) {
-                            localStorage.setItem('userAuthToken', data.access_token);
-                            logger.debug('Token stored as userAuthToken');
-                        } else {
-                            logger.warn('No access_token received in response');
-                        }
+                        // Store auth data
+                        localStorage.setItem('userAuthToken', data.access_token);
                         if (data.user) {
                             localStorage.setItem('userData', JSON.stringify(data.user));
-                            logger.debug('User data stored', { userEmail: data.user.email });
-                        } else {
-                            logger.warn('No user data received in response');
                         }
                         
-                        // Debug: Verify what was stored
-                        logger.debug('Storage verification', {
-                            hasToken: !!localStorage.getItem('userAuthToken'),
-                            hasUserData: !!localStorage.getItem('userData')
-                        });
-                        
-                        // Redirect to user dashboard
+                        // Redirect to dashboard
                         setTimeout(() => {
-                            logger.info('Redirecting to dashboard');
                             window.location.href = '/dashboard';
                         }, 1500);
                     } else {
-                        logger.error('Login failed', { responseData: data });
                         const errorMessage = data.message || data.detail || 'Credenciales incorrectas';
                         messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + errorMessage + '</div>';
                     }
                 } catch (error) {
-                    logger.error('Network error during login', {}, error);
                     messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
                 }
             });
-            
-            logger.debug('Event listener attached successfully');
         }
     </script>
 </body>
