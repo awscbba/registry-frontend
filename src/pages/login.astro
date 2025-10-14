@@ -102,8 +102,8 @@
             <p class="subtitle">AWS User Group Cochabamba</p>
         </div>
 
-        <!-- React Login Form -->
-        <div id="login-form-root"></div>
+        <!-- Login Form -->
+        <div id="login-form-mount"></div>
 
         <!-- Info Text -->
         <div class="info-text">
@@ -111,25 +111,6 @@
             <p>¿Problemas para acceder? Contacta al administrador.</p>
         </div>
     </div>
-
-    <script type="module">
-        import React from 'react';
-        import { createRoot } from 'react-dom/client';
-        import LoginForm from '../components/LoginForm.tsx';
-
-        // Mount the React LoginForm component
-        const container = document.getElementById('login-form-root');
-        if (container) {
-            const root = createRoot(container);
-            
-            const handleLoginSuccess = () => {
-                // Redirect to dashboard on successful login
-                window.location.href = '/dashboard';
-            };
-
-            root.render(React.createElement(LoginForm, { onLoginSuccess: handleLoginSuccess }));
-        }
-    </script>
 </body>
 </html>
 
