@@ -1,7 +1,7 @@
 ---
 // Server-side rendering for dynamic project subscription pages
 import Layout from '../../layouts/Layout.astro';
-import ProjectSubscriptionForm from '../../components/ProjectSubscriptionForm';
+import { EnhancedProjectShowcase } from '../../components/EnhancedProjectShowcase';
 
 // Get project data server-side for any project slug
 const { projectId } = Astro.params;
@@ -42,23 +42,9 @@ try {
         </div>
       ) : projectData ? (
         <div class="subscription-content">
-          <div class="subscription-header">
-            <h1>Subscribe to {projectData.name}</h1>
-            <p class="project-description">{projectData.description}</p>
-            <div class="project-details">
-              <span class="project-dates">
-                {projectData.startDate} - {projectData.endDate}
-              </span>
-              <span class="project-participants">
-                {projectData.currentParticipants || 0} / {projectData.maxParticipants} participants
-              </span>
-            </div>
-          </div>
-          
-          <ProjectSubscriptionForm 
+          <EnhancedProjectShowcase 
             project={projectData}
-            projectId={projectData.id}
-            client:load 
+            client:only="react"
           />
         </div>
       ) : (

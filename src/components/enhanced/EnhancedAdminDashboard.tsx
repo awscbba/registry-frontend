@@ -5,10 +5,11 @@ import { projectApi } from '../../services/projectApi';
 import { getErrorMessage, getErrorObject } from '../../utils/logger';
 import type { PersonUpdate, Person, PersonCreate } from '../../types/person';
 import type { Project, ProjectCreate, ProjectUpdate } from '../../types/project';
+import type { FormSchema } from '../../types/dynamicForm';
 import PersonForm from '../PersonForm';
 import PersonList from '../PersonList';
 import ProjectList from '../ProjectList';
-import ProjectForm from '../ProjectForm';
+import { EnhancedProjectForm } from '../EnhancedProjectForm';
 import ProjectSubscribersList from '../ProjectSubscribersList';
 import PerformanceDashboard from '../performance/PerformanceDashboard';
 import CacheManagementPanel from '../performance/CacheManagementPanel';
@@ -100,12 +101,23 @@ export default function EnhancedAdminDashboard() {
       setIsLoading(true);
       setError(null);
 
+      // Check authentication first
+      if (!authService.isAuthenticated()) {
+        setError('Session expired. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
       // Fetch admin statistics - enterprise services should work correctly
       const statsResponse = await httpClient.getJson(getApiUrl('/v2/admin/stats')) as {
         success?: boolean;
         data?: { overview?: Record<string, number> };
         overview?: Record<string, number>;
       };
+      
+      if (!statsResponse) {
+        throw new Error('No response from admin stats endpoint');
+      }
       
       const statsData = statsResponse.success ? 
         (statsResponse.data || {}) : 
@@ -201,9 +213,26 @@ export default function EnhancedAdminDashboard() {
     }
   };
 
+  // Helper function to inject formSchema for projects that don't have it
+  const getProjectWithFormSchema = (project: Project): Project => {
+    if (project.formSchema) {
+      return project;
+    }
+    
+    // Add empty formSchema for admin customization
+    return {
+      ...project,
+      formSchema: {
+        version: '1.0',
+        richTextDescription: '',
+        fields: []
+      }
+    };
+  };
+
   // Project Management Handlers
   const handleProjectEdit = (project: Project) => {
-    setSelectedProject(project);
+    setSelectedProject(getProjectWithFormSchema(project));
     setCurrentView('edit-project');
   };
 
@@ -231,14 +260,17 @@ export default function EnhancedAdminDashboard() {
     }
   };
 
-  const handleProjectSubmit = async (projectData: ProjectCreate | ProjectUpdate) => {
+  const handleProjectSubmit = async (projectData: ProjectCreate | ProjectUpdate, formSchema?: FormSchema) => {
     try {
+      // Add formSchema to project data if provided
+      const projectWithSchema = formSchema ? { ...projectData, formSchema } : projectData;
+      
       if (selectedProject) {
         // Update existing project
-        await projectApi.updateProject(selectedProject.id, projectData as ProjectUpdate);
+        await projectApi.updateProject(selectedProject.id, projectWithSchema as ProjectUpdate);
       } else {
         // Create new project
-        await projectApi.createProject(projectData as ProjectCreate);
+        await projectApi.createProject(projectWithSchema as ProjectCreate);
       }
       
       await fetchAdminData(); // Refresh projects list
@@ -722,7 +754,7 @@ export default function EnhancedAdminDashboard() {
                 {selectedProject ? 'Edit Project' : 'Create New Project'}
               </h2>
             </div>
-            <ProjectForm
+            <EnhancedProjectForm
               project={selectedProject ?? undefined}
               onSubmit={handleProjectSubmit}
               onCancel={handleProjectCancel}
