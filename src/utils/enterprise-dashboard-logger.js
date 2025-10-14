@@ -14,7 +14,7 @@ window.EnterpriseDashboardLogger = {
   },
 
   // Current log level (INFO for production, DEBUG for development)
-  currentLevel: window.location.hostname === 'localhost' ? 0 : 1,
+  currentLevel: (window.location.hostname === 'localhost') ? 0 : 1,
 
   // Structured logging with correlation IDs
   logStructured: function(level, category, message, context, additionalData) {
