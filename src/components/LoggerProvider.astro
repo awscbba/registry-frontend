@@ -1,0 +1,21 @@
+---
+// Server-side: No imports needed
+---
+
+<script>
+  // Client-side: Import and setup enterprise logger
+  import { getLogger, LogLevel } from '../utils/logger';
+  
+  // Create loggers
+  const dashboardLogger = getLogger('dashboard', LogLevel.INFO);
+  const authLogger = getLogger('auth', LogLevel.INFO);
+  const apiLogger = getLogger('api', LogLevel.INFO);
+  
+  // Make globally available
+  window.dashboardLogger = dashboardLogger;
+  window.authLogger = authLogger;
+  window.apiLogger = apiLogger;
+  
+  // Signal that loggers are ready
+  window.dispatchEvent(new CustomEvent('loggers-ready'));
+</script>

@@ -237,12 +237,19 @@
     </main>
 
     <script>
-        // Simple console logging instead of complex logger
+        // Import enterprise logger (bundled by Vite)
+        import('/src/scripts/logger-client.ts').then(() => {
+            window.dashboardLogger.info('Dashboard page loaded, initializing');
+        });
+        
+        // Fallback for immediate logging
         console.log('Dashboard page loaded, initializing');
 
         // Check if user is logged in with enhanced validation
         async function checkAuth() {
-            console.log('Starting authentication check');
+            // Use enterprise logger when available, fallback to console
+            const log = window.dashboardLogger || console;
+            log.info ? log.info('Starting authentication check') : log.log('Starting authentication check');
             
             const token = localStorage.getItem('userAuthToken');
             console.log('Token check', { hasToken: !!token });
