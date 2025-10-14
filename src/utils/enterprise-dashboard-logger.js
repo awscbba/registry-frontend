@@ -18,7 +18,9 @@ window.EnterpriseDashboardLogger = {
 
   // Structured logging with correlation IDs
   logStructured: function(level, category, message, context, additionalData) {
-    if (level < this.currentLevel) return;
+    if (level < this.currentLevel) {
+      return;
+    }
 
     const logEntry = {
       timestamp: new Date().toISOString(),
