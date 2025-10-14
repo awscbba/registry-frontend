@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { DatabaseOptimizationHistory, DatabaseChartsProps } from '../../types/database';
 import databaseService from '../../services/databaseService';
+import { getCleanComponentLogger } from '../../utils/cleanLogger';
+
+const logger = getCleanComponentLogger('DatabaseCharts');
 
 const DatabaseCharts: React.FC<DatabaseChartsProps> = ({
   timeRange = '24h',
@@ -18,11 +21,19 @@ const DatabaseCharts: React.FC<DatabaseChartsProps> = ({
   const fetchOptimizationHistory = async () => {
     try {
       setError(null);
+      logger.debug('Fetching database optimization history', { timeRange });
       const history = await databaseService.getOptimizationHistory(timeRange || '24h');
       setOptimizationHistory(history);
+      logger.info('Database optimization history loaded successfully', { 
+        recordCount: history?.optimizations?.length || 0 
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch optimization history');
-      logger.error('Database history error', { error: logger.error(err) }, (err));
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch optimization history';
+      setError(errorMessage);
+      logger.error('Failed to fetch database optimization history', { 
+        timeRange, 
+        error: errorMessage 
+      }, err instanceof Error ? err : undefined);
     } finally {
       setLoading(false);
     }
