@@ -4,6 +4,7 @@ import { projectApi } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
+import { formatDateDisplay } from '../utils/dateUtils';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
 
@@ -313,11 +314,11 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
           <div className="project-details">
             <div className="detail-item">
               <span className="detail-label">Fecha de inicio:</span>
-              <span className="detail-value">{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No especificada'}</span>
+              <span className="detail-value">{formatDateDisplay(project.startDate)}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Fecha de fin:</span>
-              <span className="detail-value">{project.endDate ? new Date(project.endDate).toLocaleDateString() : 'No especificada'}</span>
+              <span className="detail-value">{formatDateDisplay(project.endDate)}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Participantes máximos:</span>
