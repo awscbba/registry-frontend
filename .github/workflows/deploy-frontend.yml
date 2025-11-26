@@ -12,7 +12,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  AMPLIFY_APP_ID: d2df6u91uqaaay
+  AMPLIFY_APP_ID: d36qiwhuhsb8gy
   NODE_VERSION: '20'
 
 jobs:
