@@ -1,0 +1,126 @@
+name: Deploy Frontend to Amplify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AMPLIFY_APP_ID: d2df6u91uqaaay
+  NODE_VERSION: '20'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI validation
+        run: just ci-validate
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  quality-gate:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run quality checks
+        run: just ci-quality
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy to Amplify
+        run: |
+          echo "🚀 Deploying to AWS Amplify"
+          just ci-deploy amplify ${{ env.AMPLIFY_APP_ID }}
+
+      - name: Deployment summary
+        run: |
+          echo "🎉 Deployment completed!"
+          echo "📋 Amplify App: https://main.${{ env.AMPLIFY_APP_ID }}.amplifyapp.com"
+          echo "📋 Console: https://console.aws.amazon.com/amplify/home#/${{ env.AMPLIFY_APP_ID }}"
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Validate deployment
+        run: |
+          echo "✅ Post-deployment validation"
+          
+          echo "🔍 Checking API..."
+          if curl -f -s https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/health > /dev/null; then
+            echo "✅ API is accessible"
+          else
+            echo "⚠️ API check failed"
+          fi
+          
+          echo "🌐 Frontend: https://main.${{ env.AMPLIFY_APP_ID }}.amplifyapp.com"

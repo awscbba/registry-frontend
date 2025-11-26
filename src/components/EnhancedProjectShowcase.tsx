@@ -410,19 +410,19 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
               {project.startDate && (
                 <div>
                   <span className="font-medium text-gray-700">Start Date:</span>
-                  <div className="text-gray-600">{new Date(project.startDate).toLocaleDateString()}</div>
+                  <div className="text-gray-600">{project.startDate.split('T')[0]}</div>
                 </div>
               )}
               {project.endDate && (
                 <div>
                   <span className="font-medium text-gray-700">End Date:</span>
-                  <div className="text-gray-600">{new Date(project.endDate).toLocaleDateString()}</div>
+                  <div className="text-gray-600">{project.endDate.split('T')[0]}</div>
                 </div>
               )}
               {project.registrationEndDate && (
                 <div>
                   <span className="font-medium text-gray-700">Registration Ends:</span>
-                  <div className="text-gray-600">{new Date(project.registrationEndDate).toLocaleDateString()}</div>
+                  <div className="text-gray-600">{project.registrationEndDate.split('T')[0]}</div>
                 </div>
               )}
             </div>
