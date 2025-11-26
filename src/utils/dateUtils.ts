@@ -13,7 +13,8 @@ export function formatDateDisplay(dateString: string | undefined | null): string
   }
   
   // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
-  return dateString.split('T')[0];
+  const datePart = dateString.split('T')[0];
+  return datePart || 'No especificada';
 }
 
 /**
@@ -31,8 +32,18 @@ export function formatDateLocale(
   }
   
   // Parse as local date to avoid timezone shifts
-  const [year, month, day] = dateString.split('T')[0].split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const datePart = dateString.split('T')[0];
+  if (!datePart) {
+    return 'No definida';
+  }
+  
+  const parts = datePart.split('-');
+  if (parts.length !== 3) {
+    return 'No definida';
+  }
+  
+  const [year, month, day] = parts;
+  const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
   
   return date.toLocaleDateString(locale, {
     year: 'numeric',
