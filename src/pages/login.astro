@@ -120,9 +120,13 @@
     </div>
 
     <script type="module">
-        // Import logger
-        import { getLogger } from '../utils/logger.ts';
-        const logger = getLogger('login');
+        // Simple console logger for login page
+        const logger = {
+            info: (...args) => console.log('[LOGIN INFO]', ...args),
+            debug: (...args) => console.log('[LOGIN DEBUG]', ...args),
+            error: (...args) => console.error('[LOGIN ERROR]', ...args),
+            warn: (...args) => console.warn('[LOGIN WARN]', ...args)
+        };
         
         logger.info('Login page loaded, setting up form');
         
