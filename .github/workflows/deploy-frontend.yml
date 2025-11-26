@@ -68,59 +68,9 @@ jobs:
       - name: Run quality checks
         run: just ci-quality
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: quality-gate
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install Just
+      - name: Deployment info
         run: |
-          wget -qO- https://github.com/casey/just/releases/download/1.36.0/just-1.36.0-x86_64-unknown-linux-musl.tar.gz | sudo tar xvz -C /usr/local/bin just
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy to Amplify
-        run: |
-          echo "🚀 Deploying to AWS Amplify"
-          just ci-deploy amplify ${{ env.AMPLIFY_APP_ID }}
-
-      - name: Deployment summary
-        run: |
-          echo "🎉 Deployment completed!"
+          echo "✅ Build and quality checks passed!"
+          echo "🚀 Amplify will auto-deploy from main branch"
           echo "📋 Amplify App: https://main.${{ env.AMPLIFY_APP_ID }}.amplifyapp.com"
           echo "📋 Console: https://console.aws.amazon.com/amplify/home#/${{ env.AMPLIFY_APP_ID }}"
-
-  validate:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - name: Validate deployment
-        run: |
-          echo "✅ Post-deployment validation"
-          
-          echo "🔍 Checking API..."
-          if curl -f -s https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod/health > /dev/null; then
-            echo "✅ API is accessible"
-          else
-            echo "⚠️ API check failed"
-          fi
-          
-          echo "🌐 Frontend: https://main.${{ env.AMPLIFY_APP_ID }}.amplifyapp.com"
