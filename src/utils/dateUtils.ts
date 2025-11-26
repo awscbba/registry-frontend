@@ -38,11 +38,13 @@ export function formatDateLocale(
   }
   
   const parts = datePart.split('-');
-  if (parts.length !== 3) {
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
     return 'No definida';
   }
   
-  const [year, month, day] = parts;
+  const year = parts[0];
+  const month = parts[1];
+  const day = parts[2];
   const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
   
   return date.toLocaleDateString(locale, {
