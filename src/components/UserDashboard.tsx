@@ -98,10 +98,6 @@ export default function UserDashboard({
     onClose();
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { label: 'Pendiente', class: 'status-pending' },
@@ -119,36 +115,36 @@ export default function UserDashboard({
     );
   };
 
-  return (
-    <div 
-      className="modal-overlay" 
-      onClick={onClose}
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      role="dialog"
-      tabIndex={-1}
-    >
-      <div 
-        className="modal-content user-dashboard" 
-        onClick={e => e.stopPropagation()}
-        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
-        role="document"
-        tabIndex={0}
-      >
-        <div className="modal-header">
-          <div className="header-info">
-            <h2>Mi Panel de Usuario</h2>
+  // Render as modal or embedded based on isOpen prop
+  const content = (
+    <div className={isOpen ? "user-dashboard-modal" : "user-dashboard-embedded"}>
+      <div className="user-dashboard-content">
+        {isOpen && (
+          <div className="modal-header">
+            <div className="header-info">
+              <h2>Mi Panel de Usuario</h2>
+              <p className="user-info">
+                Bienvenido, <strong>{user?.firstName} {user?.lastName}</strong>
+              </p>
+            </div>
+            <button 
+              className="modal-close-button" 
+              onClick={onClose}
+              aria-label="Cerrar panel"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        
+        {!isOpen && (
+          <div className="embedded-header">
+            <h2>Mis Suscripciones</h2>
             <p className="user-info">
-              Bienvenido, <strong>{user?.firstName} {user?.lastName}</strong>
+              Gestiona tus suscripciones a proyectos
             </p>
           </div>
-          <button 
-            className="modal-close-button" 
-            onClick={onClose}
-            aria-label="Cerrar panel"
-          >
-            ×
-          </button>
-        </div>
+        )}
 
         <div className="modal-body">
           {/* Current Project Subscription Status */}
@@ -276,19 +272,22 @@ export default function UserDashboard({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="dashboard-actions">
-            <button onClick={handleLogout} className="button-secondary">
-              Cerrar Sesión
-            </button>
-            <button onClick={onClose} className="button-primary">
-              Continuar Navegando
-            </button>
-          </div>
+          {/* Actions - only show in modal mode */}
+          {isOpen && (
+            <div className="dashboard-actions">
+              <button onClick={handleLogout} className="button-secondary">
+                Cerrar Sesión
+              </button>
+              <button onClick={onClose} className="button-primary">
+                Continuar Navegando
+              </button>
+            </div>
+          )}
         </div>
+      </div>
 
         <style jsx>{`
-          .modal-overlay {
+          .user-dashboard-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -302,7 +301,11 @@ export default function UserDashboard({
             padding: 20px;
           }
 
-          .modal-content {
+          .user-dashboard-embedded {
+            width: 100%;
+          }
+
+          .user-dashboard-content {
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -312,7 +315,14 @@ export default function UserDashboard({
             overflow-y: auto;
           }
 
-          .modal-header {
+          .user-dashboard-embedded .user-dashboard-content {
+            max-width: 100%;
+            max-height: none;
+            box-shadow: none;
+          }
+
+          .modal-header,
+          .embedded-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -321,7 +331,13 @@ export default function UserDashboard({
             margin-bottom: 24px;
           }
 
-          .header-info h2 {
+          .embedded-header {
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .header-info h2,
+          .embedded-header h2 {
             margin: 0 0 8px 0;
             color: #1f2937;
             font-size: 1.5rem;
@@ -561,9 +577,13 @@ export default function UserDashboard({
           }
 
           @media (max-width: 640px) {
-            .modal-content {
+            .user-dashboard-content {
               margin: 20px;
               max-width: none;
+            }
+
+            .user-dashboard-embedded .user-dashboard-content {
+              margin: 0;
             }
 
             .dashboard-actions {
@@ -608,6 +628,29 @@ export default function UserDashboard({
             font-size: 16px;
           }
         `}</style>
+    </div>
+  );
+
+  // Return wrapped in modal overlay if isOpen, otherwise return content directly
+  if (!isOpen) {
+    return content;
+  }
+
+  return (
+    <div 
+      className="modal-overlay-wrapper" 
+      onClick={onClose}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <div 
+        onClick={e => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        role="document"
+        tabIndex={0}
+      >
+        {content}
       </div>
     </div>
   );
