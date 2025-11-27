@@ -129,7 +129,7 @@ export default function ProjectSubscriptionManager({
       if (isChecked) {
         // Subscribe to project
         logger.info('Subscribing person to project', { personId, projectId });
-        await projectApi.subscribeToProject(personId, projectId);
+        await projectApi.subscribePersonToProject(projectId, personId, { status: 'active' });
         
         // Update local state
         const newSelectedProjectIds = [...selectedProjectIds, projectId];
@@ -148,7 +148,7 @@ export default function ProjectSubscriptionManager({
         const subscription = subscriptions.find(sub => sub.projectId === projectId);
         if (subscription) {
           logger.info('Unsubscribing person from project', { personId, projectId, subscriptionId: subscription.id });
-          await projectApi.updateSubscription(subscription.id, { status: 'cancelled', isActive: false });
+          await projectApi.updateProjectSubscription(projectId, subscription.id, { status: 'cancelled' });
           
           // Update local state
           const newSelectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
