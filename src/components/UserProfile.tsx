@@ -71,7 +71,7 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
           },
         });
       }
-    } catch (err) {
+    } catch {
       setError('Error al cargar el perfil');
     } finally {
       setIsLoading(false);
@@ -114,7 +114,7 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
       } else {
         setError(result.message || 'Error al actualizar el perfil');
       }
-    } catch (err) {
+    } catch {
       setError('Error al guardar los cambios');
     } finally {
       setIsSaving(false);

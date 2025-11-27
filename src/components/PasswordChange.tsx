@@ -93,7 +93,7 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
       } else {
         setError(result.message || 'Error al cambiar la contraseña');
       }
-    } catch (err) {
+    } catch {
       setError('Error al procesar la solicitud');
     } finally {
       setIsSubmitting(false);
@@ -108,15 +108,15 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
   };
 
   const passwordStrength = (password: string): { strength: string; color: string; width: string } => {
-    if (!password) return { strength: '', color: '#e5e7eb', width: '0%' };
+    if (!password) {return { strength: '', color: '#e5e7eb', width: '0%' };}
     
     const errors = validatePassword(password);
     const score = 5 - errors.length;
     
-    if (score === 5) return { strength: 'Muy fuerte', color: '#10b981', width: '100%' };
-    if (score === 4) return { strength: 'Fuerte', color: '#3b82f6', width: '80%' };
-    if (score === 3) return { strength: 'Media', color: '#f59e0b', width: '60%' };
-    if (score === 2) return { strength: 'Débil', color: '#ef4444', width: '40%' };
+    if (score === 5) {return { strength: 'Muy fuerte', color: '#10b981', width: '100%' };}
+    if (score === 4) {return { strength: 'Fuerte', color: '#3b82f6', width: '80%' };}
+    if (score === 3) {return { strength: 'Media', color: '#f59e0b', width: '60%' };}
+    if (score === 2) {return { strength: 'Débil', color: '#ef4444', width: '40%' };}
     return { strength: 'Muy débil', color: '#dc2626', width: '20%' };
   };
 
