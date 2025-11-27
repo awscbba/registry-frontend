@@ -223,65 +223,11 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
                 </h4>
                 <p className="subscriber-email">{subscriber.email}</p>
               </div>
-              <div className="subscriber-actions">
-                <div 
-                  className="subscription-status"
-                  style={{ backgroundColor: getStatusColor(subscriber.subscriptionStatus) }}
-                >
-                  {getStatusText(subscriber.subscriptionStatus)}
-                </div>
-                
-                {/* Show approve/reject buttons for pending subscriptions */}
-                {subscriber.subscriptionStatus === 'pending' && (
-                  <div className="pending-actions">
-                    <button
-                      onClick={() => handleApproveSubscriber(subscriber)}
-                      disabled={approvingSubscriber === subscriber.id}
-                      className="approve-btn"
-                      title="Aprobar suscripción"
-                    >
-                      {approvingSubscriber === subscriber.id ? (
-                        <div className="spinner"></div>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M20 6L9 17l-5-5"/>
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleRejectSubscriber(subscriber)}
-                      disabled={rejectingSubscriber === subscriber.id}
-                      className="reject-btn"
-                      title="Rechazar suscripción"
-                    >
-                      {rejectingSubscriber === subscriber.id ? (
-                        <div className="spinner"></div>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M18 6L6 18M6 6l12 12"/>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                )}
-                
-                {/* Show remove button for active subscriptions */}
-                {subscriber.subscriptionStatus === 'active' && (
-                  <button
-                    onClick={() => handleRemoveSubscriber(subscriber)}
-                    disabled={removingSubscriber === subscriber.id}
-                    className="remove-subscriber-btn"
-                    title="Remover suscriptor"
-                  >
-                    {removingSubscriber === subscriber.id ? (
-                      <div className="spinner"></div>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                      </svg>
-                    )}
-                  </button>
-                )}
+              <div 
+                className="subscription-status"
+                style={{ backgroundColor: getStatusColor(subscriber.subscriptionStatus) }}
+              >
+                {getStatusText(subscriber.subscriptionStatus)}
               </div>
             </div>
 
@@ -303,6 +249,76 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
                     {subscriber.address.city}, {subscriber.address.country}
                   </span>
                 </div>
+              )}
+            </div>
+
+            {/* Action buttons at the bottom of the card */}
+            <div className="subscriber-actions">
+              {/* Show approve/reject buttons for pending subscriptions */}
+              {subscriber.subscriptionStatus === 'pending' && (
+                <>
+                  <button
+                    onClick={() => handleApproveSubscriber(subscriber)}
+                    disabled={approvingSubscriber === subscriber.id}
+                    className="approve-btn"
+                  >
+                    {approvingSubscriber === subscriber.id ? (
+                      <>
+                        <div className="spinner"></div>
+                        <span>Aprobando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Aprobar</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleRejectSubscriber(subscriber)}
+                    disabled={rejectingSubscriber === subscriber.id}
+                    className="reject-btn"
+                  >
+                    {rejectingSubscriber === subscriber.id ? (
+                      <>
+                        <div className="spinner"></div>
+                        <span>Rechazando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                        <span>Rechazar</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+              
+              {/* Show remove button for active subscriptions */}
+              {subscriber.subscriptionStatus === 'active' && (
+                <button
+                  onClick={() => handleRemoveSubscriber(subscriber)}
+                  disabled={removingSubscriber === subscriber.id}
+                  className="remove-subscriber-btn"
+                >
+                  {removingSubscriber === subscriber.id ? (
+                    <>
+                      <div className="spinner"></div>
+                      <span>Removiendo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                      <span>Remover Suscriptor</span>
+                    </>
+                  )}
+                </button>
               )}
             </div>
           </div>
@@ -401,42 +417,44 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
           justify-content: space-between;
           align-items: flex-start;
           margin-bottom: 1rem;
+          gap: 1rem;
         }
 
         .subscriber-info {
           flex: 1;
+          min-width: 0;
         }
 
         .subscriber-actions {
           display: flex;
-          align-items: center;
           gap: 0.75rem;
-        }
-
-        .pending-actions {
-          display: flex;
-          gap: 0.5rem;
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #f3f4f6;
         }
 
         .approve-btn {
+          flex: 1;
           background: #dcfce7;
           border: 1px solid #bbf7d0;
           border-radius: 6px;
-          padding: 0.5rem;
+          padding: 0.625rem 1rem;
           cursor: pointer;
           color: #16a34a;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 32px;
-          height: 32px;
+          gap: 0.5rem;
+          font-weight: 500;
+          font-size: 0.875rem;
         }
 
         .approve-btn:hover:not(:disabled) {
           background: #bbf7d0;
           border-color: #86efac;
-          transform: scale(1.05);
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
         }
 
         .approve-btn:disabled {
@@ -445,24 +463,27 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
         }
 
         .reject-btn {
+          flex: 1;
           background: #fee2e2;
           border: 1px solid #fecaca;
           border-radius: 6px;
-          padding: 0.5rem;
+          padding: 0.625rem 1rem;
           cursor: pointer;
           color: #dc2626;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 32px;
-          height: 32px;
+          gap: 0.5rem;
+          font-weight: 500;
+          font-size: 0.875rem;
         }
 
         .reject-btn:hover:not(:disabled) {
           background: #fecaca;
           border-color: #f87171;
-          transform: scale(1.05);
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
         }
 
         .reject-btn:disabled {
@@ -471,24 +492,27 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
         }
 
         .remove-subscriber-btn {
+          width: 100%;
           background: #fee2e2;
           border: 1px solid #fecaca;
           border-radius: 6px;
-          padding: 0.5rem;
+          padding: 0.625rem 1rem;
           cursor: pointer;
           color: #dc2626;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 32px;
-          height: 32px;
+          gap: 0.5rem;
+          font-weight: 500;
+          font-size: 0.875rem;
         }
 
         .remove-subscriber-btn:hover:not(:disabled) {
           background: #fecaca;
           border-color: #f87171;
-          transform: scale(1.05);
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
         }
 
         .remove-subscriber-btn:disabled {
@@ -510,6 +534,9 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
           color: #374151;
           font-size: 1.1rem;
           font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .subscriber-email {
@@ -566,14 +593,18 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
           }
 
           .subscriber-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.75rem;
+            flex-wrap: wrap;
           }
 
           .subscriber-actions {
-            align-self: stretch;
-            justify-content: space-between;
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .approve-btn,
+          .reject-btn,
+          .remove-subscriber-btn {
+            width: 100%;
           }
 
           .detail-item {
