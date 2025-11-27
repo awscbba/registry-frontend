@@ -26,6 +26,7 @@ const PERSON_FIELD_MAP: Record<string, string> = {
   'birth_date': 'birthDate',
   'join_date': 'joinDate',
   'is_active': 'isActive',
+  'is_admin': 'isAdmin',
   'linkedin_url': 'linkedinUrl',
   'twitter_url': 'twitterUrl',
   'github_url': 'githubUrl',
