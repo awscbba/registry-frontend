@@ -17,16 +17,17 @@ export default function SubscriptionsList() {
       setError(null);
       const data = await authService.getUserSubscriptions();
       setSubscriptions(data);
-    } catch (err) {
+    } catch {
       setError('Error al cargar las suscripciones');
-      console.error('Error loading subscriptions:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   const filteredSubscriptions = subscriptions.filter(sub => {
-    if (filter === 'all') return true;
+    if (filter === 'all') {
+      return true;
+    }
     return sub.status === filter;
   });
 
