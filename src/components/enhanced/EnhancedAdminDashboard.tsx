@@ -37,6 +37,7 @@ interface AdminUser {
   isAdmin: boolean;
   isActive: boolean;
   createdAt: string;
+  roles?: string[]; // RBAC roles array
   phone?: string;
   dateOfBirth?: string;
   address?: {
@@ -318,8 +319,9 @@ export default function EnhancedAdminDashboard() {
         email: person.email,
         firstName: person.firstName,
         lastName: person.lastName,
-        // Business rule: Default admin status based on email domain or role lookup
-        isAdmin: person.email?.endsWith('@admin.domain.com') || false,
+        // Preserve actual admin status and roles from backend
+        isAdmin: person.isAdmin || false,
+        roles: person.roles, // Preserve RBAC roles array
         // Business rule: Active status should come from user management service
         isActive: true, // TODO: Implement proper user status lookup
         createdAt: person.createdAt,
