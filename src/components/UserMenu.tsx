@@ -4,7 +4,7 @@ import { authService, type User } from '../services/authService';
 export default function UserMenu() {
   const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLElement | null>(null);
+  const menuRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     // Load user data
