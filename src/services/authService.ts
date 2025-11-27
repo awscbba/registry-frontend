@@ -521,7 +521,7 @@ class AuthService {
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/subscriptions`);
 
       const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
       return transformSubscriptions(subscriptions);
@@ -637,6 +637,93 @@ class AuthService {
       return {
         success: false,
         message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
+      };
+    }
+  }
+
+  /**
+   * Update user profile
+   */
+  async updateProfile(profileData: Partial<User>): Promise<{ success: boolean; user?: User; message?: string }> {
+    if (!this.isAuthenticated() || !this.token) {
+      return {
+        success: false,
+        message: 'Usuario no autenticado',
+      };
+    }
+
+    try {
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.putJson(`${API_CONFIG.BASE_URL}/auth/profile`, profileData);
+      
+      if (data && typeof data === 'object' && 'success' in data && (data as any).success) {
+        // Update local user data
+        const userData = (data as any).data || (data as any).user;
+        if (userData) {
+          this.user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            isAdmin: userData.isAdmin,
+            roles: userData.roles,
+          };
+          this.saveToStorage();
+        }
+        
+        return {
+          success: true,
+          user: this.user || undefined,
+          message: 'Perfil actualizado exitosamente',
+        };
+      }
+      
+      return {
+        success: false,
+        message: 'Error al actualizar el perfil',
+      };
+    } catch (error) {
+      authLogger.error('Error updating profile', { error: getErrorMessage(error) }, getErrorObject(error));
+      return {
+        success: false,
+        message: 'Error al procesar la solicitud. Inténtalo de nuevo.',
+      };
+    }
+  }
+
+  /**
+   * Change password
+   */
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message?: string }> {
+    if (!this.isAuthenticated() || !this.token) {
+      return {
+        success: false,
+        message: 'Usuario no autenticado',
+      };
+    }
+
+    try {
+      // Import httpClient dynamically to avoid circular dependency
+      const { httpClient } = await import('./httpClient');
+      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/password/change`, {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      
+      return {
+        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
+        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Contraseña cambiada exitosamente',
+      };
+    } catch (error) {
+      authLogger.error('Error changing password', { error: getErrorMessage(error) }, getErrorObject(error));
+      
+      // Extract error message from response if available
+      const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        message: errorMessage || 'Error al cambiar la contraseña. Inténtalo de nuevo.',
       };
     }
   }
