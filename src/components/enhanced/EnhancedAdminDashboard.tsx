@@ -952,6 +952,7 @@ export default function EnhancedAdminDashboard() {
                     country: '',
                     postalCode: ''
                   },
+                  roles: selectedUser.roles,
                   createdAt: selectedUser.createdAt,
                   updatedAt: selectedUser.updatedAt || selectedUser.createdAt
                 }}
