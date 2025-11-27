@@ -91,6 +91,23 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Update userRole when person prop changes
+  React.useEffect(() => {
+    if (person) {
+      const currentRole = getUserRole(person);
+      logger.info('Updating user role from person data', {
+        personId: person.id,
+        roles: person.roles,
+        isAdmin: person.isAdmin,
+        detectedRole: currentRole
+      });
+      setFormData(prev => ({
+        ...prev,
+        userRole: currentRole
+      }));
+    }
+  }, [person]);
+
   // Global countries list (major countries)
   const countries = [
     'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán',

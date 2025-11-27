@@ -118,17 +118,66 @@ export default function ProjectSubscriptionManager({
     loadData();
   }, [personId, onSubscriptionsChange]);
 
-  // Handle checkbox changes
-  const handleProjectToggle = (projectId: string, isChecked: boolean) => {
-    const newSelectedProjectIds = isChecked
-      ? [...selectedProjectIds, projectId]
-      : selectedProjectIds.filter(id => id !== projectId);
-    
-    setSelectedProjectIds(newSelectedProjectIds);
-    
-    // Notify parent component
-    if (onSubscriptionsChange) {
-      onSubscriptionsChange(newSelectedProjectIds);
+  // Handle checkbox changes - now saves immediately
+  const handleProjectToggle = async (projectId: string, isChecked: boolean) => {
+    if (!personId) {
+      setError('No se puede actualizar suscripciones sin un ID de persona');
+      return;
+    }
+
+    try {
+      if (isChecked) {
+        // Subscribe to project
+        logger.info('Subscribing person to project', { personId, projectId });
+        await projectApi.subscribeToProject(personId, projectId);
+        
+        // Update local state
+        const newSelectedProjectIds = [...selectedProjectIds, projectId];
+        setSelectedProjectIds(newSelectedProjectIds);
+        
+        // Reload subscriptions to get the latest data
+        const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+        setSubscriptions(personSubscriptions);
+        
+        // Notify parent component
+        if (onSubscriptionsChange) {
+          onSubscriptionsChange(newSelectedProjectIds);
+        }
+      } else {
+        // Unsubscribe from project
+        const subscription = subscriptions.find(sub => sub.projectId === projectId);
+        if (subscription) {
+          logger.info('Unsubscribing person from project', { personId, projectId, subscriptionId: subscription.id });
+          await projectApi.updateSubscription(subscription.id, { status: 'cancelled', isActive: false });
+          
+          // Update local state
+          const newSelectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
+          setSelectedProjectIds(newSelectedProjectIds);
+          
+          // Reload subscriptions to get the latest data
+          const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+          setSubscriptions(personSubscriptions);
+          
+          // Notify parent component
+          if (onSubscriptionsChange) {
+            onSubscriptionsChange(newSelectedProjectIds);
+          }
+        }
+      }
+    } catch (err) {
+      logger.error('Error toggling subscription', { error: err, personId, projectId });
+      setError(err instanceof ApiError ? err.message : 'Error al actualizar suscripción');
+      
+      // Reload data to ensure UI is in sync
+      try {
+        const personSubscriptions = await projectApi.getPersonSubscriptions(personId);
+        setSubscriptions(personSubscriptions);
+        const activeSubscriptions = personSubscriptions.filter(sub => sub.status === 'active' || sub.status === 'pending');
+        const currentSubscriptionProjectIds = activeSubscriptions.map(sub => sub.projectId);
+        setSelectedProjectIds(currentSubscriptionProjectIds);
+      } catch (reloadErr) {
+        logger.error('Error reloading subscriptions after failed toggle', { error: reloadErr });
+      }
     }
   };
 
