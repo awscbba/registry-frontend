@@ -1,4 +1,6 @@
 ---
+import UserMenu from '../components/UserMenu';
+
 export interface Props {
 	title: string;
 }
@@ -30,13 +32,16 @@ const { title } = Astro.props;
 						<span class="subtitle">Registro Global de Personas</span>
 					</div>
 				</div>
-				<nav>
-					<ul>
-						<li><a href="/" class="active">Registro</a></li>
-						<li><a href="https://cbba.cloud.org.bo/aws" target="_blank">Sitio Principal</a></li>
-						<li><a href="https://cbba.cloud.org.bo/aws/events" target="_blank">Eventos</a></li>
-					</ul>
-				</nav>
+				<div class="header-right">
+					<nav>
+						<ul>
+							<li><a href="/" class="active">Registro</a></li>
+							<li><a href="https://cbba.cloud.org.bo/aws" target="_blank">Sitio Principal</a></li>
+							<li><a href="https://cbba.cloud.org.bo/aws/events" target="_blank">Eventos</a></li>
+						</ul>
+					</nav>
+					<UserMenu client:load />
+				</div>
 			</div>
 		</header>
 
@@ -140,6 +145,13 @@ const { title } = Astro.props;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 20px;
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
+		gap: 20px;
 	}
 
 	.logo {
@@ -316,9 +328,14 @@ const { title } = Astro.props;
 
 		/* Mobile-specific improvements */
 		header .container {
-			flex-direction: column;
+			flex-wrap: wrap;
 			gap: 1rem;
-			text-align: center;
+		}
+
+		.header-right {
+			flex-direction: column;
+			width: 100%;
+			gap: 1rem;
 		}
 
 		nav {
@@ -327,6 +344,7 @@ const { title } = Astro.props;
 
 		nav ul {
 			justify-content: center;
+			flex-wrap: wrap;
 		}
 
 		/* Improve touch targets */

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authService, type User } from '../services/authService';
+import { authService, type User, type Address } from '../services/authService';
 
 interface UserProfileProps {
   onPasswordChangeClick: () => void;
@@ -10,13 +10,7 @@ interface ProfileFormData {
   lastName: string;
   phone: string;
   dateOfBirth: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
+  address: Address;
 }
 
 export default function UserProfile({ onPasswordChangeClick }: UserProfileProps) {
@@ -60,9 +54,9 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
         setFormData({
           firstName: currentUser.firstName || '',
           lastName: currentUser.lastName || '',
-          phone: (currentUser as any).phone || '',
-          dateOfBirth: (currentUser as any).dateOfBirth || '',
-          address: (currentUser as any).address || {
+          phone: currentUser.phone || '',
+          dateOfBirth: currentUser.dateOfBirth || '',
+          address: currentUser.address || {
             street: '',
             city: '',
             state: '',
@@ -127,9 +121,9 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
       setFormData({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        phone: (user as any).phone || '',
-        dateOfBirth: (user as any).dateOfBirth || '',
-        address: (user as any).address || {
+        phone: user.phone || '',
+        dateOfBirth: user.dateOfBirth || '',
+        address: user.address || {
           street: '',
           city: '',
           state: '',
