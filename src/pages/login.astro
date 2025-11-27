@@ -205,33 +205,33 @@
                         body: JSON.stringify({ email, password }),
                     });
                     
-                    const data = await response.json();
+                    const responseData = await response.json();
+                    
+                    // Handle nested response format
+                    const data = responseData.success ? responseData.data : responseData;
+                    const token = data.accessToken || data.access_token;
+                    const user = data.user;
+                    
                     logger.debug('Login response received', {
                         status: response.status,
                         ok: response.ok,
-                        success: response.ok,
-                        hasToken: !!data.access_token,
-                        hasUser: !!data.user,
-                        userEmail: data.user?.email
+                        hasToken: !!token,
+                        hasUser: !!user,
+                        userEmail: user?.email
                     });
                     
-                    if (response.ok && data.access_token) {
-                        logger.info('Login successful', { userEmail: data.user?.email });
+                    if (response.ok && token) {
+                        logger.info('Login successful', { userEmail: user?.email });
                         
                         messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
                         
-                        // Store auth data with correct keys to match dashboard
-                        if (data.access_token) {
-                            localStorage.setItem('userAuthToken', data.access_token);
-                            logger.debug('Token stored as userAuthToken');
-                        } else {
-                            logger.warn('No access_token received in response');
-                        }
-                        if (data.user) {
-                            localStorage.setItem('userData', JSON.stringify(data.user));
-                            logger.debug('User data stored', { userEmail: data.user.email });
-                        } else {
-                            logger.warn('No user data received in response');
+                        // Store auth data with correct keys to match authService
+                        localStorage.setItem('userAuthToken', token);
+                        logger.debug('Token stored as userAuthToken');
+                        
+                        if (user) {
+                            localStorage.setItem('userData', JSON.stringify(user));
+                            logger.debug('User data stored', { userEmail: user.email });
                         }
                         
                         // Debug: Verify what was stored
@@ -246,7 +246,7 @@
                             window.location.href = '/dashboard';
                         }, 1500);
                     } else {
-                        logger.error('Login failed', { responseData: data });
+                        logger.error('Login failed', { responseData });
                         const errorMessage = data.message || data.detail || 'Credenciales incorrectas';
                         messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + errorMessage + '</div>';
                     }

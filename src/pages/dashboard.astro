@@ -237,9 +237,13 @@
     </main>
 
     <script type="module">
-        // Import logger
-        import { getLogger } from '../utils/logger.ts';
-        const logger = getLogger('dashboard');
+        // Simple console logger for dashboard page
+        const logger = {
+            info: (...args) => console.log('[DASHBOARD INFO]', ...args),
+            debug: (...args) => console.log('[DASHBOARD DEBUG]', ...args),
+            error: (...args) => console.error('[DASHBOARD ERROR]', ...args),
+            warn: (...args) => console.warn('[DASHBOARD WARN]', ...args)
+        };
 
         // Check if user is logged in with enhanced validation
         async function checkAuth() {
@@ -351,12 +355,8 @@
                     logger.debug('User is not admin, admin link remains hidden');
                 }
 
-                // Try to load the UserDashboard component
-                logger.debug('Loading dashboard component');
-                const module = await import('/src/components/UserDashboard.tsx');
-                const UserDashboard = module.default;
-                
-                // For now, show a simple message until we properly integrate React
+                // Show dashboard content
+                logger.debug('Loading dashboard content');
                 const container = document.getElementById('user-dashboard-mount');
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
