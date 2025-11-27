@@ -140,6 +140,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    // Only validate required fields for personal info
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'Nombre es requerido';
     }
@@ -148,45 +149,45 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
     }
     if (!formData.email.trim()) {
       newErrors.email = 'Email es requerido';
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Teléfono es requerido';
-    }
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Fecha de nacimiento es requerida';
-    }
-    if (!formData.address.street.trim()) {
-      newErrors.street = 'Dirección es requerida';
-    }
-    if (!formData.address.city.trim()) {
-      newErrors.city = 'Ciudad es requerida';
-    }
-    if (!formData.address.state.trim()) {
-      newErrors.state = 'Departamento es requerido';
-    }
-    if (!formData.address.country.trim()) {
-      newErrors.country = 'País es requerido';
+    } else {
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Por favor ingrese un email válido';
+      }
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Por favor ingrese un email válido';
+    // Phone, date of birth, and address are optional for updates
+    // Only validate if they're being filled
+    if (formData.phone && formData.phone.trim().length > 0 && formData.phone.trim().length < 7) {
+      newErrors.phone = 'Teléfono debe tener al menos 7 dígitos';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    // Pass both person data and subscription data to parent
-    await onSubmit(formData, { projectIds: selectedProjectIds });
+    // Only submit personal info and address
+    await onSubmit(formData);
+  };
+
+  const handleRoleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Only submit role information
+    const roleData: PersonUpdate = {
+      userRole: formData.userRole,
+      isAdmin: formData.userRole === 'admin' || formData.userRole === 'super_admin'
+    };
+    
+    await onSubmit(roleData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -219,8 +220,8 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
   return (
     <div className="person-form">
-      <form onSubmit={handleSubmit} className="form-container">
-        {/* Personal Information Section */}
+      {/* Section 1: Personal Information and Address */}
+      <form onSubmit={handlePersonalInfoSubmit} className="form-container">
         <div className="form-section">
           <h3 className="section-title">Información Personal</h3>
           
@@ -280,7 +281,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
             <div className="form-group">
               <label htmlFor="phone" className="form-label">
-                Teléfono *
+                Teléfono <span className="optional">(opcional)</span>
               </label>
               <input
                 type="tel"
@@ -298,7 +299,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
           <div className="form-group">
             <label htmlFor="dateOfBirth" className="form-label">
-              Fecha de Nacimiento *
+              Fecha de Nacimiento <span className="optional">(opcional)</span>
             </label>
             <input
               type="date"
@@ -319,7 +320,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           
           <div className="form-group">
             <label htmlFor="address.street" className="form-label">
-              Dirección *
+              Dirección <span className="optional">(opcional)</span>
             </label>
             <input
               type="text"
@@ -337,7 +338,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="address.city" className="form-label">
-                Ciudad *
+                Ciudad <span className="optional">(opcional)</span>
               </label>
               <input
                 type="text"
@@ -354,7 +355,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
 
             <div className="form-group">
               <label htmlFor="address.state" className="form-label">
-                Estado/Provincia/Departamento *
+                Estado/Provincia/Departamento <span className="optional">(opcional)</span>
               </label>
               <input
                 type="text"
@@ -379,7 +380,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="address.country" className="form-label">
-                País *
+                País <span className="optional">(opcional)</span>
               </label>
               <select
                 id="address.country"
@@ -415,10 +416,29 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           </div>
         </div>
 
+        {/* Form Actions for Personal Info */}
+        <div className="form-actions">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Guardando...' : 'Guardar Información Personal'}
+          </button>
+        </div>
+      </form>
 
-
-        {/* User Role Section - Only visible to super admins */}
-        {authService.isSuperAdmin() && (
+      {/* Section 2: User Role - Only visible to super admins and only when editing */}
+      {authService.isSuperAdmin() && person && (
+        <form onSubmit={handleRoleSubmit} className="form-container">
           <div className="form-section">
             <h3 className="section-title">Rol de Usuario</h3>
             
@@ -454,34 +474,30 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
               </p>
             </div>
           </div>
-        )}
 
-        {/* Project Subscriptions Section */}
-        <ProjectSubscriptionManager
-          personId={person?.id}
-          isEditing={true}
-          onSubscriptionsChange={setSelectedProjectIds}
-        />
+          {/* Form Actions for Role */}
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Guardando...' : 'Actualizar Rol'}
+            </button>
+          </div>
+        </form>
+      )}
 
-        {/* Form Actions */}
-        <div className="form-actions">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn btn-secondary"
-            disabled={isLoading}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Guardando...' : person ? 'Actualizar Persona' : 'Crear Persona'}
-          </button>
+      {/* Section 3: Project Subscriptions - Only when editing */}
+      {person && (
+        <div className="form-container">
+          <ProjectSubscriptionManager
+            personId={person.id}
+            isEditing={true}
+            onSubscriptionsChange={setSelectedProjectIds}
+          />
         </div>
-      </form>
+      )}
 
       <style jsx>{`
         .person-form {
@@ -494,14 +510,19 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           border-radius: 12px;
           padding: 30px;
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          margin-bottom: 30px;
+        }
+
+        .form-container:last-child {
+          margin-bottom: 0;
         }
 
         .form-section {
-          margin-bottom: 40px;
+          margin-bottom: 30px;
         }
 
         .form-section:last-of-type {
-          margin-bottom: 30px;
+          margin-bottom: 20px;
         }
 
         .section-title {
