@@ -355,12 +355,8 @@
                     logger.debug('User is not admin, admin link remains hidden');
                 }
 
-                // Try to load the UserDashboard component
-                logger.debug('Loading dashboard component');
-                const module = await import('../components/UserDashboard.tsx');
-                const UserDashboard = module.default;
-                
-                // For now, show a simple message until we properly integrate React
+                // Show dashboard content
+                logger.debug('Loading dashboard content');
                 const container = document.getElementById('user-dashboard-mount');
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
