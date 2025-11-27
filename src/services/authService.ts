@@ -9,11 +9,22 @@ import { API_CONFIG } from '../config/api';
 import { authLogger, getErrorMessage, getErrorObject } from '../utils/logger';
 import { transformSubscriptions } from '../utils/fieldMapping';
 
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
+  phone?: string;
+  dateOfBirth?: string;
+  address?: Address;
   isAdmin?: boolean;
   role?: string;
   roles?: string[]; // For RBAC system
@@ -666,6 +677,9 @@ class AuthService {
             email: userData.email,
             firstName: userData.firstName,
             lastName: userData.lastName,
+            phone: userData.phone,
+            dateOfBirth: userData.dateOfBirth,
+            address: userData.address,
             isAdmin: userData.isAdmin,
             roles: userData.roles,
           };
