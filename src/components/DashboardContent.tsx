@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import UserProfile from './UserProfile';
-import UserDashboard from './UserDashboard';
+import SubscriptionsList from './SubscriptionsList';
 import PasswordChange from './PasswordChange';
 
 type TabType = 'profile' | 'subscriptions';
@@ -48,16 +48,7 @@ export default function DashboardContent() {
           <UserProfile onPasswordChangeClick={() => setShowPasswordChange(true)} />
         )}
         
-        {activeTab === 'subscriptions' && (
-          <div className="subscriptions-wrapper">
-            <UserDashboard
-              isOpen={true}
-              onClose={() => {}}
-              currentProjectId={undefined}
-              onSubscribeToProject={undefined}
-            />
-          </div>
-        )}
+        {activeTab === 'subscriptions' && <SubscriptionsList />}
       </div>
 
       {/* Password Change Modal */}
@@ -151,12 +142,6 @@ export default function DashboardContent() {
           to {
             opacity: 1;
           }
-        }
-
-        .subscriptions-wrapper {
-          background: white;
-          border-radius: 8px;
-          padding: 24px;
         }
 
         @media (max-width: 768px) {
