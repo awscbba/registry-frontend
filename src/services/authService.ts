@@ -521,7 +521,7 @@ class AuthService {
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/user/subscriptions`);
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/subscriptions`);
 
       const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
       return transformSubscriptions(subscriptions);
