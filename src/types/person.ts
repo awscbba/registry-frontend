@@ -15,6 +15,7 @@ export interface Person {
   dateOfBirth: string;
   address: Address;
   isAdmin?: boolean; // Added for admin role management
+  roles?: string[]; // RBAC roles array
   createdAt: string;
   updatedAt: string;
 }
