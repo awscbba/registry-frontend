@@ -357,7 +357,7 @@
 
                 // Try to load the UserDashboard component
                 logger.debug('Loading dashboard component');
-                const module = await import('/src/components/UserDashboard.tsx');
+                const module = await import('../components/UserDashboard.tsx');
                 const UserDashboard = module.default;
                 
                 // For now, show a simple message until we properly integrate React
