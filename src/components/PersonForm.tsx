@@ -90,7 +90,6 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
   // Global countries list (major countries)
   const countries = [
@@ -494,7 +493,7 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           <ProjectSubscriptionManager
             personId={person.id}
             isEditing={true}
-            onSubscriptionsChange={setSelectedProjectIds}
+            onSubscriptionsChange={() => {}}
           />
         </div>
       )}
