@@ -280,7 +280,7 @@
                         <input type="password" id="password" name="password" required 
                                placeholder="Mínimo 8 caracteres" minlength="8">
                         <div class="password-requirements">
-                            Mínimo 8 caracteres
+                            Mínimo 8 caracteres, debe incluir mayúscula, minúscula, número y carácter especial
                         </div>
                     </div>
                     <div class="form-group">
@@ -498,8 +498,23 @@
                     }, 3000);
                 } else {
                     logger.error('Registration failed', { responseData });
-                    const errorMessage = responseData.message || responseData.detail || 'Error al crear la cuenta';
-                    showMessage(`Error: ${errorMessage}`, 'error');
+                    // Extract error message from various possible response structures
+                    let errorMessage = 'Error al crear la cuenta';
+                    
+                    if (responseData.error && responseData.error.message) {
+                        // Backend error structure: { error: { message: "..." } }
+                        errorMessage = responseData.error.message;
+                    } else if (responseData.detail) {
+                        // FastAPI HTTPException structure: { detail: "..." }
+                        errorMessage = responseData.detail;
+                        // Remove "Registration failed: " prefix if present
+                        errorMessage = errorMessage.replace('Registration failed: ', '');
+                    } else if (responseData.message) {
+                        // Generic message structure
+                        errorMessage = responseData.message;
+                    }
+                    
+                    showMessage(errorMessage, 'error');
                     
                     // Re-enable submit button
                     submitBtn.disabled = false;
