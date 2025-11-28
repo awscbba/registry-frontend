@@ -1,0 +1,404 @@
+---
+// Registration page for new user signup
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - AWS User Group Cochabamba</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #4299e1;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        label .required {
+            color: #f56565;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d2d6dc;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .password-requirements {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background: #4299e1;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background: #3182ce;
+        }
+
+        button[type="submit"]:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .info-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 1rem;
+        }
+
+        .info-text a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+
+        .info-text a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h1>Crear Cuenta</h1>
+            <p class="subtitle">AWS User Group Cochabamba</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section">
+            <form id="register-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Nombre <span class="required">*</span></label>
+                        <input type="text" id="firstName" name="firstName" required 
+                               placeholder="Juan" minlength="1" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Apellido <span class="required">*</span></label>
+                        <input type="text" id="lastName" name="lastName" required 
+                               placeholder="Pérez" minlength="1" maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="tu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" 
+                           placeholder="+591 12345678" maxlength="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfBirth">Fecha de Nacimiento <span class="required">*</span></label>
+                    <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña <span class="required">*</span></label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Mínimo 8 caracteres" minlength="8">
+                    <div class="password-requirements">
+                        Mínimo 8 caracteres
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña <span class="required">*</span></label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
+                           placeholder="Repite tu contraseña" minlength="8">
+                </div>
+
+                <div class="form-group">
+                    <label for="city">Ciudad</label>
+                    <input type="text" id="city" name="city" 
+                           placeholder="Cochabamba">
+                </div>
+
+                <button type="submit" id="submit-btn">
+                    Crear Cuenta
+                </button>
+            </form>
+
+            <div id="register-message" class="message"></div>
+        </div>
+
+        <!-- Info Text -->
+        <div class="info-text">
+            <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Logger
+        const logger = {
+            info: (...args) => console.log('[REGISTER INFO]', ...args),
+            debug: (...args) => console.log('[REGISTER DEBUG]', ...args),
+            error: (...args) => console.error('[REGISTER ERROR]', ...args),
+            warn: (...args) => console.warn('[REGISTER WARN]', ...args)
+        };
+        
+        logger.info('Registration page loaded');
+        
+        // API Configuration
+        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
+        const REGISTER_ENDPOINT = '/v2/public/subscribe';
+        
+        // Get form elements
+        const form = document.getElementById('register-form');
+        const messageDiv = document.getElementById('register-message');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        // Show message helper
+        function showMessage(text, type = 'info') {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+        
+        // Hide message helper
+        function hideMessage() {
+            messageDiv.style.display = 'none';
+        }
+        
+        // Form submission handler
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            logger.info('Registration form submitted');
+            hideMessage();
+            
+            // Get form values
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const city = document.getElementById('city').value.trim();
+            
+            // Validation
+            if (!firstName || !lastName || !email || !dateOfBirth || !password) {
+                showMessage('Por favor, completa todos los campos obligatorios.', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Las contraseñas no coinciden.', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showMessage('La contraseña debe tener al menos 8 caracteres.', 'error');
+                return;
+            }
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creando cuenta...';
+            showMessage('Creando tu cuenta...', 'info');
+            
+            try {
+                // Prepare registration data
+                const registrationData = {
+                    firstName,
+                    lastName,
+                    email,
+                    phone: phone || '',
+                    dateOfBirth,
+                    password,
+                    address: {
+                        street: '',
+                        city: city || '',
+                        state: '',
+                        postalCode: '',
+                        country: 'Bolivia'
+                    }
+                };
+                
+                logger.debug('Sending registration request', { email });
+                
+                const response = await fetch(`${API_BASE_URL}/v2/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registrationData),
+                });
+                
+                const responseData = await response.json();
+                
+                logger.debug('Registration response received', {
+                    status: response.status,
+                    ok: response.ok
+                });
+                
+                if (response.ok) {
+                    logger.info('Registration successful', { email });
+                    showMessage('¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...', 'success');
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    logger.error('Registration failed', { responseData });
+                    const errorMessage = responseData.message || responseData.detail || 'Error al crear la cuenta';
+                    showMessage(`Error: ${errorMessage}`, 'error');
+                    
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Crear Cuenta';
+                }
+            } catch (error) {
+                logger.error('Network error during registration', error);
+                showMessage('Error de conexión. Por favor, intenta nuevamente.', 'error');
+                
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Crear Cuenta';
+            }
+        });
+        
+        // Set max date for date of birth (must be at least 13 years old)
+        const dateInput = document.getElementById('dateOfBirth');
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+        dateInput.max = maxDate.toISOString().split('T')[0];
+        
+        logger.debug('Date of birth max date set', { maxDate: dateInput.max });
+    </script>
+</body>
+</html>
