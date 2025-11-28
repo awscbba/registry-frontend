@@ -37,31 +37,74 @@ export default function UserMenu() {
   if (!user) {
     return (
       <div className="user-menu-container">
-        <a href="/login" className="login-button">
-          Iniciar Sesión
-        </a>
+        <div className="auth-buttons">
+          <a href="/register" className="register-button">
+            Registrarse
+          </a>
+          <a href="/login" className="login-button">
+            Iniciar Sesión
+          </a>
+        </div>
         <style jsx>{`
           .user-menu-container {
             position: relative;
           }
 
+          .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .register-button,
           .login-button {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: var(--secondary-color, #FF9900);
-            color: var(--primary-color, #161d2b);
             text-decoration: none;
             border-radius: 6px;
             font-weight: 600;
             font-size: 14px;
             transition: all 0.2s;
+            white-space: nowrap;
+          }
+
+          .register-button {
+            background: transparent;
+            color: white;
+            border: 2px solid var(--secondary-color, #FF9900);
+          }
+
+          .register-button:hover {
+            background: rgba(255, 153, 0, 0.1);
+            transform: translateY(-1px);
+          }
+
+          .login-button {
+            background: var(--secondary-color, #FF9900);
+            color: var(--primary-color, #161d2b);
+            border: 2px solid var(--secondary-color, #FF9900);
           }
 
           .login-button:hover {
             opacity: 0.9;
             transform: translateY(-1px);
+          }
+
+          @media (max-width: 768px) {
+            .auth-buttons {
+              flex-direction: column;
+              width: 100%;
+              gap: 8px;
+            }
+
+            .register-button,
+            .login-button {
+              width: 100%;
+              justify-content: center;
+              min-height: 44px;
+            }
           }
         `}</style>
       </div>
