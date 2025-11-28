@@ -247,6 +247,13 @@
                            placeholder="Cochabamba">
                 </div>
 
+                <div class="form-group">
+                    <label for="projectId">Proyecto de Interés</label>
+                    <select id="projectId" name="projectId">
+                        <option value="">Cargando proyectos...</option>
+                    </select>
+                </div>
+
                 <button type="submit" id="submit-btn">
                     Crear Cuenta
                 </button>
@@ -274,12 +281,48 @@
         
         // API Configuration
         const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-        const REGISTER_ENDPOINT = '/v2/public/subscribe';
+        const PROJECTS_ENDPOINT = '/v2/projects';
+        const SUBSCRIBE_ENDPOINT = '/v2/public/subscribe';
         
         // Get form elements
         const form = document.getElementById('register-form');
         const messageDiv = document.getElementById('register-message');
         const submitBtn = document.getElementById('submit-btn');
+        const projectSelect = document.getElementById('projectId');
+        
+        // Load projects on page load
+        async function loadProjects() {
+            try {
+                logger.debug('Loading projects');
+                const response = await fetch(`${API_BASE_URL}${PROJECTS_ENDPOINT}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success && data.data) {
+                    const projects = data.data;
+                    logger.debug('Projects loaded', { count: projects.length });
+                    
+                    // Clear loading option
+                    projectSelect.innerHTML = '<option value="">Selecciona un proyecto (opcional)</option>';
+                    
+                    // Add projects
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.name;
+                        projectSelect.appendChild(option);
+                    });
+                } else {
+                    logger.warn('Failed to load projects');
+                    projectSelect.innerHTML = '<option value="">No hay proyectos disponibles</option>';
+                }
+            } catch (error) {
+                logger.error('Error loading projects', error);
+                projectSelect.innerHTML = '<option value="">Error al cargar proyectos</option>';
+            }
+        }
+        
+        // Load projects immediately
+        loadProjects();
         
         // Show message helper
         function showMessage(text, type = 'info') {
@@ -308,6 +351,7 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const city = document.getElementById('city').value.trim();
+            const projectId = document.getElementById('projectId').value;
             
             // Validation
             if (!firstName || !lastName || !email || !dateOfBirth || !password) {
@@ -325,20 +369,25 @@
                 return;
             }
             
+            if (!projectId) {
+                showMessage('Por favor, selecciona un proyecto de interés.', 'error');
+                return;
+            }
+            
             // Disable submit button
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creando cuenta...';
             showMessage('Creando tu cuenta...', 'info');
             
             try {
-                // Prepare registration data
+                // Prepare registration data using public subscribe endpoint
                 const registrationData = {
                     firstName,
                     lastName,
                     email,
                     phone: phone || '',
                     dateOfBirth,
-                    password,
+                    projectId,
                     address: {
                         street: '',
                         city: city || '',
@@ -348,9 +397,9 @@
                     }
                 };
                 
-                logger.debug('Sending registration request', { email });
+                logger.debug('Sending registration request', { email, projectId });
                 
-                const response = await fetch(`${API_BASE_URL}/v2/admin/users`, {
+                const response = await fetch(`${API_BASE_URL}${SUBSCRIBE_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -367,12 +416,12 @@
                 
                 if (response.ok) {
                     logger.info('Registration successful', { email });
-                    showMessage('¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...', 'success');
+                    showMessage('¡Cuenta creada exitosamente! Revisa tu email para los siguientes pasos. Redirigiendo...', 'success');
                     
-                    // Redirect to login after 2 seconds
+                    // Redirect to login after 3 seconds
                     setTimeout(() => {
                         window.location.href = '/login';
-                    }, 2000);
+                    }, 3000);
                 } else {
                     logger.error('Registration failed', { responseData });
                     const errorMessage = responseData.message || responseData.detail || 'Error al crear la cuenta';
