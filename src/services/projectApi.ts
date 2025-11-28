@@ -211,23 +211,6 @@ export const projectApi = {
   },
 
   async subscribePersonToProject(projectId: string, personId: string, data: { subscribedBy?: string; notes?: string; status?: string } = {}): Promise<Subscription> {
-    // For project subscription endpoint, we need to provide person info
-    // First get the person details to include in the subscription
-    let personData;
-    try {
-      const person = await this.getPerson(personId);
-      personData = {
-        email: person.email,
-        name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.email
-      };
-    } catch {
-      // If we can't get person details, use minimal data
-      personData = {
-        email: `person-${personId}@example.com`,
-        name: `Person ${personId}`
-      };
-    }
-
     const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBE(projectId)), {
       method: 'POST',
       headers: {
@@ -235,9 +218,9 @@ export const projectApi = {
         ...addAuthHeaders()
       },
       body: JSON.stringify({
-        person: personData,
-        status: data.status || 'active',
-        notes: data.notes || ''
+        personId: personId,
+        projectId: projectId,
+        status: data.status || 'active'
       }),
     });
     const result = await handleApiResponse(response);
