@@ -31,9 +31,22 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 2.5rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .register-container {
+                max-width: 500px;
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 1.5rem;
+            }
         }
 
         .logo-section {
@@ -82,6 +95,13 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
         }
 
         label {
@@ -215,15 +235,16 @@
                            placeholder="tu@email.com">
                 </div>
 
-                <div class="form-group">
-                    <label for="phone">Teléfono</label>
-                    <input type="tel" id="phone" name="phone" 
-                           placeholder="+591 12345678" maxlength="20">
-                </div>
-
-                <div class="form-group">
-                    <label for="dateOfBirth">Fecha de Nacimiento <span class="required">*</span></label>
-                    <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" id="phone" name="phone" 
+                               placeholder="+591 12345678" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Fecha de Nacimiento <span class="required">*</span></label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
