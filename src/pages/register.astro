@@ -291,10 +291,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="projectId">Proyecto de Interés <span class="required">*</span></label>
+                    <label for="projectId">Proyecto de Interés (opcional)</label>
                     <select id="projectId" name="projectId">
                         <option value="">Cargando proyectos...</option>
                     </select>
+                    <div class="password-requirements">
+                        Puedes seleccionar un proyecto ahora o hacerlo más tarde desde tu perfil
+                    </div>
                 </div>
 
                 <button type="submit" id="submit-btn">
@@ -325,6 +328,7 @@
         // API Configuration
         const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
         const PROJECTS_ENDPOINT = '/v2/projects';
+        const REGISTER_ENDPOINT = '/v2/public/register';
         const SUBSCRIBE_ENDPOINT = '/v2/public/subscribe';
         
         // Get form elements
@@ -412,25 +416,20 @@
                 return;
             }
             
-            if (!projectId) {
-                showMessage('Por favor, selecciona un proyecto de interés.', 'error');
-                return;
-            }
-            
             // Disable submit button
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creando cuenta...';
             showMessage('Creando tu cuenta...', 'info');
             
             try {
-                // Prepare registration data using public subscribe endpoint
+                // Prepare registration data
                 const registrationData = {
                     firstName,
                     lastName,
                     email,
                     phone: phone || '',
                     dateOfBirth,
-                    projectId,
+                    password,
                     address: {
                         street: '',
                         city: city || '',
@@ -440,9 +439,10 @@
                     }
                 };
                 
-                logger.debug('Sending registration request', { email, projectId });
+                logger.debug('Sending registration request', { email, hasProject: !!projectId });
                 
-                const response = await fetch(`${API_BASE_URL}${SUBSCRIBE_ENDPOINT}`, {
+                // Register user first
+                const response = await fetch(`${API_BASE_URL}${REGISTER_ENDPOINT}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -459,7 +459,38 @@
                 
                 if (response.ok) {
                     logger.info('Registration successful', { email });
-                    showMessage('¡Cuenta creada exitosamente! Revisa tu email para los siguientes pasos. Redirigiendo...', 'success');
+                    
+                    // If project is selected, subscribe to it
+                    if (projectId) {
+                        logger.debug('Subscribing to project', { projectId });
+                        try {
+                            const subscribeData = {
+                                ...registrationData,
+                                projectId
+                            };
+                            
+                            const subscribeResponse = await fetch(`${API_BASE_URL}${SUBSCRIBE_ENDPOINT}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(subscribeData),
+                            });
+                            
+                            if (subscribeResponse.ok) {
+                                logger.info('Project subscription successful');
+                                showMessage('¡Cuenta creada y suscrito al proyecto! Revisa tu email. Redirigiendo...', 'success');
+                            } else {
+                                logger.warn('Project subscription failed, but account created');
+                                showMessage('¡Cuenta creada exitosamente! Puedes suscribirte a proyectos desde tu perfil. Redirigiendo...', 'success');
+                            }
+                        } catch (subscribeError) {
+                            logger.warn('Project subscription error, but account created', subscribeError);
+                            showMessage('¡Cuenta creada exitosamente! Puedes suscribirte a proyectos desde tu perfil. Redirigiendo...', 'success');
+                        }
+                    } else {
+                        showMessage('¡Cuenta creada exitosamente! Ya puedes iniciar sesión. Redirigiendo...', 'success');
+                    }
                     
                     // Redirect to login after 3 seconds
                     setTimeout(() => {
