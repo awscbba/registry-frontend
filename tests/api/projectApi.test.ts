@@ -444,8 +444,8 @@ describe('ProjectAPI Critical Tests', () => {
       // Test DELETE unsubscribe
       await projectApi.unsubscribePersonFromProject(projectId, subscriptionId);
 
-      // Verify all calls were made
-      expect(mockFetch).toHaveBeenCalledTimes(5);
+      // Verify all calls were made (4 calls: GET subscribers, POST subscribe, PUT update, DELETE unsubscribe)
+      expect(mockFetch).toHaveBeenCalledTimes(4);
     });
   });
 
