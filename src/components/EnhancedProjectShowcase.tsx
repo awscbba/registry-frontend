@@ -96,11 +96,6 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
 
   const checkUserLoginStatus = () => {
     const authenticated = authService.isAuthenticated();
-    console.log('🔴 EnhancedProjectShowcase - Auth check:', {
-      authenticated,
-      hasToken: !!authService.getToken(),
-      currentUser: authService.getCurrentUser()?.email
-    });
     setIsLoggedIn(authenticated);
   };
 
@@ -317,25 +312,6 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
 
             {/* Subscription Form Section */}
             <div className="p-6 border-b border-gray-200">
-              {/* Debug Info */}
-              <div style={{ 
-                background: '#ff0000', 
-                color: '#ffffff',
-                border: '5px solid #000000', 
-                padding: '20px', 
-                marginBottom: '20px',
-                fontSize: '16px',
-                fontFamily: 'monospace',
-                fontWeight: 'bold'
-              }}>
-                <strong style={{ fontSize: '20px' }}>🔴 DEBUG - EnhancedProjectShowcase 🔴</strong><br/><br/>
-                isLoggedIn: {String(isLoggedIn)}<br/>
-                hasToken: {String(!!authService.getToken())}<br/>
-                currentUser: {authService.getCurrentUser()?.email || 'none'}<br/>
-                checkingSubscription: {String(checkingSubscription)}<br/>
-                hasExistingSubscription: {String(!!existingSubscription)}
-              </div>
-
               {isLoggedIn ? (
                 // Authenticated user view
                 checkingSubscription ? (
