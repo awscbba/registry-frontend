@@ -378,16 +378,12 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
               <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
               <div className="existing-user-notice">
                 <p>¿Ya tienes una cuenta? 
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setLoginMessage('Inicia sesión para suscribirte al proyecto con tu cuenta existente.');
-                      setShowLoginModal(true);
-                    }}
+                  <a 
+                    href="https://registry.cloud.org.bo/login"
                     className="login-link"
                   >
                     Inicia sesión aquí
-                  </button>
+                  </a>
                 </p>
               </div>
             </div>

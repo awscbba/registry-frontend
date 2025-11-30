@@ -359,13 +359,12 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-700">
                   ¿Ya tienes una cuenta? 
-                  <button 
-                    type="button"
+                  <a 
+                    href="https://registry.cloud.org.bo/login"
                     className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                    onClick={() => window.alert('Funcionalidad de login será implementada')}
                   >
                     Inicia sesión aquí
-                  </button>
+                  </a>
                 </p>
               </div>
             </div>
