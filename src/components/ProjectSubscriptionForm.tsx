@@ -29,6 +29,10 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   const [loginMessage, setLoginMessage] = useState<string>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
+  // Subscription state
+  const [existingSubscription, setExistingSubscription] = useState<any>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
+  
   // Form data - simplified for new workflow
   const [formData, setFormData] = useState({
     firstName: '',
@@ -49,8 +53,37 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
     checkUserLoginStatus();
   }, [projectId, initialProject]);
 
+  useEffect(() => {
+    // Check subscription status when user logs in or project changes
+    if (isLoggedIn && project?.id) {
+      checkSubscriptionStatus();
+    }
+  }, [isLoggedIn, project?.id]);
+
   const checkUserLoginStatus = () => {
     setIsLoggedIn(authService.isAuthenticated());
+  };
+
+  const checkSubscriptionStatus = async () => {
+    if (!project?.id) return;
+    
+    setCheckingSubscription(true);
+    try {
+      const subscription = await authService.checkProjectSubscription(project.id);
+      setExistingSubscription(subscription);
+      logger.info('Subscription status checked', { 
+        projectId: project.id, 
+        hasSubscription: !!subscription,
+        subscriptionStatus: subscription?.status 
+      });
+    } catch (err) {
+      logger.error('Error checking subscription status', { 
+        projectId: project.id, 
+        error: getErrorMessage(err) 
+      }, getErrorObject(err));
+    } finally {
+      setCheckingSubscription(false);
+    }
   };
 
   // Helper function to convert project name to URL-friendly slug
@@ -239,8 +272,30 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
     setIsLoggedIn(true);
-    setShowUserDashboard(true);
     checkUserLoginStatus();
+    // Check subscription status after login
+    if (project?.id) {
+      checkSubscriptionStatus();
+    }
+  };
+
+  const handleSubscribeClick = async () => {
+    if (!project?.id) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await handleUserSubscription(project.id);
+      // Refresh subscription status
+      await checkSubscriptionStatus();
+    } catch (err) {
+      logger.error('Subscription error', { error: getErrorMessage(err) }, getErrorObject(err));
+      setError('Error al procesar la suscripción. Por favor intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleShowUserDashboard = () => {
@@ -339,21 +394,84 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
         {/* Subscription Form or User Actions */}
         {isLoggedIn ? (
           <div className="authenticated-section">
-            <div className="auth-message">
-              <div className="message-icon">✅</div>
-              <div className="message-content">
-                <h3>¡Estás conectado!</h3>
-                <p>Puedes gestionar tus suscripciones desde tu panel de usuario.</p>
+            {checkingSubscription ? (
+              <div className="checking-subscription">
+                <div className="loading-spinner"></div>
+                <p>Verificando estado de suscripción...</p>
               </div>
-            </div>
-            <div className="auth-actions">
-              <button 
-                onClick={handleShowUserDashboard}
-                className={BUTTON_CLASSES.PRIMARY}
-              >
-                Ver Mi Panel de Usuario
-              </button>
-            </div>
+            ) : existingSubscription ? (
+              // User is already subscribed
+              <div className="subscription-status">
+                <div className="status-icon">✅</div>
+                <div className="status-content">
+                  <h3>Ya estás suscrito a este proyecto</h3>
+                  <p>Te suscribiste el {formatDateDisplay(existingSubscription.subscribedAt)}</p>
+                  <div className="subscription-details">
+                    <div className="detail-row">
+                      <span className="detail-label">Estado:</span>
+                      <span className={`status-badge status-${existingSubscription.status}`}>
+                        {existingSubscription.status === 'active' ? 'Activo' : 
+                         existingSubscription.status === 'pending' ? 'Pendiente' : 
+                         existingSubscription.status === 'cancelled' ? 'Cancelado' :
+                         existingSubscription.status}
+                      </span>
+                    </div>
+                    {existingSubscription.notes && (
+                      <div className="detail-row">
+                        <span className="detail-label">Notas:</span>
+                        <span className="detail-value">{existingSubscription.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="status-actions">
+                  <button 
+                    onClick={handleShowUserDashboard}
+                    className={BUTTON_CLASSES.PRIMARY}
+                  >
+                    Ver Mi Panel de Usuario
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // User is logged in but not subscribed
+              <div className="subscribe-section">
+                <div className="subscribe-message">
+                  <div className="message-icon">📝</div>
+                  <div className="message-content">
+                    <h3>Suscríbete a este proyecto</h3>
+                    <p>Haz clic en el botón para enviar tu solicitud de suscripción.</p>
+                  </div>
+                </div>
+                {success && (
+                  <div className="success-message">
+                    <div className="success-icon">✅</div>
+                    <p>{success}</p>
+                  </div>
+                )}
+                {error && (
+                  <div className="error-message">
+                    <div className="error-icon">⚠️</div>
+                    <p>{error}</p>
+                  </div>
+                )}
+                <div className="subscribe-actions">
+                  <button 
+                    onClick={handleSubscribeClick}
+                    disabled={isSubmitting}
+                    className={BUTTON_CLASSES.PRIMARY}
+                  >
+                    {isSubmitting ? 'Enviando solicitud...' : 'Suscribirse al Proyecto'}
+                  </button>
+                  <button 
+                    onClick={handleShowUserDashboard}
+                    className={BUTTON_CLASSES.SECONDARY}
+                  >
+                    Ver Mi Panel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -533,7 +651,88 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
           text-align: center;
         }
 
-        .auth-message {
+        .checking-subscription {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          padding: 40px 20px;
+        }
+
+        .checking-subscription p {
+          margin: 0;
+          color: #6b7280;
+        }
+
+        .subscription-status {
+          background: #f0fdf4;
+          border: 2px solid #86efac;
+          border-radius: 12px;
+          padding: 32px;
+          text-align: center;
+        }
+
+        .status-icon {
+          font-size: 48px;
+          margin-bottom: 16px;
+        }
+
+        .status-content h3 {
+          margin: 0 0 8px 0;
+          color: #15803d;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        .status-content p {
+          margin: 0 0 24px 0;
+          color: #166534;
+          font-size: 1rem;
+        }
+
+        .subscription-details {
+          background: white;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 24px;
+          text-align: left;
+        }
+
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .detail-row:last-child {
+          border-bottom: none;
+        }
+
+        .detail-label {
+          font-weight: 500;
+          color: #374151;
+        }
+
+        .detail-value {
+          color: #6b7280;
+        }
+
+        .status-actions {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+        }
+
+        .subscribe-section {
+          background: #eff6ff;
+          border: 2px solid #bfdbfe;
+          border-radius: 12px;
+          padding: 32px;
+        }
+
+        .subscribe-message {
           display: flex;
           align-items: flex-start;
           gap: 16px;
@@ -542,20 +741,28 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
         }
 
         .message-icon {
-          font-size: 24px;
+          font-size: 32px;
           flex-shrink: 0;
         }
 
         .message-content h3 {
           margin: 0 0 8px 0;
-          color: #1f2937;
+          color: #1e40af;
           font-size: 1.25rem;
+          font-weight: 600;
         }
 
         .message-content p {
           margin: 0;
-          color: #6b7280;
+          color: #1e40af;
           line-height: 1.5;
+        }
+
+        .subscribe-actions {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
         .existing-user-notice {
