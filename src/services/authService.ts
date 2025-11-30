@@ -552,7 +552,7 @@ class AuthService {
    * Subscribe to a project
    */
   async subscribeToProject(projectId: string, notes?: string): Promise<unknown> {
-    if (!this.isAuthenticated() || !this.token) {
+    if (!this.isAuthenticated() || !this.token || !this.user) {
       throw new Error('User not authenticated');
     }
 
@@ -560,6 +560,9 @@ class AuthService {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
       return await httpClient.postJson(`${API_CONFIG.BASE_URL}/v2/projects/${projectId}/subscriptions`, {
+        personId: this.user.id,
+        projectId: projectId,
+        status: 'pending',
         notes: notes || undefined
       });
     } catch (error) {
