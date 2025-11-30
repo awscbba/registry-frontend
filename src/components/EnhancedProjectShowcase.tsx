@@ -5,6 +5,7 @@ import { getApiLogger } from '../utils/logger';
 import { dynamicFormApi } from '../services/dynamicFormApi';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
 import { getSiteUrl } from '../config/api';
+import { authService } from '../services/authService';
 
 interface EnhancedProjectShowcaseProps {
   project: Project;
@@ -31,6 +32,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Authentication state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [existingSubscription, setExistingSubscription] = useState<any>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
 
   // Ensure client-side rendering and inject form schema
   useEffect(() => {
@@ -55,6 +61,66 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
       loadProjectSubmissions();
     }
   }, [project.id, isClient]);
+
+  // Check authentication status
+  useEffect(() => {
+    if (isClient) {
+      checkUserLoginStatus();
+      
+      // Re-check periodically and on focus
+      const interval = setInterval(checkUserLoginStatus, 2000);
+      const handleFocus = () => checkUserLoginStatus();
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'userAuthToken' || e.key === 'userData') {
+          checkUserLoginStatus();
+        }
+      };
+
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('storage', handleStorageChange);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+  }, [isClient]);
+
+  // Check subscription status when user logs in
+  useEffect(() => {
+    if (isClient && isLoggedIn && project.id) {
+      checkSubscriptionStatus();
+    }
+  }, [isClient, isLoggedIn, project.id]);
+
+  const checkUserLoginStatus = () => {
+    const authenticated = authService.isAuthenticated();
+    console.log('🔴 EnhancedProjectShowcase - Auth check:', {
+      authenticated,
+      hasToken: !!authService.getToken(),
+      currentUser: authService.getCurrentUser()?.email
+    });
+    setIsLoggedIn(authenticated);
+  };
+
+  const checkSubscriptionStatus = async () => {
+    if (!project.id) return;
+    
+    setCheckingSubscription(true);
+    try {
+      const subscription = await authService.checkProjectSubscription(project.id);
+      setExistingSubscription(subscription);
+      logger.debug('Subscription status checked', { 
+        projectId: project.id, 
+        hasSubscription: !!subscription 
+      });
+    } catch (error) {
+      logger.error('Error checking subscription status', { error, projectId: project.id });
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
 
   const loadProjectSubmissions = async () => {
     try {
@@ -101,14 +167,31 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
     }));
   };
 
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubscribe = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     if (!isClient) {
       return;
     }
 
-    // Validate required fields
+    // If user is logged in, use one-click subscription
+    if (isLoggedIn) {
+      setIsSubmitting(true);
+      try {
+        await authService.subscribeToProject(project.id, formData.notes);
+        window.alert('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
+        // Refresh subscription status
+        await checkSubscriptionStatus();
+      } catch (error) {
+        logger.error('Subscription error:', error);
+        window.alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // For non-logged-in users, validate required fields
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
       window.alert('Por favor completa todos los campos requeridos (Nombre, Apellido, Email)');
       return;
@@ -234,11 +317,81 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
 
             {/* Subscription Form Section */}
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Solicitar Suscripción</h2>
-              <p className="text-sm text-gray-600 mb-6">Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
-              
-              {/* Basic Subscription Form - Always Show */}
-              <form onSubmit={handleSubscribe} className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+              {/* Debug Info */}
+              <div style={{ 
+                background: '#ff0000', 
+                color: '#ffffff',
+                border: '5px solid #000000', 
+                padding: '20px', 
+                marginBottom: '20px',
+                fontSize: '16px',
+                fontFamily: 'monospace',
+                fontWeight: 'bold'
+              }}>
+                <strong style={{ fontSize: '20px' }}>🔴 DEBUG - EnhancedProjectShowcase 🔴</strong><br/><br/>
+                isLoggedIn: {String(isLoggedIn)}<br/>
+                hasToken: {String(!!authService.getToken())}<br/>
+                currentUser: {authService.getCurrentUser()?.email || 'none'}<br/>
+                checkingSubscription: {String(checkingSubscription)}<br/>
+                hasExistingSubscription: {String(!!existingSubscription)}
+              </div>
+
+              {isLoggedIn ? (
+                // Authenticated user view
+                checkingSubscription ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Verificando estado de suscripción...</p>
+                  </div>
+                ) : existingSubscription ? (
+                  // Already subscribed
+                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                    <div className="text-center">
+                      <div className="text-5xl mb-4">✅</div>
+                      <h3 className="text-xl font-semibold text-green-800 mb-2">Ya estás suscrito a este proyecto</h3>
+                      <p className="text-green-700 mb-4">
+                        Te suscribiste el {new Date(existingSubscription.subscribedAt).toLocaleDateString()}
+                      </p>
+                      <div className="inline-block bg-white rounded-lg px-4 py-2 border border-green-300">
+                        <span className="text-sm font-medium text-gray-700">Estado: </span>
+                        <span className={`text-sm font-bold ${
+                          existingSubscription.status === 'active' ? 'text-green-600' :
+                          existingSubscription.status === 'pending' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`}>
+                          {existingSubscription.status === 'active' ? 'Activo' :
+                           existingSubscription.status === 'pending' ? 'Pendiente' :
+                           existingSubscription.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Logged in but not subscribed
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                    <div className="text-center">
+                      <div className="text-5xl mb-4">📝</div>
+                      <h3 className="text-xl font-semibold text-blue-800 mb-2">Suscríbete a este proyecto</h3>
+                      <p className="text-blue-700 mb-6">
+                        Haz clic en el botón para enviar tu solicitud de suscripción.
+                      </p>
+                      <button
+                        onClick={() => handleSubscribe()}
+                        disabled={isSubmitting}
+                        className="px-8 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'Enviando...' : 'Suscribirse al Proyecto'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              ) : (
+                // Non-authenticated user view
+                <>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Solicitar Suscripción</h2>
+                  <p className="text-sm text-gray-600 mb-6">Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
+                  
+                  {/* Basic Subscription Form - Show for non-logged-in users */}
+                  <form onSubmit={handleSubscribe} className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Información Básica</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -356,18 +509,20 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                 </div>
               )}
 
-              {/* Existing User Notice */}
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-700">
-                  ¿Ya tienes una cuenta? 
-                  <a 
-                    href={getSiteUrl('/login')}
-                    className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Inicia sesión aquí
-                  </a>
-                </p>
-              </div>
+                  {/* Existing User Notice */}
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      ¿Ya tienes una cuenta? 
+                      <a 
+                        href={getSiteUrl('/login')}
+                        className="ml-1 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Inicia sesión aquí
+                      </a>
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Submission Statistics */}
