@@ -559,8 +559,7 @@ class AuthService {
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/user/subscribe`, {
-        projectId,
+      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/v2/projects/${projectId}/subscriptions`, {
         notes: notes || undefined
       });
     } catch (error) {
