@@ -377,8 +377,36 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
     );
   }
 
+  // Debug: Log render state
+  logger.info('ProjectSubscriptionForm render', {
+    isLoggedIn,
+    isLoading,
+    hasProject: !!project,
+    checkingSubscription,
+    hasExistingSubscription: !!existingSubscription,
+    authToken: !!authService.getToken(),
+    currentUser: authService.getCurrentUser()?.email
+  });
+
   return (
     <div className="subscription-form-container">
+      {/* Debug Info - Remove after testing */}
+      <div style={{ 
+        background: '#fff3cd', 
+        border: '1px solid #ffc107', 
+        padding: '10px', 
+        marginBottom: '10px',
+        fontSize: '12px',
+        fontFamily: 'monospace'
+      }}>
+        <strong>Debug Info:</strong><br/>
+        isLoggedIn: {String(isLoggedIn)}<br/>
+        hasToken: {String(!!authService.getToken())}<br/>
+        currentUser: {authService.getCurrentUser()?.email || 'none'}<br/>
+        checkingSubscription: {String(checkingSubscription)}<br/>
+        hasExistingSubscription: {String(!!existingSubscription)}
+      </div>
+
       {/* User Status Bar */}
       {isLoggedIn && (
         <div className="user-status-bar">
