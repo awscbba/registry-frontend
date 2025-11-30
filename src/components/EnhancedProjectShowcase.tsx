@@ -4,6 +4,7 @@ import type { EnhancedProject, ProjectSubmission, FormSchema } from '../types/dy
 import { getApiLogger } from '../utils/logger';
 import { dynamicFormApi } from '../services/dynamicFormApi';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
+import { getSiteUrl } from '../config/api';
 
 interface EnhancedProjectShowcaseProps {
   project: Project;
@@ -359,13 +360,12 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-700">
                   ¿Ya tienes una cuenta? 
-                  <button 
-                    type="button"
+                  <a 
+                    href={getSiteUrl('/login')}
                     className="ml-1 text-blue-600 hover:text-blue-800 underline"
-                    onClick={() => window.alert('Funcionalidad de login será implementada')}
                   >
                     Inicia sesión aquí
-                  </button>
+                  </a>
                 </p>
               </div>
             </div>

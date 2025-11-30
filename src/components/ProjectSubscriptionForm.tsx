@@ -7,6 +7,7 @@ import { BUTTON_CLASSES } from '../types/ui';
 import { formatDateDisplay } from '../utils/dateUtils';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
+import { getSiteUrl } from '../config/api';
 
 interface ProjectSubscriptionFormProps {
   projectId: string;
@@ -378,16 +379,12 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
               <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
               <div className="existing-user-notice">
                 <p>¿Ya tienes una cuenta? 
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setLoginMessage('Inicia sesión para suscribirte al proyecto con tu cuenta existente.');
-                      setShowLoginModal(true);
-                    }}
+                  <a 
+                    href={getSiteUrl('/login')}
                     className="login-link"
                   >
                     Inicia sesión aquí
-                  </button>
+                  </a>
                 </p>
               </div>
             </div>
