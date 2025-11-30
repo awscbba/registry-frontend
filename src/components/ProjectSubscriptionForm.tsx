@@ -60,8 +60,42 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
     }
   }, [isLoggedIn, project?.id]);
 
+  useEffect(() => {
+    // Re-check authentication status when window gains focus
+    // This handles cases where user logs in in another tab
+    const handleFocus = () => {
+      checkUserLoginStatus();
+    };
+
+    // Also check on storage events (when localStorage changes in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userAuthToken' || e.key === 'userData') {
+        checkUserLoginStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+
+    // Check immediately on mount and periodically
+    checkUserLoginStatus();
+    const interval = setInterval(checkUserLoginStatus, 2000); // Check every 2 seconds
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const checkUserLoginStatus = () => {
-    setIsLoggedIn(authService.isAuthenticated());
+    const authenticated = authService.isAuthenticated();
+    logger.info('Checking user login status', { 
+      authenticated, 
+      hasToken: !!authService.getToken(),
+      currentUser: authService.getCurrentUser()?.email 
+    });
+    setIsLoggedIn(authenticated);
   };
 
   const checkSubscriptionStatus = async () => {
