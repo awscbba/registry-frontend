@@ -174,12 +174,26 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
       setIsSubmitting(true);
       try {
         await authService.subscribeToProject(project.id, formData.notes);
-        window.alert('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
+        
+        // Wait a moment for the backend to process
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Refresh subscription status
         await checkSubscriptionStatus();
+        
+        // Show success message after state is updated
+        window.alert('¡Suscripción enviada exitosamente! Tu solicitud está pendiente de aprobación por un administrador.');
       } catch (error) {
         logger.error('Subscription error:', error);
-        window.alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        
+        // Check if already subscribed
+        if (errorMessage.includes('already subscribed') || errorMessage.includes('ya existe')) {
+          await checkSubscriptionStatus();
+          window.alert('Ya tienes una suscripción a este proyecto.');
+        } else {
+          window.alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -320,14 +334,37 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                   </div>
                 ) : existingSubscription ? (
                   // Already subscribed
-                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                  <div className={`border-2 rounded-lg p-6 ${
+                    existingSubscription.status === 'active' ? 'bg-green-50 border-green-200' :
+                    existingSubscription.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                    'bg-gray-50 border-gray-200'
+                  }`}>
                     <div className="text-center">
-                      <div className="text-5xl mb-4">✅</div>
-                      <h3 className="text-xl font-semibold text-green-800 mb-2">Ya estás suscrito a este proyecto</h3>
-                      <p className="text-green-700 mb-4">
-                        Te suscribiste el {new Date(existingSubscription.subscribedAt).toLocaleDateString()}
+                      <div className="text-5xl mb-4">
+                        {existingSubscription.status === 'active' ? '✅' :
+                         existingSubscription.status === 'pending' ? '⏳' :
+                         '❌'}
+                      </div>
+                      <h3 className={`text-xl font-semibold mb-2 ${
+                        existingSubscription.status === 'active' ? 'text-green-800' :
+                        existingSubscription.status === 'pending' ? 'text-yellow-800' :
+                        'text-gray-800'
+                      }`}>
+                        {existingSubscription.status === 'active' ? 'Ya estás suscrito a este proyecto' :
+                         existingSubscription.status === 'pending' ? 'Tu solicitud está pendiente de aprobación' :
+                         'Tu suscripción fue cancelada'}
+                      </h3>
+                      <p className={`mb-4 ${
+                        existingSubscription.status === 'active' ? 'text-green-700' :
+                        existingSubscription.status === 'pending' ? 'text-yellow-700' :
+                        'text-gray-700'
+                      }`}>
+                        {existingSubscription.status === 'pending' 
+                          ? `Solicitud enviada el ${new Date(existingSubscription.subscribedAt).toLocaleDateString()}`
+                          : `Te suscribiste el ${new Date(existingSubscription.subscribedAt).toLocaleDateString()}`
+                        }
                       </p>
-                      <div className="inline-block bg-white rounded-lg px-4 py-2 border border-green-300">
+                      <div className="inline-block bg-white rounded-lg px-4 py-2 border border-gray-300">
                         <span className="text-sm font-medium text-gray-700">Estado: </span>
                         <span className={`text-sm font-bold ${
                           existingSubscription.status === 'active' ? 'text-green-600' :
@@ -335,10 +372,16 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                           'text-gray-600'
                         }`}>
                           {existingSubscription.status === 'active' ? 'Activo' :
-                           existingSubscription.status === 'pending' ? 'Pendiente' :
+                           existingSubscription.status === 'pending' ? 'Pendiente de Aprobación' :
+                           existingSubscription.status === 'cancelled' ? 'Cancelado' :
                            existingSubscription.status}
                         </span>
                       </div>
+                      {existingSubscription.status === 'pending' && (
+                        <p className="text-xs text-yellow-600 mt-4">
+                          Un administrador revisará tu solicitud pronto. Te notificaremos por email cuando sea aprobada.
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
