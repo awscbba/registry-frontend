@@ -4,6 +4,7 @@ import type { EnhancedProject, ProjectSubmission, FormSchema } from '../types/dy
 import { getApiLogger } from '../utils/logger';
 import { dynamicFormApi } from '../services/dynamicFormApi';
 import { DynamicFormRenderer } from './DynamicFormRenderer';
+import { getSiteUrl } from '../config/api';
 
 interface EnhancedProjectShowcaseProps {
   project: Project;
@@ -360,7 +361,7 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                 <p className="text-sm text-blue-700">
                   ¿Ya tienes una cuenta? 
                   <a 
-                    href="https://registry.cloud.org.bo/login"
+                    href={getSiteUrl('/login')}
                     className="ml-1 text-blue-600 hover:text-blue-800 underline"
                   >
                     Inicia sesión aquí

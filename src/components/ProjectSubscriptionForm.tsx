@@ -7,6 +7,7 @@ import { BUTTON_CLASSES } from '../types/ui';
 import { formatDateDisplay } from '../utils/dateUtils';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
+import { getSiteUrl } from '../config/api';
 
 interface ProjectSubscriptionFormProps {
   projectId: string;
@@ -379,7 +380,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
               <div className="existing-user-notice">
                 <p>¿Ya tienes una cuenta? 
                   <a 
-                    href="https://registry.cloud.org.bo/login"
+                    href={getSiteUrl('/login')}
                     className="login-link"
                   >
                     Inicia sesión aquí

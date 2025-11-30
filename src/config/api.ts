@@ -8,6 +8,7 @@
 
 export const API_CONFIG = {
   BASE_URL: import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod',
+  SITE_URL: import.meta.env.PUBLIC_SITE_URL || 'https://registry.cloud.org.bo',
   ENDPOINTS: {
     // Authentication - Unified login endpoint for all users
     AUTH_LOGIN: '/auth/login',           // Unified login endpoint (admin and regular users)
@@ -64,4 +65,17 @@ export const getApiHeaders = (additionalHeaders: Record<string, string> = {}): R
     ...API_CONFIG.DEFAULT_HEADERS,
     ...additionalHeaders,
   };
+};
+
+/**
+ * Get the full URL for a site page
+ * Uses relative path if on the same domain, otherwise uses configured SITE_URL
+ */
+export const getSiteUrl = (path: string): string => {
+  // If we're in the browser and on the same domain, use relative path
+  if (typeof window !== 'undefined') {
+    return path;
+  }
+  // Otherwise use the configured site URL (for SSR or external links)
+  return `${API_CONFIG.SITE_URL}${path}`;
 };
