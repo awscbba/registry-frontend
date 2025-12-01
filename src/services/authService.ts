@@ -531,16 +531,18 @@ class AuthService {
    * Get user subscriptions
    */
   async getUserSubscriptions(): Promise<UserSubscription[]> {
-    if (!this.isAuthenticated() || !this.token) {
+    if (!this.isAuthenticated() || !this.token || !this.user) {
       throw new Error('User not authenticated');
     }
 
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/subscriptions`);
+      // Use the working endpoint that returns subscriptions correctly
+      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/v2/subscriptions/person/${this.user.id}`);
 
-      const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
+      // This endpoint returns array directly, not wrapped in subscriptions object
+      const subscriptions = Array.isArray(data) ? data : [];
       return transformSubscriptions(subscriptions);
     } catch (error) {
       authLogger.error('Error fetching subscriptions', { error: getErrorMessage(error) }, getErrorObject(error));
