@@ -112,12 +112,8 @@ class AuthService {
     try {
       if (this.token) {
         localStorage.setItem(AUTH_TOKEN_KEY, this.token);
-        // eslint-disable-next-line no-console
-        console.log('✅ Token saved to localStorage:', this.token.substring(0, 50) + '...');
       } else {
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        // eslint-disable-next-line no-console
-        console.log('❌ No token to save, removed from localStorage');
       }
 
       if (this.refreshToken) {
@@ -128,14 +124,11 @@ class AuthService {
 
       if (this.user) {
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(this.user));
-        // eslint-disable-next-line no-console
-        console.log('✅ User saved to localStorage:', this.user.email);
       } else {
         localStorage.removeItem(USER_DATA_KEY);
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Error saving to localStorage:', error);
+      logger.error('Error saving to localStorage', { error });
     }
   }
 
