@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Pre-push hook for registry-frontend
+# Runs tests and type checking before allowing pushes
+
+set -e
+
+echo "🔍 Running pre-push validation..."
+
+# Run type checking
+echo "🔍 Running TypeScript type checking..."
+npm run type-check || {
+    echo "❌ TypeScript type checking failed"
+    echo "💡 Fix type errors before pushing"
+    exit 1
+}
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test || {
+    echo "❌ Tests failed"
+    echo "💡 Fix failing tests before pushing"
+    exit 1
+}
+
+echo "✅ Pre-push validation passed!"
+echo "📊 Completed checks:"
+echo "   ✅ TypeScript type checking"
+echo "   ✅ Tests"
+
+exit 0
