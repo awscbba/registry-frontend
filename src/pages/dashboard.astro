@@ -212,30 +212,17 @@ import DashboardContent from '../components/DashboardContent';
     </main>
 
     <script>
-        // Simple console logger for dashboard page
-        const logger = {
-            info: (...args) => console.log('[DASHBOARD INFO]', ...args),
-            debug: (...args) => console.log('[DASHBOARD DEBUG]', ...args),
-            error: (...args) => console.error('[DASHBOARD ERROR]', ...args),
-            warn: (...args) => console.warn('[DASHBOARD WARN]', ...args)
-        };
-
         // Check if user is logged in with enhanced validation
         async function checkAuth() {
-            logger.debug('Starting authentication check');
-            
             const token = localStorage.getItem('userAuthToken');
-            logger.debug('Token check', { hasToken: !!token });
             
             if (!token) {
-                logger.info('No token found, redirecting to login');
                 window.location.href = '/login';
                 return false;
             }
 
             // Validate token with backend
             try {
-                logger.debug('Validating token with backend');
                 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
                 const response = await fetch(`${API_BASE_URL}/auth/me`, {
                     headers: {
@@ -244,10 +231,7 @@ import DashboardContent from '../components/DashboardContent';
                     }
                 });
 
-                logger.debug('Token validation response', { status: response.status });
-
                 if (!response.ok) {
-                    logger.warn('Token validation failed, clearing storage and redirecting');
                     // Token is invalid, clear storage and redirect
                     localStorage.removeItem('userAuthToken');
                     localStorage.removeItem('userData');
@@ -257,16 +241,13 @@ import DashboardContent from '../components/DashboardContent';
 
                 // Token is valid, update user data if needed
                 const userData = await response.json();
-                logger.debug('Token validation successful', { userData });
                 
                 if (userData.user) {
                     localStorage.setItem('userData', JSON.stringify(userData.user));
-                    logger.debug('Updated userData in localStorage');
                 }
 
                 return true;
             } catch (error) {
-                logger.warn('Token validation error (network issue)', {}, error);
                 // On network error, allow access but don't update data
                 // This prevents logout on temporary network issues
                 return true;
@@ -275,7 +256,6 @@ import DashboardContent from '../components/DashboardContent';
 
         // Logout function
         window.logout = function() {
-            logger.info('Logging out user');
             // Use the unified auth service for logout
             if (typeof window !== 'undefined') {
                 // Clear all possible localStorage keys for complete cleanup
@@ -286,69 +266,53 @@ import DashboardContent from '../components/DashboardContent';
                 localStorage.removeItem('auth_token'); // Legacy cleanup
                 localStorage.removeItem('current_user'); // Legacy cleanup
             }
-            logger.info('Cleared localStorage, redirecting to login');
             window.location.href = '/login';
         }
 
         // Load user dashboard with proper async handling
         async function loadUserDashboard() {
-            logger.debug('Loading user dashboard');
-            
             // Add a small delay to ensure any login process has completed
             await new Promise(resolve => setTimeout(resolve, 100));
             
             const isAuthenticated = await checkAuth();
             if (!isAuthenticated) {
-                logger.warn('Authentication failed, stopping dashboard load');
                 return;
             }
 
             try {
                 // Get user data from localStorage
                 const userDataStr = localStorage.getItem('userData');
-                logger.debug('UserData from localStorage', { hasUserData: !!userDataStr });
                 
                 const userData = JSON.parse(userDataStr || '{}');
                 const userEmail = userData.email;
                 
                 if (userEmail) {
                     document.getElementById('user-email').textContent = userEmail;
-                    logger.debug('Set user email in header', { userEmail });
                 } else {
                     document.getElementById('user-email').textContent = 'Usuario';
-                    logger.debug('No email found, using default');
                 }
                 
                 // Check if user is admin and show admin link
                 if (userData.isAdmin) {
-                    logger.debug('User is admin, showing admin link');
                     const adminLink = document.getElementById('admin-link');
                     if (adminLink) {
                         adminLink.style.display = 'inline-block';
                     }
-                } else {
-                    logger.debug('User is not admin, admin link remains hidden');
                 }
-
-                logger.info('Dashboard loaded successfully');
                 
             } catch (error) {
-                logger.error('Error loading user dashboard', {}, error);
                 console.error('Error loading user dashboard:', error);
             }
         }
 
         // Initialize dashboard when page loads with proper error handling
         document.addEventListener('DOMContentLoaded', async () => {
-            logger.info('DOM loaded, initializing dashboard');
-            
             // Check for legacy authentication and migrate if needed
             if (typeof window !== 'undefined') {
                 const legacyAuthToken = localStorage.getItem('authToken');
                 const legacyUserEmail = localStorage.getItem('userEmail');
                 
                 if (legacyAuthToken && !localStorage.getItem('userAuthToken')) {
-                    logger.info('Migrating legacy authentication data');
                     localStorage.setItem('userAuthToken', legacyAuthToken);
                     
                     if (legacyUserEmail) {
@@ -364,14 +328,12 @@ import DashboardContent from '../components/DashboardContent';
                     // Clean up legacy keys
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('userEmail');
-                    logger.info('Legacy authentication data migrated successfully');
                 }
             }
             
             try {
                 await loadUserDashboard();
             } catch (error) {
-                logger.error('Fatal error during dashboard initialization', {}, error);
                 console.error('Fatal error during dashboard initialization:', error);
             }
         });
@@ -379,11 +341,7 @@ import DashboardContent from '../components/DashboardContent';
         // Add visibility change handler to re-validate auth when user returns to tab
         document.addEventListener('visibilitychange', async () => {
             if (!document.hidden) {
-                logger.debug('Tab became visible, re-checking auth');
-                const isAuthenticated = await checkAuth();
-                if (!isAuthenticated) {
-                    logger.warn('Auth check failed on tab focus');
-                }
+                await checkAuth();
             }
         });
     </script>

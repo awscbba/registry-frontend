@@ -112,12 +112,8 @@ class AuthService {
     try {
       if (this.token) {
         localStorage.setItem(AUTH_TOKEN_KEY, this.token);
-        // eslint-disable-next-line no-console
-        console.log('✅ Token saved to localStorage:', this.token.substring(0, 50) + '...');
       } else {
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        // eslint-disable-next-line no-console
-        console.log('❌ No token to save, removed from localStorage');
       }
 
       if (this.refreshToken) {
@@ -128,14 +124,11 @@ class AuthService {
 
       if (this.user) {
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(this.user));
-        // eslint-disable-next-line no-console
-        console.log('✅ User saved to localStorage:', this.user.email);
       } else {
         localStorage.removeItem(USER_DATA_KEY);
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Error saving to localStorage:', error);
+      logger.error('Error saving to localStorage', { error });
     }
   }
 
@@ -531,16 +524,18 @@ class AuthService {
    * Get user subscriptions
    */
   async getUserSubscriptions(): Promise<UserSubscription[]> {
-    if (!this.isAuthenticated() || !this.token) {
+    if (!this.isAuthenticated() || !this.token || !this.user) {
       throw new Error('User not authenticated');
     }
 
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/auth/subscriptions`);
+      // Use the working endpoint that returns subscriptions correctly
+      const response = await httpClient.getJson<any>(`${API_CONFIG.BASE_URL}/v2/subscriptions/person/${this.user.id}`);
 
-      const subscriptions = (data && typeof data === 'object' && 'subscriptions' in data) ? (data as any).subscriptions : [];
+      // Extract subscriptions from response (API returns {success: true, data: [...], version: 'v2'})
+      const subscriptions = response?.data || [];
       return transformSubscriptions(subscriptions);
     } catch (error) {
       authLogger.error('Error fetching subscriptions', { error: getErrorMessage(error) }, getErrorObject(error));
@@ -552,15 +547,17 @@ class AuthService {
    * Subscribe to a project
    */
   async subscribeToProject(projectId: string, notes?: string): Promise<unknown> {
-    if (!this.isAuthenticated() || !this.token) {
+    if (!this.isAuthenticated() || !this.token || !this.user) {
       throw new Error('User not authenticated');
     }
 
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/user/subscribe`, {
-        projectId,
+      return await httpClient.postJson(`${API_CONFIG.BASE_URL}/v2/projects/${projectId}/subscriptions`, {
+        personId: this.user.id,
+        projectId: projectId,
+        status: 'pending',
         notes: notes || undefined
       });
     } catch (error) {
@@ -726,15 +723,32 @@ class AuthService {
     try {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
-      const data = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/password/change`, {
+      const response = await httpClient.postJson(`${API_CONFIG.BASE_URL}/auth/password/change`, {
         currentPassword,
         newPassword,
         confirmPassword,
       });
       
+      // Handle nested response structure: { success: true, data: { message: "..." } }
+      const success = (response && typeof response === 'object' && 'success' in response) 
+        ? (response as any).success || false 
+        : false;
+      
+      let message = 'Contraseña cambiada exitosamente';
+      if (response && typeof response === 'object') {
+        // Check for message in data.message (nested)
+        if ('data' in response && response.data && typeof response.data === 'object' && 'message' in response.data) {
+          message = (response.data as any).message;
+        }
+        // Check for message at top level
+        else if ('message' in response) {
+          message = (response as any).message;
+        }
+      }
+      
       return {
-        success: (data && typeof data === 'object' && 'success' in data) ? (data as any).success || false : false,
-        message: (data && typeof data === 'object' && 'message' in data) ? (data as any).message : 'Contraseña cambiada exitosamente',
+        success,
+        message,
       };
     } catch (error) {
       authLogger.error('Error changing password', { error: getErrorMessage(error) }, getErrorObject(error));

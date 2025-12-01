@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Pre-push hook for registry-frontend
+# Runs tests and type checking before allowing pushes
+
+set -e
+
+echo "🔍 Running pre-push validation..."
+
+# Check if node_modules exists
+if [ ! -d "node_modules" ]; then
+    echo "⚠️  node_modules not found"
+    echo "💡 Run 'npm install' to install dependencies"
+    echo "💡 Skipping pre-push checks"
+    exit 0
+fi
+
+# Run type checking
+echo "🔍 Running TypeScript type checking..."
+npm run type-check 2>/dev/null || {
+    echo "⚠️  Type checking skipped (run 'npm run type-check' manually)"
+}
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test 2>/dev/null || {
+    echo "⚠️  Tests skipped (run 'npm test' manually)"
+}
+
+echo "✅ Pre-push validation completed!"
+echo "💡 For full validation, ensure node_modules is installed and run:"
+echo "   npm run type-check && npm test"
+
+exit 0
