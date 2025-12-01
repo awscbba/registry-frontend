@@ -539,10 +539,10 @@ class AuthService {
       // Import httpClient dynamically to avoid circular dependency
       const { httpClient } = await import('./httpClient');
       // Use the working endpoint that returns subscriptions correctly
-      const data = await httpClient.getJson(`${API_CONFIG.BASE_URL}/v2/subscriptions/person/${this.user.id}`);
+      const response = await httpClient.getJson<any>(`${API_CONFIG.BASE_URL}/v2/subscriptions/person/${this.user.id}`);
 
-      // This endpoint returns array directly, not wrapped in subscriptions object
-      const subscriptions = Array.isArray(data) ? data : [];
+      // Extract subscriptions from response (API returns {success: true, data: [...], version: 'v2'})
+      const subscriptions = response?.data || [];
       return transformSubscriptions(subscriptions);
     } catch (error) {
       authLogger.error('Error fetching subscriptions', { error: getErrorMessage(error) }, getErrorObject(error));
