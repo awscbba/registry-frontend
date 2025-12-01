@@ -11,12 +11,16 @@
 const SUBSCRIPTION_FIELD_MAP: Record<string, string> = {
   'person_id': 'personId',
   'project_id': 'projectId', 
+  'project_name': 'projectName',
   'person_name': 'personName',
   'person_email': 'personEmail',
   'email_sent': 'emailSent',
   'person_created': 'personCreated',
+  'subscription_date': 'subscribedAt',
+  'subscriptionDate': 'subscribedAt',
   'created_at': 'createdAt',
-  'updated_at': 'updatedAt'
+  'updated_at': 'updatedAt',
+  'is_active': 'isActive'
 } as const;
 
 const PERSON_FIELD_MAP: Record<string, string> = {
