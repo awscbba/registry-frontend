@@ -7,21 +7,31 @@ set -e
 
 echo "🔍 Running pre-push validation..."
 
-# Run type checking
+# Run type checking using the project's TypeScript
 echo "🔍 Running TypeScript type checking..."
-npx --yes typescript@latest tsc --noEmit || {
-    echo "❌ TypeScript type checking failed"
-    echo "💡 Fix type errors before pushing"
-    exit 1
-}
+if command -v npm &> /dev/null; then
+    npm run type-check || {
+        echo "❌ TypeScript type checking failed"
+        echo "💡 Fix type errors before pushing"
+        echo "💡 Or run: git push --no-verify (not recommended)"
+        exit 1
+    }
+else
+    echo "⚠️  npm not found, skipping type check"
+fi
 
 # Run tests
 echo "🧪 Running tests..."
-npm run test || {
-    echo "❌ Tests failed"
-    echo "💡 Fix failing tests before pushing"
-    exit 1
-}
+if command -v npm &> /dev/null; then
+    npm run test || {
+        echo "❌ Tests failed"
+        echo "💡 Fix failing tests before pushing"
+        echo "💡 Or run: git push --no-verify (not recommended)"
+        exit 1
+    }
+else
+    echo "⚠️  npm not found, skipping tests"
+fi
 
 echo "✅ Pre-push validation passed!"
 echo "📊 Completed checks:"
