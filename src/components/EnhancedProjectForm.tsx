@@ -30,7 +30,13 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
     endDate: project?.endDate || '',
     registrationEndDate: project?.registrationEndDate || '',
     isEnabled: project?.isEnabled ?? true,
+    enableSubscriptionNotifications: project?.enableSubscriptionNotifications ?? true,
+    notificationEmails: project?.notificationEmails || [],
   });
+
+  const [notificationEmailsInput, setNotificationEmailsInput] = useState<string>(
+    project?.notificationEmails?.join(', ') || ''
+  );
 
   const [formSchema, setFormSchema] = useState<FormSchema>({
     version: '1.0',
@@ -221,6 +227,57 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                 <span className="text-sm text-gray-700">Project is enabled</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        {/* Email Notifications */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Email Notifications</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  checked={projectData.enableSubscriptionNotifications}
+                  onChange={(e) => handleInputChange('enableSubscriptionNotifications', e.target.checked)}
+                  className="mr-3 mt-1 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Send email notifications when users subscribe
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    You'll receive an email each time someone subscribes to this project
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {projectData.enableSubscriptionNotifications && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Additional Admin Emails (optional)
+                </label>
+                <input
+                  type="text"
+                  value={notificationEmailsInput}
+                  onChange={(e) => {
+                    setNotificationEmailsInput(e.target.value);
+                    const emails = e.target.value
+                      .split(',')
+                      .map(email => email.trim())
+                      .filter(email => email.length > 0);
+                    handleInputChange('notificationEmails', emails);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="admin1@example.com, admin2@example.com"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Separate multiple emails with commas. You'll automatically receive notifications as the project creator.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
