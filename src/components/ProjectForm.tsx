@@ -29,6 +29,8 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
     maxParticipants: project?.maxParticipants || '',
     startDate: formatDateForInput(project?.startDate),
     endDate: formatDateForInput(project?.endDate),
+    enableSubscriptionNotifications: project?.enableSubscriptionNotifications ?? true,
+    notificationEmails: project?.notificationEmails?.join(', ') || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,6 +70,12 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
     }
 
     try {
+      // Parse notification emails
+      const notificationEmails = formData.notificationEmails
+        .split(',')
+        .map(email => email.trim())
+        .filter(email => email.length > 0);
+
       const submitData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -75,6 +83,8 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
         maxParticipants: formData.maxParticipants ? Number(formData.maxParticipants) : undefined,
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined,
+        enableSubscriptionNotifications: formData.enableSubscriptionNotifications,
+        notificationEmails: notificationEmails.length > 0 ? notificationEmails : undefined,
       };
 
       await onSubmit(submitData);
@@ -84,10 +94,12 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
 
     // Clear error when user starts typing
@@ -217,6 +229,50 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
               {errors.endDate && <span className="error-message">{errors.endDate}</span>}
             </div>
           </div>
+        </div>
+
+        {/* Email Notifications */}
+        <div className="form-section">
+          <h3 className="section-title">Notificaciones por Email</h3>
+          
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                name="enableSubscriptionNotifications"
+                checked={formData.enableSubscriptionNotifications}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className="form-checkbox"
+              />
+              <span>Enviar notificaciones cuando alguien se suscriba al proyecto</span>
+            </label>
+            <p className="help-text">
+              Recibirás un email cada vez que un usuario se suscriba a este proyecto
+            </p>
+          </div>
+
+          {formData.enableSubscriptionNotifications && (
+            <div className="form-group">
+              <label htmlFor="notificationEmails" className="form-label">
+                Emails Adicionales <span className="optional">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                id="notificationEmails"
+                name="notificationEmails"
+                value={formData.notificationEmails}
+                onChange={handleInputChange}
+                className="form-control"
+                disabled={isLoading}
+                placeholder="admin1@example.com, admin2@example.com"
+              />
+              <p className="help-text">
+                Emails adicionales que recibirán notificaciones (separados por comas). 
+                Tú recibirás notificaciones automáticamente como creador del proyecto.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Form Actions */}
@@ -382,6 +438,30 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          cursor: pointer;
+          font-weight: 500;
+          color: var(--text-color);
+        }
+
+        .form-checkbox {
+          width: 20px;
+          height: 20px;
+          cursor: pointer;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+
+        .help-text {
+          font-size: 0.85rem;
+          color: #666;
+          margin-top: 8px;
+          line-height: 1.5;
         }
 
         @media (max-width: 768px) {
