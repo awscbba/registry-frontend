@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import { authService } from '../services/authService';
 import type { Project } from '../types/project';
-import { BUTTON_CLASSES } from '../types/ui';
-import { debugToken } from '../utils/tokenDebug';
-import LoginForm from './LoginForm';
+import UserLoginModal from './UserLoginModal';
 
 type ViewMode = 'cards' | 'list' | 'icons';
 
@@ -14,7 +12,7 @@ export default function ProjectShowcase() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [currentPage, setCurrentPage] = useState(1);
   const [ongoingCurrentPage, setOngoingCurrentPage] = useState(1);
@@ -32,12 +30,8 @@ export default function ProjectShowcase() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    setShowLoginForm(false);
+    setShowLoginModal(false);
     loadActiveProjects();
-  };
-
-  const handleLoginClick = () => {
-    setShowLoginForm(true);
   };
 
   const loadActiveProjects = async () => {
@@ -104,27 +98,6 @@ export default function ProjectShowcase() {
     window.location.href = `/subscribe/${slug}/`;
   };
 
-  const handleAdminClick = () => {
-    // Navigate to admin dashboard - use Astro route
-    // Add trailing slash to ensure proper static site routing
-    window.location.href = '/admin/';
-  };
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      setIsAuthenticated(false);
-      setProjects([]);
-      setError(null);
-      
-      // Redirect to clean main page to avoid showing error messages
-      window.location.href = '/';
-    } catch {
-      // Still redirect even if logout fails to ensure clean state
-      window.location.href = '/';
-    }
-  };
-
   // Pagination logic for available projects
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
@@ -157,10 +130,8 @@ export default function ProjectShowcase() {
     });
   };
 
-  // Show login form if user clicked login button or there's an auth error
-  if (showLoginForm || (!isAuthenticated && error?.includes('401'))) {
-    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
-  }
+  // Show login modal if user clicked login button or there's an auth error
+  const shouldShowLogin = showLoginModal || (!isAuthenticated && error?.includes('401'));
 
   if (isLoading) {
     return (
@@ -279,7 +250,7 @@ export default function ProjectShowcase() {
   return (
     <div className="project-showcase">
       <div className="container">
-        {/* Header with conditional Admin and Login/Logout Buttons */}
+        {/* Header */}
         <div className="header-section">
           <div className="header-content">
             <div className="header-text">
@@ -289,38 +260,6 @@ export default function ProjectShowcase() {
                 <p className="user-info">
                   Bienvenido, {authService.getCurrentUser()?.firstName} {authService.getCurrentUser()?.lastName}
                 </p>
-              )}
-            </div>
-            <div className="header-actions">
-              {isAuthenticated ? (
-                <>
-                  {/* Only show admin button for admin users */}
-                  {authService.isAdmin() && (
-                    <button onClick={handleAdminClick} className={BUTTON_CLASSES.ADMIN}>
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Administración
-                    </button>
-                  )}
-                  <button onClick={() => debugToken()} className="btn-secondary" style={{marginRight: '10px'}}>
-                    🔍 Debug Token
-                  </button>
-                  <button onClick={handleLogout} className="btn-logout">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Cerrar Sesión
-                  </button>
-                </>
-              ) : (
-                <button onClick={handleLoginClick} className="btn-login">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                  Iniciar Sesión
-                </button>
               )}
             </div>
           </div>
@@ -1328,6 +1267,13 @@ export default function ProjectShowcase() {
           }
         }
       `}</style>
+
+      <UserLoginModal
+        isOpen={shouldShowLogin}
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={handleLoginSuccess}
+        message="Inicia sesión para ver los proyectos activos"
+      />
     </div>
   );
 }
