@@ -197,7 +197,7 @@ export default function ProjectShowcase() {
             </div>
             <h3>Error al cargar proyectos</h3>
             <p>{error}</p>
-            <button onClick={loadActiveProjects} className={BUTTON_CLASSES.RETRY}>
+            <button onClick={loadActiveProjects} className="btn-retry">
               Reintentar
             </button>
           </div>
@@ -362,7 +362,7 @@ export default function ProjectShowcase() {
                           <div className="project-actions">
                             <button 
                               onClick={() => handleSubscribeClick(project)}
-                              className={BUTTON_CLASSES.SUBSCRIBE}
+                              className="btn-subscribe"
                             >
                               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
