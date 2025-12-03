@@ -130,8 +130,8 @@ export default function ProjectShowcase() {
     });
   };
 
-  // Show login modal if user clicked login button or there's an auth error
-  const shouldShowLogin = showLoginModal || (!isAuthenticated && error?.includes('401'));
+  // Show login modal only when explicitly requested
+  const shouldShowLogin = showLoginModal;
 
   if (isLoading) {
     return (
