@@ -44,6 +44,12 @@ export default function UserLoginModal({
       if (result.success) {
         // Reset form
         setFormData({ email: '', password: '' });
+        
+        // Dispatch auth state change event for other components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('authStateChanged'));
+        }
+        
         onLoginSuccess();
       } else {
         setError(result.message || 'Login failed');

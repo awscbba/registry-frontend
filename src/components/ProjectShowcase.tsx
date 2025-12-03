@@ -39,6 +39,12 @@ export default function ProjectShowcase() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     setShowLoginModal(false);
+    
+    // Dispatch auth state change event for other components (like UserMenu)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('authStateChanged'));
+    }
+    
     loadActiveProjects();
   };
 
