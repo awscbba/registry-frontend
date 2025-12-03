@@ -23,6 +23,14 @@ export default function ProjectShowcase() {
     const isAuth = authService.isAuthenticated();
     setIsAuthenticated(isAuth);
     
+    // Check if we should auto-open login modal (from /login redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('login') === 'true' && !isAuth) {
+      setShowLoginModal(true);
+      // Clean up URL parameter
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    
     // Load projects - this should work for both authenticated and non-authenticated users
     // If there's an auth error, it will be handled gracefully in the error handler
     loadActiveProjects();

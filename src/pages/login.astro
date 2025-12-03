@@ -1,5 +1,5 @@
 ---
-// Login page for user authentication
+// Login page - redirects to home with login modal
 ---
 
 <!DOCTYPE html>
@@ -8,13 +8,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - AWS User Group Cochabamba</title>
+    <script>
+        // Redirect to home page with login parameter
+        window.location.href = '/?login=true';
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #232F3E 0%, #FF9900 100%);
@@ -22,250 +20,37 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
         }
 
-        .login-container {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 3rem;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .logo-section {
+        .redirect-message {
+            color: white;
             text-align: center;
-            margin-bottom: 2rem;
+            font-size: 1.2rem;
         }
 
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #232F3E 0%, #FF9900 100%);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .logo svg {
+        .spinner {
             width: 40px;
             height: 40px;
-            fill: white;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
 
-        h1 {
-            color: #232F3E;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 0.9rem;
-        }
-
-        .form-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .info-text {
-            text-align: center;
-            font-size: 0.9rem;
-            color: #718096;
-        }
-
-        .info-text p {
-            margin-bottom: 0.5rem;
-        }
-
-        .info-text a {
-            color: #FF9900;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .info-text a:hover {
-            color: #E88B00;
-            text-decoration: underline;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <!-- Logo Section -->
-        <div class="logo-section">
-            <div class="logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-            </div>
-            <h1>Iniciar Sesión</h1>
-            <p class="subtitle">AWS User Group Cochabamba</p>
-        </div>
-
-        <!-- Form Section -->
-        <div class="form-section">
-            <div id="login-form-mount">
-                <!-- Form will be mounted here -->
-            </div>
-        </div>
-
-        <!-- Info Text -->
-        <div class="info-text">
-            <p>¿No tienes cuenta? <a href="/register">Regístrate aquí</a></p>
-        </div>
+    <div class="redirect-message">
+        <div class="spinner"></div>
+        <p>Redirigiendo al inicio de sesión...</p>
     </div>
-
-    <script type="module">
-        // Simple console logger for login page
-        const logger = {
-            info: (...args) => console.log('[LOGIN INFO]', ...args),
-            debug: (...args) => console.log('[LOGIN DEBUG]', ...args),
-            error: (...args) => console.error('[LOGIN ERROR]', ...args),
-            warn: (...args) => console.warn('[LOGIN WARN]', ...args)
-        };
-        
-        logger.info('Login page loaded, setting up form');
-        
-        // API Configuration
-        const API_BASE_URL = 'https://2t9blvt2c1.execute-api.us-east-1.amazonaws.com/prod';
-        const LOGIN_ENDPOINT = '/auth/login'; // Unified login endpoint
-        
-        // Create the form immediately
-        const container = document.getElementById('login-form-mount');
-        container.innerHTML = `
-            <form id="simple-login-form" style="text-align: left;">
-                <div style="margin-bottom: 1rem;">
-                    <label for="email" style="display: block; margin-bottom: 0.5rem; color: #232F3E; font-weight: 600; font-size: 0.875rem;">Email:</label>
-                    <input type="email" id="email" name="email" required 
-                           style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s ease;"
-                           placeholder="tu@email.com"
-                           onfocus="this.style.borderColor='#FF9900'; this.style.boxShadow='0 0 0 3px rgba(255, 153, 0, 0.1)'"
-                           onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label for="password" style="display: block; margin-bottom: 0.5rem; color: #232F3E; font-weight: 600; font-size: 0.875rem;">Contraseña:</label>
-                    <input type="password" id="password" name="password" required 
-                           style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s ease;"
-                           placeholder="Tu contraseña"
-                           onfocus="this.style.borderColor='#FF9900'; this.style.boxShadow='0 0 0 3px rgba(255, 153, 0, 0.1)'"
-                           onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
-                    <div style="text-align: right; margin-top: 0.5rem;">
-                        <a href="/reset-password" style="color: #FF9900; font-size: 14px; text-decoration: underline; cursor: pointer;">¿Olvidaste tu contraseña?</a>
-                    </div>
-                </div>
-                <button type="submit" 
-                        style="width: 100%; background: #FF9900; color: white; padding: 1rem; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
-                        onmouseover="this.style.background='#E88B00'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(255, 153, 0, 0.3)'" 
-                        onmouseout="this.style.background='#FF9900'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    Iniciar Sesión
-                </button>
-            </form>
-            <div id="login-message" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px; display: none;"></div>
-        `;
-
-        // Set up the form handler immediately after creating the form
-        logger.debug('Form created, setting up event handler');
-        
-        // Get form elements
-        const form = document.getElementById('simple-login-form');
-        const messageDiv = document.getElementById('login-message');
-        
-        if (!form) {
-            logger.error('Login form not found');
-        } else if (!messageDiv) {
-            logger.error('Message div not found');
-        } else {
-            logger.debug('Form and message div found, attaching event listener');
-            
-            // Add form submission handler
-            form.addEventListener('submit', async function(e) {
-                logger.info('Form submitted');
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                logger.debug('Login attempt', { email, passwordLength: password.length });
-                
-                if (!email || !password) {
-                    messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = '<div style="color: #f56565;">Por favor, completa todos los campos.</div>';
-                    return;
-                }
-                
-                messageDiv.style.display = 'block';
-                messageDiv.innerHTML = '<div style="color: #4299e1;">Iniciando sesión...</div>';
-                
-                try {
-                    const loginUrl = `${API_BASE_URL}${LOGIN_ENDPOINT}`;
-                    logger.debug('Making login request', { loginUrl });
-                    
-                    const response = await fetch(loginUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ email, password }),
-                    });
-                    
-                    const responseData = await response.json();
-                    
-                    // Handle nested response format
-                    const data = responseData.success ? responseData.data : responseData;
-                    const token = data.accessToken || data.access_token;
-                    const user = data.user;
-                    
-                    logger.debug('Login response received', {
-                        status: response.status,
-                        ok: response.ok,
-                        hasToken: !!token,
-                        hasUser: !!user,
-                        userEmail: user?.email
-                    });
-                    
-                    if (response.ok && token) {
-                        logger.info('Login successful', { userEmail: user?.email });
-                        
-                        messageDiv.innerHTML = '<div style="color: #48bb78;">¡Inicio de sesión exitoso! Redirigiendo...</div>';
-                        
-                        // Store auth data with correct keys to match authService
-                        localStorage.setItem('userAuthToken', token);
-                        logger.debug('Token stored as userAuthToken');
-                        
-                        if (user) {
-                            localStorage.setItem('userData', JSON.stringify(user));
-                            logger.debug('User data stored', { userEmail: user.email });
-                        }
-                        
-                        // Debug: Verify what was stored
-                        logger.debug('Storage verification', {
-                            hasToken: !!localStorage.getItem('userAuthToken'),
-                            hasUserData: !!localStorage.getItem('userData')
-                        });
-                        
-                        // Redirect to user dashboard
-                        setTimeout(() => {
-                            logger.info('Redirecting to dashboard');
-                            window.location.href = '/dashboard';
-                        }, 1500);
-                    } else {
-                        logger.error('Login failed', { responseData });
-                        const errorMessage = data.message || data.detail || 'Credenciales incorrectas';
-                        messageDiv.innerHTML = '<div style="color: #f56565;">Error: ' + errorMessage + '</div>';
-                    }
-                } catch (error) {
-                    logger.error('Network error during login', {}, error);
-                    messageDiv.innerHTML = '<div style="color: #f56565;">Error de conexión. Por favor, intenta nuevamente.</div>';
-                }
-            });
-            
-            logger.debug('Event listener attached successfully');
-        }
-    </script>
+    <noscript>
+        <p style="color: white; text-align: center;">JavaScript es requerido para usar esta aplicación. Por favor, habilita JavaScript en tu navegador.</p>
+    </noscript>
 </body>
 </html>
