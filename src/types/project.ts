@@ -15,6 +15,9 @@ export interface Project {
   subscriptionCount?: number; // Active + pending subscriptions only
   totalSubscriptionsEverCreated?: number; // Historical count including inactive
   availableSlots?: number; // Calculated based on active subscriptions only
+  // Email notification fields
+  enableSubscriptionNotifications?: boolean;
+  notificationEmails?: string[];
 }
 
 export interface ProjectCreate {
@@ -27,6 +30,8 @@ export interface ProjectCreate {
   createdBy?: string;
   registrationEndDate?: string;
   isEnabled?: boolean;
+  enableSubscriptionNotifications?: boolean;
+  notificationEmails?: string[];
 }
 
 export interface ProjectUpdate {
@@ -38,6 +43,8 @@ export interface ProjectUpdate {
   endDate?: string;
   registrationEndDate?: string;
   isEnabled?: boolean;
+  enableSubscriptionNotifications?: boolean;
+  notificationEmails?: string[];
 }
 
 export interface Subscription {

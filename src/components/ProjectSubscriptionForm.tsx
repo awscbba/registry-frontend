@@ -510,24 +510,41 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
           </div>
         ) : (
           <>
-            {/* Success Message */}
-            {success && (
-              <div className="success-message">
-                <div className="success-icon">✅</div>
-                <p>{success}</p>
+            {/* Success State - Show instead of form */}
+            {success ? (
+              <div className="success-state">
+                <div className="success-icon-large">✅</div>
+                <h2>¡Solicitud Enviada Exitosamente!</h2>
+                <div className="success-details">
+                  <p>{success}</p>
+                </div>
+                <div className="success-actions">
+                  <a 
+                    href={getSiteUrl('/login')}
+                    className={BUTTON_CLASSES.PRIMARY}
+                  >
+                    Iniciar Sesión
+                  </a>
+                  <a 
+                    href={getSiteUrl('/')}
+                    className={BUTTON_CLASSES.SECONDARY}
+                  >
+                    Volver al Inicio
+                  </a>
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                {/* Error Message */}
+                {error && (
+                  <div className="error-message">
+                    <div className="error-icon">⚠️</div>
+                    <p>{error}</p>
+                  </div>
+                )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="error-message">
-                <div className="error-icon">⚠️</div>
-                <p>{error}</p>
-              </div>
-            )}
-
-            {/* Subscription Form */}
-            <div className="form-intro">
+                {/* Subscription Form */}
+                <div className="form-intro">
               <h2>Solicitar Suscripción</h2>
               <p>Completa la información básica para solicitar acceso a este proyecto. Un administrador revisará tu solicitud.</p>
               <div className="existing-user-notice">
@@ -614,6 +631,8 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
                 </button>
               </div>
             </form>
+              </>
+            )}
           </>
         )}
       </div>
@@ -1043,6 +1062,66 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
           margin: 0;
           color: #dc2626;
           line-height: 1.5;
+        }
+
+        .success-state {
+          padding: 60px 40px;
+          text-align: center;
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .success-icon-large {
+          font-size: 80px;
+          margin-bottom: 24px;
+          animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        .success-state h2 {
+          margin: 0 0 24px 0;
+          color: #15803d;
+          font-size: 2rem;
+          font-weight: 700;
+        }
+
+        .success-details {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          margin: 0 auto 32px;
+          max-width: 600px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .success-details p {
+          margin: 0;
+          color: #166534;
+          line-height: 1.8;
+          white-space: pre-line;
+        }
+
+        .success-actions {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .success-actions a {
+          text-decoration: none;
         }
 
         .form-actions {
