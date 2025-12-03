@@ -11,6 +11,12 @@ export default function UserMenu() {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
 
+    // Listen for auth state changes
+    const handleAuthChange = () => {
+      const updatedUser = authService.getCurrentUser();
+      setUser(updatedUser);
+    };
+
     // Close menu when clicking outside
     const handleClickOutside = (event: Event) => {
       const target = event.target as HTMLElement;
@@ -19,11 +25,14 @@ export default function UserMenu() {
       }
     };
 
-    if (typeof document !== 'undefined') {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('authStateChanged', handleAuthChange);
       document.addEventListener('mousedown', handleClickOutside);
     }
+    
     return () => {
-      if (typeof document !== 'undefined') {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('authStateChanged', handleAuthChange);
         document.removeEventListener('mousedown', handleClickOutside);
       }
     };
