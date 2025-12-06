@@ -493,6 +493,8 @@ export default function EnhancedAdminDashboard() {
                 <button
                   onClick={() => setIsStatsMenuOpen(!isStatsMenuOpen)}
                   onMouseEnter={() => setIsStatsMenuOpen(true)}
+                  aria-expanded={isStatsMenuOpen}
+                  aria-label="Stats menu"
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     ['performance', 'cache', 'database', 'query-optimization', 'connection-pools', 'system-health'].includes(currentView)
                       ? 'border-blue-500 text-gray-900'
@@ -500,7 +502,7 @@ export default function EnhancedAdminDashboard() {
                   }`}
                 >
                   Stats
-                  <svg className={`ml-1 h-4 w-4 transition-transform duration-200 ${isStatsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`ml-1 h-4 w-4 transition-transform duration-200 ${isStatsMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>

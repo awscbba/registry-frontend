@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import DatabasePerformancePanel from '../components/performance/DatabasePerformancePanel';
-import QueryOptimizationPanel from '../components/performance/QueryOptimizationPanel';
-import ConnectionPoolMonitor from '../components/performance/ConnectionPoolMonitor';
-import DatabaseCharts from '../components/performance/DatabaseCharts';
+import LazyDatabasePerformancePanel from '../components/lazy/LazyDatabasePerformancePanel';
+import LazyQueryOptimizationPanel from '../components/lazy/LazyQueryOptimizationPanel';
+import LazyConnectionPoolMonitor from '../components/lazy/LazyConnectionPoolMonitor';
+import LazyDatabaseCharts from '../components/lazy/LazyDatabaseCharts';
 ---
 
 <Layout title="Database Optimization - AWS User Group Cochabamba">
@@ -18,16 +18,16 @@ import DatabaseCharts from '../components/performance/DatabaseCharts';
 					</div>
 
 					<!-- Database Performance Panel -->
-					<DatabasePerformancePanel client:load showDetailedMetrics={true} />
+					<LazyDatabasePerformancePanel client:load showDetailedMetrics={true} />
 
 					<!-- Database Charts -->
-					<DatabaseCharts client:load timeRange="24h" metrics={['queryTime', 'poolUtilization', 'throughput', 'connections']} />
+					<LazyDatabaseCharts client:load timeRange="24h" metrics={['queryTime', 'poolUtilization', 'throughput', 'connections']} />
 
 					<!-- Query Optimization Panel -->
-					<QueryOptimizationPanel client:load showRecommendations={true} allowOptimizationApplication={true} />
+					<LazyQueryOptimizationPanel client:load showRecommendations={true} allowOptimizationApplication={true} />
 
 					<!-- Connection Pool Monitor -->
-					<ConnectionPoolMonitor client:load showAllPools={true} alertThreshold={0.8} />
+					<LazyConnectionPoolMonitor client:load showAllPools={true} alertThreshold={0.8} />
 				</div>
 			</div>
 		</div>

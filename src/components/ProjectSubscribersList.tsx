@@ -3,6 +3,7 @@ import { projectApi, ApiError } from '../services/projectApi';
 import { httpClient, getApiUrl } from '../services/httpClient';
 import type { Project } from '../types/project';
 import type { Person } from '../types/person';
+import SubscriberCard from './SubscriberCard';
 
 interface ProjectSubscribersListProps {
   project: Project;
@@ -145,31 +146,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#10b981'; // Green
-      case 'pending': return '#f59e0b'; // Yellow
-      case 'cancelled': return '#ef4444'; // Red
-      default: return '#6b7280'; // Gray
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Activo';
-      case 'pending': return 'Pendiente';
-      case 'cancelled': return 'Cancelado';
-      default: return status;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   if (isLoading) {
     return (
@@ -185,7 +162,7 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
   if (error) {
     return (
       <div className="subscribers-list">
-        <div className="error-state">
+        <div className="error-state" role="alert">
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -215,113 +192,16 @@ export default function ProjectSubscribersList({ project }: ProjectSubscribersLi
 
       <div className="subscribers-grid">
         {subscribers.map((subscriber) => (
-          <div key={subscriber.id} className="subscriber-card">
-            <div className="subscriber-header">
-              <div className="subscriber-info">
-                <h4 className="subscriber-name">
-                  {subscriber.firstName} {subscriber.lastName}
-                </h4>
-                <p className="subscriber-email">{subscriber.email}</p>
-              </div>
-              <div 
-                className="subscription-status"
-                style={{ backgroundColor: getStatusColor(subscriber.subscriptionStatus) }}
-              >
-                {getStatusText(subscriber.subscriptionStatus)}
-              </div>
-            </div>
-
-            <div className="subscriber-details">
-              {subscriber.phone && (
-                <div className="detail-item">
-                  <span className="detail-label">Teléfono:</span>
-                  <span className="detail-value">{subscriber.phone}</span>
-                </div>
-              )}
-              <div className="detail-item">
-                <span className="detail-label">Fecha de suscripción:</span>
-                <span className="detail-value">{formatDate(subscriber.subscriptionDate)}</span>
-              </div>
-              {subscriber.address && (
-                <div className="detail-item">
-                  <span className="detail-label">Ciudad:</span>
-                  <span className="detail-value">
-                    {subscriber.address.city}, {subscriber.address.country}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons at the bottom of the card */}
-            <div className="subscriber-actions">
-              {/* Show approve/reject buttons for pending subscriptions */}
-              {subscriber.subscriptionStatus === 'pending' && (
-                <>
-                  <button
-                    onClick={() => handleApproveSubscriber(subscriber)}
-                    disabled={approvingSubscriber === subscriber.id}
-                    className="approve-btn"
-                  >
-                    {approvingSubscriber === subscriber.id ? (
-                      <>
-                        <div className="spinner"></div>
-                        <span>Aprobando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M20 6L9 17l-5-5"/>
-                        </svg>
-                        <span>Aprobar</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleRejectSubscriber(subscriber)}
-                    disabled={rejectingSubscriber === subscriber.id}
-                    className="reject-btn"
-                  >
-                    {rejectingSubscriber === subscriber.id ? (
-                      <>
-                        <div className="spinner"></div>
-                        <span>Rechazando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M18 6L6 18M6 6l12 12"/>
-                        </svg>
-                        <span>Rechazar</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-              
-              {/* Show remove button for active subscriptions */}
-              {subscriber.subscriptionStatus === 'active' && (
-                <button
-                  onClick={() => handleRemoveSubscriber(subscriber)}
-                  disabled={removingSubscriber === subscriber.id}
-                  className="remove-subscriber-btn"
-                >
-                  {removingSubscriber === subscriber.id ? (
-                    <>
-                      <div className="spinner"></div>
-                      <span>Removiendo...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                      </svg>
-                      <span>Remover Suscriptor</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+          <SubscriberCard
+            key={subscriber.id}
+            subscriber={subscriber}
+            onApprove={handleApproveSubscriber}
+            onReject={handleRejectSubscriber}
+            onRemove={handleRemoveSubscriber}
+            isApproving={approvingSubscriber === subscriber.id}
+            isRejecting={rejectingSubscriber === subscriber.id}
+            isRemoving={removingSubscriber === subscriber.id}
+          />
         ))}
       </div>
 

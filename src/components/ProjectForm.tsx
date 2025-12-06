@@ -119,8 +119,10 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
               className={`form-control ${errors.name ? 'error' : ''}`}
               disabled={isLoading}
               placeholder="Ej: AWS Workshop Cochabamba 2025"
+              aria-describedby={errors.name ? "name-error" : undefined}
+              aria-invalid={errors.name ? "true" : "false"}
             />
-            {errors.name && <span className="error-message">{errors.name}</span>}
+            {errors.name && <span id="name-error" className="error-message" role="alert">{errors.name}</span>}
           </div>
 
           <div className="form-group">
@@ -136,8 +138,10 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
               disabled={isLoading}
               placeholder="Describe el proyecto, objetivos y contenido..."
               rows={4}
+              aria-describedby={errors.description ? "description-error" : undefined}
+              aria-invalid={errors.description ? "true" : "false"}
             />
-            {errors.description && <span className="error-message">{errors.description}</span>}
+            {errors.description && <span id="description-error" className="error-message" role="alert">{errors.description}</span>}
           </div>
 
           <div className="form-row">
@@ -175,8 +179,10 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
                 disabled={isLoading}
                 placeholder="50"
                 min="1"
+                aria-describedby={errors.maxParticipants ? "maxParticipants-error" : undefined}
+                aria-invalid={errors.maxParticipants ? "true" : "false"}
               />
-              {errors.maxParticipants && <span className="error-message">{errors.maxParticipants}</span>}
+              {errors.maxParticipants && <span id="maxParticipants-error" className="error-message" role="alert">{errors.maxParticipants}</span>}
             </div>
           </div>
         </div>
@@ -213,8 +219,10 @@ export default function ProjectForm({ project, onSubmit, onCancel, isLoading = f
                 onChange={handleInputChange}
                 className={`form-control ${errors.endDate ? 'error' : ''}`}
                 disabled={isLoading}
+                aria-describedby={errors.endDate ? "endDate-error" : undefined}
+                aria-invalid={errors.endDate ? "true" : "false"}
               />
-              {errors.endDate && <span className="error-message">{errors.endDate}</span>}
+              {errors.endDate && <span id="endDate-error" className="error-message" role="alert">{errors.endDate}</span>}
             </div>
           </div>
         </div>

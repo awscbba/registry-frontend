@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
 interface PasswordChangeProps {
   onClose: () => void;
@@ -7,6 +8,7 @@ interface PasswordChangeProps {
 }
 
 export default function PasswordChange({ onClose, onSuccess }: PasswordChangeProps) {
+  const { modalRef } = useFocusManagement(true); // Always open when rendered
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -123,10 +125,29 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
   const strength = passwordStrength(newPassword);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="modal-overlay" 
+      onClick={onClose}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      role="dialog"
+      aria-labelledby="password-change-modal-title"
+      aria-modal="true"
+      tabIndex={-1}
+    >
+      <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
+        className="modal-content" 
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        role="document"
+        tabIndex={-1}
+      >
         <div className="modal-header">
-          <h2>Cambiar Contraseña</h2>
+          <h2 id="password-change-modal-title">Cambiar Contraseña</h2>
           <button className="close-button" onClick={onClose} aria-label="Cerrar">
             ×
           </button>
@@ -134,7 +155,7 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
 
         <form onSubmit={handleSubmit} className="password-form">
           {error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" id="password-change-error" role="alert">
               <span className="alert-icon">⚠️</span>
               <span style={{ whiteSpace: 'pre-line' }}>{error}</span>
             </div>
@@ -152,6 +173,8 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
                 placeholder="Ingresa tu contraseña actual"
                 disabled={isSubmitting}
                 autoComplete="current-password"
+                aria-describedby={error ? "password-change-error" : undefined}
+                aria-invalid={error ? "true" : "false"}
               />
               <button
                 type="button"
@@ -176,6 +199,8 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
                 placeholder="Ingresa tu nueva contraseña"
                 disabled={isSubmitting}
                 autoComplete="new-password"
+                aria-describedby="password-requirements"
+                aria-invalid={error ? "true" : "false"}
               />
               <button
                 type="button"
@@ -218,6 +243,8 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
                 placeholder="Confirma tu nueva contraseña"
                 disabled={isSubmitting}
                 autoComplete="new-password"
+                aria-describedby="password-requirements"
+                aria-invalid={error ? "true" : "false"}
               />
               <button
                 type="button"
@@ -231,7 +258,7 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
           </div>
 
           {/* Password Requirements */}
-          <div className="password-requirements">
+          <div className="password-requirements" id="password-requirements">
             <p className="requirements-title">La contraseña debe contener:</p>
             <ul>
               <li className={newPassword.length >= 8 ? 'valid' : ''}>

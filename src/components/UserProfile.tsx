@@ -177,28 +177,42 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
           <h3>Información Personal</h3>
           <div className="form-grid">
             <div className="form-field">
-              <label>Nombre</label>
+              <label htmlFor="firstName">Nombre</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  placeholder="Nombre"
-                />
+                <>
+                  <input
+                    type="text"
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    placeholder="Nombre"
+                    aria-describedby="firstName-help"
+                  />
+                  <span id="firstName-help" className="field-hint">
+                    Ingrese su nombre completo
+                  </span>
+                </>
               ) : (
                 <p className="field-value">{user?.firstName || '-'}</p>
               )}
             </div>
 
             <div className="form-field">
-              <label>Apellido</label>
+              <label htmlFor="lastName">Apellido</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  placeholder="Apellido"
-                />
+                <>
+                  <input
+                    type="text"
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    placeholder="Apellido"
+                    aria-describedby="lastName-help"
+                  />
+                  <span id="lastName-help" className="field-hint">
+                    Ingrese su apellido completo
+                  </span>
+                </>
               ) : (
                 <p className="field-value">{user?.lastName || '-'}</p>
               )}
@@ -208,34 +222,48 @@ export default function UserProfile({ onPasswordChangeClick }: UserProfileProps)
               <label>Email</label>
               <p className="field-value">{user?.email || '-'}</p>
               {isEditing && (
-                <small className="field-hint">
+                <small className="field-hint" id="email-help">
                   El email no puede ser modificado. Contacta a soporte si necesitas cambiarlo.
                 </small>
               )}
             </div>
 
             <div className="form-field">
-              <label>Teléfono</label>
+              <label htmlFor="phone">Teléfono</label>
               {isEditing ? (
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="Teléfono"
-                />
+                <>
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Teléfono"
+                    aria-describedby="phone-help"
+                  />
+                  <span id="phone-help" className="field-hint">
+                    Ingrese su número de teléfono con código de país
+                  </span>
+                </>
               ) : (
                 <p className="field-value">{formData.phone || '-'}</p>
               )}
             </div>
 
             <div className="form-field">
-              <label>Fecha de Nacimiento</label>
+              <label htmlFor="dateOfBirth">Fecha de Nacimiento</label>
               {isEditing ? (
-                <input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                />
+                <>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    aria-describedby="dateOfBirth-help"
+                  />
+                  <span id="dateOfBirth-help" className="field-hint">
+                    Seleccione su fecha de nacimiento
+                  </span>
+                </>
               ) : (
                 <p className="field-value">{formData.dateOfBirth || '-'}</p>
               )}

@@ -1,4 +1,5 @@
 import type { Project } from '../types/project';
+import ProjectListCard from './ProjectListCard';
 
 interface ProjectListProps {
   projects: Project[];
@@ -10,66 +11,6 @@ interface ProjectListProps {
 }
 
 export default function ProjectList({ projects, onEdit, onDelete, onViewSubscribers, onUpdateStatus, isLoading = false }: ProjectListProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return '#fbbf24'; // Yellow
-      case 'active': return '#10b981'; // Green
-      case 'ongoing': return '#3b82f6'; // Blue
-      case 'completed': return '#6b7280'; // Gray
-      case 'cancelled': return '#ef4444'; // Red
-      default: return '#6c757d';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Pendiente';
-      case 'active': return 'Activo';
-      case 'ongoing': return 'En Curso';
-      case 'completed': return 'Completado';
-      case 'cancelled': return 'Cancelado';
-      default: return status;
-    }
-  };
-
-  const getAvailableTransitions = (currentStatus: string) => {
-    switch (currentStatus) {
-      case 'pending':
-        return [
-          { status: 'active', label: 'Activar', color: '#10b981' },
-          { status: 'cancelled', label: 'Cancelar', color: '#ef4444' }
-        ];
-      case 'active':
-        return [
-          { status: 'ongoing', label: 'Iniciar', color: '#3b82f6' },
-          { status: 'completed', label: 'Completar', color: '#6b7280' },
-          { status: 'cancelled', label: 'Cancelar', color: '#ef4444' }
-        ];
-      case 'ongoing':
-        return [
-          { status: 'active', label: 'Reactivar', color: '#10b981' },
-          { status: 'completed', label: 'Completar', color: '#6b7280' },
-          { status: 'cancelled', label: 'Cancelar', color: '#ef4444' }
-        ];
-      case 'completed':
-        return [
-          { status: 'active', label: 'Reactivar', color: '#10b981' }
-        ];
-      case 'cancelled':
-        return [
-          { status: 'active', label: 'Reactivar', color: '#10b981' }
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) {
-      return 'No definida';
-    }
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
 
   if (isLoading) {
     return (
@@ -145,119 +86,14 @@ export default function ProjectList({ projects, onEdit, onDelete, onViewSubscrib
     <div className="project-list">
       <div className="projects-grid">
         {projects.map((project) => (
-          <div key={project.id} className="project-card">
-            <div className="project-header">
-              <h3 className="project-title">{project.name}</h3>
-              <div className="project-status" style={{ backgroundColor: getStatusColor(project.status) }}>
-                {getStatusText(project.status)}
-              </div>
-            </div>
-
-            <div className="project-description">
-              <p>{project.description}</p>
-            </div>
-
-            <div className="project-details">
-              <div className="detail-item">
-                <span className="detail-label">Participantes máx:</span>
-                <span className="detail-value">{project.maxParticipants || 'Sin límite'}</span>
-              </div>
-              {/* Show subscription counts and available slots */}
-              {typeof project.subscriptionCount === 'number' && (
-                <div className="detail-item">
-                  <span className="detail-label">Suscripciones activas:</span>
-                  <span className="detail-value">{project.subscriptionCount}</span>
-                </div>
-              )}
-              {project.maxParticipants && typeof project.availableSlots === 'number' && (
-                <div className="detail-item">
-                  <span className="detail-label">Cupos disponibles:</span>
-                  <span className="detail-value" style={{ 
-                    color: project.availableSlots === 0 ? '#dc2626' : 
-                           project.availableSlots <= 5 ? '#f59e0b' : '#10b981' 
-                  }}>
-                    {project.availableSlots}
-                  </span>
-                </div>
-              )}
-              {/* Show historical count if different from current */}
-              {typeof project.totalSubscriptionsEverCreated === 'number' && 
-               project.totalSubscriptionsEverCreated > (project.subscriptionCount || 0) && (
-                <div className="detail-item">
-                  <span className="detail-label">Total histórico:</span>
-                  <span className="detail-value" style={{ color: '#6b7280', fontSize: '0.9em' }}>
-                    {project.totalSubscriptionsEverCreated}
-                  </span>
-                </div>
-              )}
-              <div className="detail-item">
-                <span className="detail-label">Fecha inicio:</span>
-                <span className="detail-value">{formatDate(project.startDate)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Fecha fin:</span>
-                <span className="detail-value">{formatDate(project.endDate)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Creado por:</span>
-                <span className="detail-value">{project.createdBy}</span>
-              </div>
-            </div>
-
-            <div className="project-actions">
-              {/* Status transition buttons */}
-              {onUpdateStatus && getAvailableTransitions(project.status).length > 0 && (
-                <div className="status-transitions">
-                  <span className="transitions-label">Estado:</span>
-                  {getAvailableTransitions(project.status).map((transition) => (
-                    <button
-                      key={transition.status}
-                      onClick={() => onUpdateStatus(project, transition.status)}
-                      className="btn btn-status"
-                      style={{ backgroundColor: transition.color }}
-                      title={`Cambiar estado a ${transition.label.toLowerCase()}`}
-                    >
-                      {transition.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Regular action buttons */}
-              <div className="regular-actions">
-                <button
-                  onClick={() => onViewSubscribers(project)}
-                  className="btn btn-secondary"
-                  title="Ver suscriptores"
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                  Suscriptores
-                </button>
-                <button
-                  onClick={() => onEdit(project)}
-                  className="btn btn-primary"
-                  title="Editar proyecto"
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editar
-                </button>
-                <button
-                  onClick={() => onDelete(project.id)}
-                  className="btn btn-danger"
-                  title="Eliminar proyecto"
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
+          <ProjectListCard
+            key={project.id}
+            project={project}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onViewSubscribers={onViewSubscribers}
+            onUpdateStatus={onUpdateStatus}
+          />
         ))}
       </div>
 

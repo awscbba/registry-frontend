@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="reset-password-page">
         <div className="reset-password-container">
-          <div className="error-state">
+          <div className="error-state" role="alert">
             <div className="error-icon">⚠️</div>
             <h2>Enlace No Válido</h2>
             <p>{message}</p>
@@ -179,9 +179,13 @@ export default function ResetPasswordPage() {
               placeholder="Mínimo 8 caracteres"
               disabled={isLoading}
               className={errors.newPassword ? 'error' : ''}
+              aria-describedby={errors.newPassword ? "newPassword-error" : "newPassword-help"}
+              aria-invalid={errors.newPassword ? "true" : "false"}
             />
-            {errors.newPassword && (
-              <span className="error-text">{errors.newPassword}</span>
+            {errors.newPassword ? (
+              <span id="newPassword-error" className="error-text" role="alert">{errors.newPassword}</span>
+            ) : (
+              <span id="newPassword-help" className="field-help">La contraseña debe tener al menos 8 caracteres</span>
             )}
           </div>
 
@@ -195,9 +199,13 @@ export default function ResetPasswordPage() {
               placeholder="Repite tu nueva contraseña"
               disabled={isLoading}
               className={errors.confirmPassword ? 'error' : ''}
+              aria-describedby={errors.confirmPassword ? "confirmPassword-error" : "confirmPassword-help"}
+              aria-invalid={errors.confirmPassword ? "true" : "false"}
             />
-            {errors.confirmPassword && (
-              <span className="error-text">{errors.confirmPassword}</span>
+            {errors.confirmPassword ? (
+              <span id="confirmPassword-error" className="error-text" role="alert">{errors.confirmPassword}</span>
+            ) : (
+              <span id="confirmPassword-help" className="field-help">Repite la contraseña para confirmar</span>
             )}
           </div>
 
@@ -299,6 +307,13 @@ export default function ResetPasswordPage() {
         .error-text {
           color: #ef4444;
           font-size: 14px;
+          margin-top: 4px;
+          display: block;
+        }
+
+        .field-help {
+          font-size: 12px;
+          color: #6b7280;
           margin-top: 4px;
           display: block;
         }

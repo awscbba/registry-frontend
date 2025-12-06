@@ -255,8 +255,14 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
                 className={`form-control ${errors.firstName ? 'error' : ''}`}
                 disabled={isLoading}
                 placeholder="Ingrese su nombre"
+                aria-describedby={errors.firstName ? "firstName-error" : "firstName-help"}
+                aria-invalid={errors.firstName ? "true" : "false"}
               />
-              {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+              {errors.firstName ? (
+                <span id="firstName-error" className="error-message" role="alert">{errors.firstName}</span>
+              ) : (
+                <span id="firstName-help" className="field-help">Ingrese su nombre completo</span>
+              )}
             </div>
 
             <div className="form-group">
@@ -272,8 +278,14 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
                 className={`form-control ${errors.lastName ? 'error' : ''}`}
                 disabled={isLoading}
                 placeholder="Ingrese su apellido"
+                aria-describedby={errors.lastName ? "lastName-error" : "lastName-help"}
+                aria-invalid={errors.lastName ? "true" : "false"}
               />
-              {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+              {errors.lastName ? (
+                <span id="lastName-error" className="error-message" role="alert">{errors.lastName}</span>
+              ) : (
+                <span id="lastName-help" className="field-help">Ingrese su apellido completo</span>
+              )}
             </div>
           </div>
 
@@ -291,8 +303,14 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
                 className={`form-control ${errors.email ? 'error' : ''}`}
                 disabled={isLoading}
                 placeholder="ejemplo@correo.com"
+                aria-describedby={errors.email ? "email-error" : "email-help"}
+                aria-invalid={errors.email ? "true" : "false"}
               />
-              {errors.email && <span className="error-message">{errors.email}</span>}
+              {errors.email ? (
+                <span id="email-error" className="error-message" role="alert">{errors.email}</span>
+              ) : (
+                <span id="email-help" className="field-help">Ingrese un email válido</span>
+              )}
             </div>
 
             <div className="form-group">
@@ -308,8 +326,14 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
                 placeholder="+XX XXXXXXXX"
                 className={`form-control ${errors.phone ? 'error' : ''}`}
                 disabled={isLoading}
+                aria-describedby={errors.phone ? "phone-error" : "phone-help"}
+                aria-invalid={errors.phone ? "true" : "false"}
               />
-              {errors.phone && <span className="error-message">{errors.phone}</span>}
+              {errors.phone ? (
+                <span id="phone-error" className="error-message" role="alert">{errors.phone}</span>
+              ) : (
+                <span id="phone-help" className="field-help">Ingrese su número de teléfono con código de país</span>
+              )}
             </div>
           </div>
 
@@ -325,8 +349,14 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
               onChange={handleInputChange}
               className={`form-control ${errors.dateOfBirth ? 'error' : ''}`}
               disabled={isLoading}
+              aria-describedby={errors.dateOfBirth ? "dateOfBirth-error" : "dateOfBirth-help"}
+              aria-invalid={errors.dateOfBirth ? "true" : "false"}
             />
-            {errors.dateOfBirth && <span className="error-message">{errors.dateOfBirth}</span>}
+            {errors.dateOfBirth ? (
+              <span id="dateOfBirth-error" className="error-message" role="alert">{errors.dateOfBirth}</span>
+            ) : (
+              <span id="dateOfBirth-help" className="field-help">Seleccione su fecha de nacimiento</span>
+            )}
           </div>
         </div>
 
@@ -607,6 +637,13 @@ export default function PersonForm({ person, onSubmit, onCancel, isLoading = fal
           font-size: 0.85rem;
           margin-top: 5px;
           font-weight: 500;
+        }
+
+        .field-help {
+          display: block;
+          font-size: 0.85rem;
+          color: #6b7280;
+          margin-top: 5px;
         }
 
         .form-actions {

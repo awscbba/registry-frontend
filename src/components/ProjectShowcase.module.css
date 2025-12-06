@@ -1,0 +1,337 @@
+/* ProjectShowcase Component Styles */
+
+.projectShowcase {
+  min-height: 100vh;
+  background: white;
+  padding: 2rem 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Loading State */
+.loadingState {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  color: #232F3E;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #FF9900;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.errorState {
+  text-align: center;
+  padding: 4rem 0;
+  color: #232F3E;
+}
+
+.errorIcon {
+  color: #FF9900;
+  margin-bottom: 1rem;
+}
+
+/* Header Section */
+.headerSection {
+  margin-bottom: 4rem;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.headerText h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #232F3E;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.headerText p {
+  font-size: 1.25rem;
+  color: #595959;
+  max-width: 600px;
+}
+
+.userInfo {
+  font-size: 1rem !important;
+  color: #FF9900 !important;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Projects Section */
+.projectsSection {
+  margin-bottom: 2rem;
+}
+
+.projectsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerTitle h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #232F3E;
+  margin-bottom: 0.5rem;
+}
+
+.headerTitle p {
+  color: #595959;
+  font-size: 1.1rem;
+}
+
+/* View Controls */
+.viewControls {
+  display: flex;
+  gap: 0.5rem;
+  background: #f3f4f6;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: #5a5f6b;
+  transition: all 0.2s ease;
+}
+
+.viewBtn:hover {
+  color: #374151;
+  background: #e5e7eb;
+}
+
+.viewBtn:focus-visible {
+  outline: 3px solid #FF9900;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.2);
+}
+
+.viewBtn.active {
+  background: #FF9900;
+  color: white;
+}
+
+/* Projects Display Layouts */
+.projectsDisplay.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.projectsDisplay.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.projectsDisplay.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Ongoing Section */
+.ongoingSection {
+  margin-top: 4rem;
+}
+
+.projectsDisplay.ongoing .projectItem {
+  opacity: 0.8;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding: 2rem 0;
+}
+
+.paginationBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  border-color: #FF9900;
+  color: #FF9900;
+}
+
+.paginationBtn:focus-visible {
+  outline: 3px solid #FF9900;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.2);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationNumbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.paginationNumber {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paginationNumber:hover {
+  border-color: #FF9900;
+  color: #FF9900;
+}
+
+.paginationNumber:focus-visible {
+  outline: 3px solid #FF9900;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.2);
+}
+
+.paginationNumber.active {
+  background: #FF9900;
+  border-color: #FF9900;
+  color: white;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 4rem 0;
+  color: #595959;
+}
+
+.emptyIcon {
+  color: #FF9900;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  color: #232F3E;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .headerText h1 {
+    font-size: 2rem;
+  }
+
+  .headerActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .headerActions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .projectsHeader {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .headerTitle h2 {
+    font-size: 1.5rem;
+  }
+
+  .viewControls {
+    justify-content: center;
+  }
+
+  .projectsDisplay.cards {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .projectsDisplay.icons {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .paginationNumbers {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+  }
+}

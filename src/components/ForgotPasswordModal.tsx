@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface ForgotPasswordModalProps {
 }
 
 export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
+  const { modalRef } = useFocusManagement(isOpen);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -54,19 +56,21 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
         }
       }}
       role="dialog"
+      aria-labelledby="forgot-password-modal-title"
       aria-modal="true"
       tabIndex={-1}
     >
       <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
         className="modal-content" 
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
-        role="dialog"
-        tabIndex={0}
+        role="document"
+        tabIndex={-1}
       >
         <div className="modal-header">
-          <h2>Restablecer Contraseña</h2>
-          <button className="close-button" onClick={handleClose}>
+          <h2 id="forgot-password-modal-title">Restablecer Contraseña</h2>
+          <button className="close-button" onClick={handleClose} aria-label="Cerrar modal">
             ×
           </button>
         </div>
@@ -88,11 +92,15 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                   placeholder="tu@email.com"
                   required
                   disabled={isLoading}
+                  aria-describedby="reset-email-help"
                 />
+                <span id="reset-email-help" className="field-help">
+                  Ingresa el email asociado a tu cuenta para recibir instrucciones
+                </span>
               </div>
 
               {message && (
-                <div className={`message ${isSuccess ? 'success' : 'error'}`}>
+                <div className={`message ${isSuccess ? 'success' : 'error'}`} role="alert">
                   {message}
                 </div>
               )}
@@ -228,6 +236,13 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
         .form-group input:disabled {
           background: #f9fafb;
           color: #6b7280;
+        }
+
+        .field-help {
+          font-size: 12px;
+          color: #6b7280;
+          margin-top: 4px;
+          display: block;
         }
 
         .message {

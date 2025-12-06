@@ -1,50 +1,135 @@
 import { useState, useEffect, useRef } from 'react';
-import { authService, type User } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
+/**
+ * UserMenu component
+ * 
+ * Displays user authentication status and provides navigation options.
+ * For unauthenticated users, shows Register and Login buttons.
+ * For authenticated users, shows user avatar, profile menu, and logout option.
+ * 
+ * Features:
+ * - Keyboard navigation support (Arrow keys, Enter, Escape)
+ * - Click-outside detection to close menu
+ * - ARIA attributes for accessibility
+ * - Focus management for menu items
+ * 
+ * @returns {JSX.Element} User menu component
+ */
 export default function UserMenu() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
+  const { showToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const menuRef = useRef<HTMLElement>(null);
+  // eslint-disable-next-line no-undef
+  const menuItemsRef = useRef<Array<HTMLAnchorElement | HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    // Load user data
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
     // Close menu when clicking outside
     const handleClickOutside = (event: Event) => {
       const target = event.target as HTMLElement;
       if (menuRef.current && !menuRef.current.contains(target)) {
         setIsOpen(false);
+        setFocusedIndex(-1);
+      }
+    };
+
+    // Handle keyboard navigation
+    // eslint-disable-next-line no-undef
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) {
+        return;
+      }
+
+      // Close menu when pressing Escape key
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        setFocusedIndex(-1);
+        return;
+      }
+
+      // Arrow key navigation
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        
+        const menuItems = menuItemsRef.current.filter(item => item !== null);
+        if (menuItems.length === 0) {
+          return;
+        }
+
+        let newIndex = focusedIndex;
+        
+        if (event.key === 'ArrowDown') {
+          // Move down
+          newIndex = focusedIndex < menuItems.length - 1 ? focusedIndex + 1 : 0;
+        } else if (event.key === 'ArrowUp') {
+          // Move up
+          newIndex = focusedIndex > 0 ? focusedIndex - 1 : menuItems.length - 1;
+        }
+
+        setFocusedIndex(newIndex);
+        menuItems[newIndex]?.focus();
+      }
+
+      // Enter key activates focused item
+      if (event.key === 'Enter' && focusedIndex >= 0) {
+        event.preventDefault();
+        const menuItems = menuItemsRef.current.filter(item => item !== null);
+        menuItems[focusedIndex]?.click();
       }
     };
 
     if (typeof document !== 'undefined') {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       if (typeof document !== 'undefined') {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
       }
     };
-  }, []);
+  }, [isOpen, focusedIndex]);
 
   const handleLogout = () => {
-    authService.logout();
+    logout();
+    showToast('Sesión cerrada exitosamente', 'success');
     window.location.href = '/';
   };
 
   if (!user) {
     return (
       <div className="user-menu-container">
-        <div className="auth-buttons">
-          <a href="/register" className="register-button">
+        <nav className="auth-buttons" aria-label="Autenticación">
+          <a 
+            href="/register" 
+            className="register-button" 
+            aria-label="Ir a página de registro"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                window.location.href = '/register';
+              }
+            }}
+          >
             Registrarse
           </a>
-          <a href="/login" className="login-button">
+          <a 
+            href="/login" 
+            className="login-button" 
+            aria-label="Ir a página de inicio de sesión"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                window.location.href = '/login';
+              }
+            }}
+          >
             Iniciar Sesión
           </a>
-        </div>
+        </nav>
         <style jsx>{`
           .user-menu-container {
             position: relative;
@@ -81,6 +166,12 @@ export default function UserMenu() {
             transform: translateY(-1px);
           }
 
+          .register-button:focus-visible {
+            outline: 3px solid white;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 5px rgba(255, 153, 0, 0.3);
+          }
+
           .login-button {
             background: var(--secondary-color, #FF9900);
             color: var(--primary-color, #161d2b);
@@ -90,6 +181,12 @@ export default function UserMenu() {
           .login-button:hover {
             opacity: 0.9;
             transform: translateY(-1px);
+          }
+
+          .login-button:focus-visible {
+            outline: 3px solid white;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 5px rgba(255, 153, 0, 0.3);
           }
 
           @media (max-width: 768px) {
@@ -122,10 +219,17 @@ export default function UserMenu() {
       <button
         className="user-menu-button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="User menu"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
+        aria-label="Menú de usuario"
         aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <div className="user-avatar">
+        <div className="user-avatar" aria-hidden="true">
           {getInitials()}
         </div>
         <span className="user-name">
@@ -137,6 +241,7 @@ export default function UserMenu() {
           height="16"
           viewBox="0 0 16 16"
           fill="none"
+          aria-hidden="true"
         >
           <path
             d="M4 6L8 10L12 6"
@@ -149,7 +254,7 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="dropdown-menu">
+        <div className="dropdown-menu" role="menu" aria-label="Opciones de usuario">
           <div className="dropdown-header">
             <div className="user-info">
               <div className="user-name-full">
@@ -159,10 +264,23 @@ export default function UserMenu() {
             </div>
           </div>
 
-          <div className="dropdown-divider"></div>
+          <div className="dropdown-divider" role="separator"></div>
 
-          <a href="/dashboard" className="dropdown-item">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <a 
+            ref={(el) => (menuItemsRef.current[0] = el)}
+            href="/dashboard" 
+            className="dropdown-item" 
+            role="menuitem"
+            tabIndex={focusedIndex === 0 ? 0 : -1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                window.location.href = '/dashboard';
+              }
+            }}
+            onFocus={() => setFocusedIndex(0)}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z"
                 stroke="currentColor"
@@ -182,8 +300,21 @@ export default function UserMenu() {
           </a>
 
           {user.isAdmin && (
-            <a href="/admin" className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <a 
+              ref={(el) => (menuItemsRef.current[1] = el)}
+              href="/admin" 
+              className="dropdown-item" 
+              role="menuitem"
+              tabIndex={focusedIndex === 1 ? 0 : -1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  window.location.href = '/admin';
+                }
+              }}
+              onFocus={() => setFocusedIndex(1)}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
                   d="M13 2H3C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V3C14 2.44772 13.5523 2 13 2Z"
                   stroke="currentColor"
@@ -203,10 +334,23 @@ export default function UserMenu() {
             </a>
           )}
 
-          <div className="dropdown-divider"></div>
+          <div className="dropdown-divider" role="separator"></div>
 
-          <button onClick={handleLogout} className="dropdown-item logout">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <button 
+            ref={(el) => (menuItemsRef.current[user.isAdmin ? 2 : 1] = el)}
+            onClick={handleLogout} 
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleLogout();
+              }
+            }}
+            className="dropdown-item logout" 
+            role="menuitem"
+            tabIndex={focusedIndex === (user.isAdmin ? 2 : 1) ? 0 : -1}
+            onFocus={() => setFocusedIndex(user.isAdmin ? 2 : 1)}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M6 14H3C2.44772 14 2 13.5523 2 13V3C2 2.44772 2.44772 2 3 2H6"
                 stroke="currentColor"
@@ -255,6 +399,12 @@ export default function UserMenu() {
 
         .user-menu-button:hover {
           background: rgba(255, 255, 255, 0.15);
+        }
+
+        .user-menu-button:focus-visible {
+          outline: 3px solid var(--secondary-color, #FF9900);
+          outline-offset: 2px;
+          box-shadow: 0 0 0 5px rgba(255, 153, 0, 0.3);
         }
 
         .user-avatar {
@@ -357,15 +507,23 @@ export default function UserMenu() {
           cursor: pointer;
         }
 
-        .dropdown-item:hover {
+        .dropdown-item:hover,
+        .dropdown-item:focus {
           background: #f3f4f6;
+          outline: none;
+        }
+
+        .dropdown-item:focus-visible {
+          outline: 2px solid var(--secondary-color, #FF9900);
+          outline-offset: -2px;
         }
 
         .dropdown-item.logout {
           color: #dc2626;
         }
 
-        .dropdown-item.logout:hover {
+        .dropdown-item.logout:hover,
+        .dropdown-item.logout:focus {
           background: #fef2f2;
         }
 

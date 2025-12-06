@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authService, type UserSubscription } from '../services/authService';
+import SubscriptionCard from './SubscriptionCard';
 
 export default function SubscriptionsList() {
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
@@ -31,42 +32,6 @@ export default function SubscriptionsList() {
     return sub.status === filter;
   });
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: { label: 'Activo', color: '#10b981', bg: '#d1fae5' },
-      pending: { label: 'Pendiente', color: '#f59e0b', bg: '#fef3c7' },
-      cancelled: { label: 'Cancelado', color: '#ef4444', bg: '#fee2e2' },
-    };
-    const badge = badges[status as keyof typeof badges] || badges.pending;
-    return (
-      <span
-        style={{
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '12px',
-          fontWeight: '500',
-          color: badge.color,
-          backgroundColor: badge.bg,
-        }}
-      >
-        {badge.label}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -78,7 +43,7 @@ export default function SubscriptionsList() {
 
   if (error) {
     return (
-      <div className="error-container">
+      <div className="error-container" role="alert">
         <span className="error-icon">⚠️</span>
         <p>{error}</p>
         <button onClick={loadSubscriptions} className="retry-button">
@@ -133,24 +98,10 @@ export default function SubscriptionsList() {
       ) : (
         <div className="subscriptions-grid">
           {filteredSubscriptions.map((subscription) => (
-            <div key={subscription.id} className="subscription-card">
-              <div className="card-header">
-                <h3>{subscription.projectName}</h3>
-                {getStatusBadge(subscription.status)}
-              </div>
-              <div className="card-body">
-                <div className="info-row">
-                  <span className="label">Fecha de suscripción:</span>
-                  <span className="value">{formatDate(subscription.subscribedAt)}</span>
-                </div>
-                {subscription.notes && (
-                  <div className="info-row">
-                    <span className="label">Notas:</span>
-                    <span className="value">{subscription.notes}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            <SubscriptionCard
+              key={subscription.id}
+              subscription={subscription}
+            />
           ))}
         </div>
       )}
@@ -282,63 +233,6 @@ export default function SubscriptionsList() {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
           gap: 20px;
-        }
-
-        .subscription-card {
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          overflow: hidden;
-          transition: box-shadow 0.2s;
-        }
-
-        .subscription-card:hover {
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-          padding: 16px;
-          background: #f9fafb;
-          border-bottom: 1px solid #e5e7eb;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .card-header h3 {
-          margin: 0;
-          color: #1f2937;
-          font-size: 1.1rem;
-          font-weight: 600;
-          flex: 1;
-        }
-
-        .card-body {
-          padding: 16px;
-        }
-
-        .info-row {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          margin-bottom: 12px;
-        }
-
-        .info-row:last-child {
-          margin-bottom: 0;
-        }
-
-        .label {
-          font-size: 12px;
-          font-weight: 500;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .value {
-          color: #1f2937;
-          font-size: 14px;
         }
 
         @media (max-width: 768px) {

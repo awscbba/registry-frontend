@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Indicators Test</title>
+    <style>
+        :root {
+            --primary-color: #161d2b;
+            --secondary-color: #FF9900;
+            --accent-color: #4A90E2;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            padding: 2rem;
+            background: #f8f8f8;
+        }
+
+        /* Global focus indicators */
+        *:focus {
+            outline: none;
+        }
+
+        *:focus-visible {
+            outline: 3px solid var(--secondary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        button:focus-visible,
+        .button:focus-visible {
+            outline: 3px solid var(--secondary-color);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.2);
+        }
+
+        a:focus-visible {
+            outline: 3px solid var(--secondary-color);
+            outline-offset: 2px;
+            text-decoration: underline;
+        }
+
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible {
+            outline: 3px solid var(--accent-color);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.2);
+        }
+
+        .test-section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .test-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        a {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        input, textarea, select {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .instructions {
+            background: #dbeafe;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .success {
+            color: #065f46;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>Focus Indicators Test Page</h1>
+    
+    <div class="instructions">
+        <h3>Testing Instructions:</h3>
+        <ol>
+            <li>Press <kbd>Tab</kbd> to navigate through interactive elements</li>
+            <li>Verify that each element shows a <span class="success">visible orange outline</span> when focused</li>
+            <li>Check that the outline has good contrast and is clearly visible</li>
+            <li>Verify that form inputs show a <span class="success">blue outline</span></li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Buttons</h2>
+        <div class="test-items">
+            <button>Primary Button</button>
+            <button>Secondary Button</button>
+            <button disabled>Disabled Button</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Links</h2>
+        <div class="test-items">
+            <a href="#test1">Link 1</a>
+            <a href="#test2">Link 2</a>
+            <a href="#test3">Link 3</a>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Form Inputs</h2>
+        <div class="test-items">
+            <input type="text" placeholder="Text input">
+            <input type="email" placeholder="Email input">
+            <select>
+                <option>Option 1</option>
+                <option>Option 2</option>
+            </select>
+            <textarea placeholder="Textarea" rows="3"></textarea>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Mixed Interactive Elements</h2>
+        <div class="test-items">
+            <button>Action Button</button>
+            <a href="#action">Action Link</a>
+            <input type="text" placeholder="Input field">
+        </div>
+    </div>
+
+    <script>
+        // Log focus events for debugging
+        document.addEventListener('focusin', (e) => {
+            console.log('Focus on:', e.target.tagName, e.target.className || e.target.type);
+        });
+    </script>
+</body>
+</html>

@@ -254,7 +254,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                         placeholder="Tu nombre"
                         required
                         disabled={isSubmitting}
+                        aria-describedby="firstName-help"
                       />
+                      <span id="firstName-help" className="text-xs text-gray-500 mt-1 block">
+                        Ingrese su nombre completo
+                      </span>
                     </div>
                     
                     <div>
@@ -270,7 +274,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                         placeholder="Tu apellido"
                         required
                         disabled={isSubmitting}
+                        aria-describedby="lastName-help"
                       />
+                      <span id="lastName-help" className="text-xs text-gray-500 mt-1 block">
+                        Ingrese su apellido completo
+                      </span>
                     </div>
                   </div>
                   
@@ -287,7 +295,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                       placeholder="tu@email.com"
                       required
                       disabled={isSubmitting}
+                      aria-describedby="email-help"
                     />
+                    <span id="email-help" className="text-xs text-gray-500 mt-1 block">
+                      Ingrese un email válido para recibir notificaciones
+                    </span>
                   </div>
                   
                   <div>
@@ -302,7 +314,11 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Información adicional que quieras compartir (opcional)"
                       disabled={isSubmitting}
+                      aria-describedby="notes-help"
                     />
+                    <span id="notes-help" className="text-xs text-gray-500 mt-1 block">
+                      Información adicional opcional sobre su participación
+                    </span>
                   </div>
                 </div>
 

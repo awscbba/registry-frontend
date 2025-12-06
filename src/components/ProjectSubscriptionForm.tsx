@@ -265,7 +265,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   if (error && !project) {
     return (
       <div className="subscription-form-container">
-        <div className="error-state">
+        <div className="error-state" role="alert">
           <h2>Error</h2>
           <p>{error}</p>
           <button onClick={loadProject} className={BUTTON_CLASSES.SECONDARY}>
@@ -279,7 +279,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   if (!project) {
     return (
       <div className="subscription-form-container">
-        <div className="error-state">
+        <div className="error-state" role="alert">
           <h2>Proyecto no encontrado</h2>
           <p>El proyecto que buscas no existe o no está disponible.</p>
         </div>
@@ -366,7 +366,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
 
             {/* Error Message */}
             {error && (
-              <div className="error-message">
+              <div className="error-message" role="alert">
                 <div className="error-icon">⚠️</div>
                 <p>{error}</p>
               </div>
@@ -408,7 +408,11 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
                       required
                       disabled={isSubmitting}
                       placeholder="Tu nombre"
+                      aria-describedby="firstName-help"
                     />
+                    <span id="firstName-help" className="field-help">
+                      Ingrese su nombre completo
+                    </span>
                   </div>
                   
                   <div className="form-group">
@@ -422,7 +426,11 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
                       required
                       disabled={isSubmitting}
                       placeholder="Tu apellido"
+                      aria-describedby="lastName-help"
                     />
+                    <span id="lastName-help" className="field-help">
+                      Ingrese su apellido completo
+                    </span>
                   </div>
                 </div>
 
@@ -437,7 +445,11 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
                     required
                     disabled={isSubmitting}
                     placeholder="tu@email.com"
+                    aria-describedby="email-help"
                   />
+                  <span id="email-help" className="field-help">
+                    Ingrese un email válido para recibir notificaciones
+                  </span>
                 </div>
 
                 <div className="form-group">
@@ -450,7 +462,11 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
                     disabled={isSubmitting}
                     placeholder="Información adicional que quieras compartir (opcional)"
                     rows={4}
+                    aria-describedby="notes-help"
                   />
+                  <span id="notes-help" className="field-help">
+                    Información adicional sobre su interés en el proyecto (opcional)
+                  </span>
                 </div>
               </div>
 
@@ -760,6 +776,13 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
         .form-group textarea {
           resize: vertical;
           min-height: 100px;
+        }
+
+        .field-help {
+          display: block;
+          font-size: 12px;
+          color: #6b7280;
+          margin-top: 4px;
         }
 
         .success-message,

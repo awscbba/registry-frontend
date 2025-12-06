@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authService, type UserSubscription } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
+import UserSubscriptionCard from './UserSubscriptionCard';
 
 interface UserDashboardProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ export default function UserDashboard({
   currentProjectId,
   onSubscribeToProject 
 }: UserDashboardProps) {
+  const { modalRef } = useFocusManagement(isOpen);
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +125,7 @@ export default function UserDashboard({
         {isOpen && (
           <div className="modal-header">
             <div className="header-info">
-              <h2>Mi Panel de Usuario</h2>
+              <h2 id="user-dashboard-modal-title">Mi Panel de Usuario</h2>
               <p className="user-info">
                 Bienvenido, <strong>{user?.firstName} {user?.lastName}</strong>
               </p>
@@ -192,13 +195,19 @@ export default function UserDashboard({
                 <div className="no-subscription">
                   <p>No estás suscrito a este proyecto.</p>
                   <div className="subscribe-section">
+                    <label htmlFor="subscription-notes" className="sr-only">Notas adicionales</label>
                     <textarea
+                      id="subscription-notes"
                       value={subscriptionNotes}
                       onChange={(e) => setSubscriptionNotes(e.target.value)}
                       placeholder="Notas adicionales (opcional)"
                       rows={3}
                       disabled={isSubscribing}
+                      aria-describedby="subscription-notes-help"
                     />
+                    <span id="subscription-notes-help" className="field-help">
+                      Información adicional opcional sobre su participación en el proyecto
+                    </span>
                     <button
                       onClick={handleSubscribeToCurrentProject}
                       className="button-primary"
@@ -222,7 +231,7 @@ export default function UserDashboard({
                 <p>Cargando suscripciones...</p>
               </div>
             ) : error ? (
-              <div className="error-state">
+              <div className="error-state" role="alert">
                 <div className="error-icon">⚠️</div>
                 <p>{error}</p>
                 <button onClick={loadUserSubscriptions} className="button-secondary">
@@ -238,35 +247,10 @@ export default function UserDashboard({
             ) : (
               <div className="subscriptions-list">
                 {subscriptions.map((subscription) => (
-                  <div key={subscription.id} className="subscription-card">
-                    <div className="subscription-info">
-                      <h4>
-                        {subscription.projectName || 'Proyecto no disponible'}
-                        {(!subscription.projectName || subscription.projectName.includes('[DELETED]')) && (
-                          <span className="project-warning" title="Este proyecto ya no existe">
-                            ⚠️
-                          </span>
-                        )}
-                      </h4>
-                      <p className="subscription-meta">
-                        Estado: {getStatusBadge(subscription.status)}
-                        <span className="subscription-date">
-                          Suscrito: {new Date(subscription.subscribedAt).toLocaleDateString()}
-                        </span>
-                      </p>
-                      {subscription.notes && (
-                        <p className="subscription-notes">
-                          <strong>Notas:</strong> {subscription.notes}
-                        </p>
-                      )}
-                      {(!subscription.projectName || subscription.projectName.includes('[DELETED]')) && (
-                        <div className="project-deleted-notice">
-                          <span className="notice-icon">ℹ️</span>
-                          <span>Este proyecto ha sido eliminado. Tu suscripción será removida automáticamente.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <UserSubscriptionCard
+                    key={subscription.id}
+                    subscription={subscription}
+                  />
                 ))}
               </div>
             )}
@@ -642,13 +626,16 @@ export default function UserDashboard({
       onClick={onClose}
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
       role="dialog"
+      aria-labelledby="user-dashboard-modal-title"
+      aria-modal="true"
       tabIndex={-1}
     >
       <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
         onClick={e => e.stopPropagation()}
         onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
         role="document"
-        tabIndex={0}
+        tabIndex={-1}
       >
         {content}
       </div>

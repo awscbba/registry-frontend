@@ -1,6 +1,6 @@
 ---
 // User dashboard page
-import DashboardContent from '../components/DashboardContent';
+import LazyDashboardContent from '../components/lazy/LazyDashboardContent';
 ---
 
 <!DOCTYPE html>
@@ -199,7 +199,7 @@ import DashboardContent from '../components/DashboardContent';
             </div>
             
             <div class="dashboard-content">
-                <DashboardContent client:load />
+                <LazyDashboardContent client:load />
             </div>
             
             <div class="navigation-links">

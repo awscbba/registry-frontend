@@ -100,6 +100,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
           type="button"
           onClick={() => removeField(field.id)}
           className="text-red-600 hover:text-red-800 text-sm"
+          aria-label={`Remove ${field.type === 'poll_single' ? 'single choice' : 'multiple choice'} poll #${index + 1}`}
         >
           Remove
         </button>
@@ -117,7 +118,11 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
             onChange={(e) => updateField(field.id, { question: e.target.value })}
             placeholder="Enter your question..."
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            aria-describedby={`question-${field.id}-help`}
           />
+          <span id={`question-${field.id}-help`} className="text-xs text-gray-500 mt-1 block">
+            Enter the question text for this poll
+          </span>
         </div>
 
         {/* Required checkbox */}
@@ -147,12 +152,18 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
                   onChange={(e) => updateOption(field.id, optionIndex, e.target.value)}
                   placeholder={`Option ${optionIndex + 1}`}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  aria-describedby={`option-${field.id}-${optionIndex}-help`}
+                  aria-label={`Option ${optionIndex + 1}`}
                 />
+                <span id={`option-${field.id}-${optionIndex}-help`} className="sr-only">
+                  Enter text for option {optionIndex + 1}
+                </span>
                 {field.options.length > 2 && (
                   <button
                     type="button"
                     onClick={() => removeOption(field.id, optionIndex)}
                     className="text-red-600 hover:text-red-800 text-sm px-2"
+                    aria-label={`Remove option ${optionIndex + 1}`}
                   >
                     ×
                   </button>

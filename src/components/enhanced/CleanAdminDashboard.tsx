@@ -188,6 +188,8 @@ export default function CleanAdminDashboard() {
                 <button
                   onClick={handleStatsToggle}
                   onMouseEnter={() => setIsStatsMenuOpen(true)}
+                  aria-expanded={isStatsMenuOpen}
+                  aria-label="Stats menu"
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
                     ['performance', 'cache', 'database', 'query-optimization', 'connection-pools', 'system-health'].includes(currentView)
                       ? 'border-blue-500 text-gray-900'
@@ -200,6 +202,7 @@ export default function CleanAdminDashboard() {
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>

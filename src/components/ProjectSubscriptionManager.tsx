@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import type { Project, Subscription } from '../types/project';
 import { getComponentLogger } from '../utils/logger';
+import ProjectSubscriptionCard from './ProjectSubscriptionCard';
 
 const logger = getComponentLogger('ProjectSubscriptionManager');
 
@@ -203,7 +204,7 @@ export default function ProjectSubscriptionManager({
     return (
       <div className="subscription-manager">
         <h3>Suscripciones a Proyectos</h3>
-        <div className="error-state">
+        <div className="error-state" role="alert">
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -230,37 +231,14 @@ export default function ProjectSubscriptionManager({
             const isSelected = selectedProjectIds.includes(project.id);
             
             return (
-              <div key={project.id} className="project-item">
-                <div className="project-checkbox">
-                  {isEditing ? (
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => handleProjectToggle(project.id, e.target.checked)}
-                        className="project-checkbox-input"
-                      />
-                      <span className="checkbox-custom"></span>
-                      <div className="project-info">
-                        <span className="project-name">{project.name}</span>
-                        <span className="project-description">{project.description}</span>
-                      </div>
-                    </label>
-                  ) : (
-                    <div className="project-info readonly">
-                      <span className="project-name">{project.name}</span>
-                      <span className="project-description">{project.description}</span>
-                      {subscriptionStatus && (
-                        <span className={`status-badge status-${subscriptionStatus}`}>
-                          {subscriptionStatus === 'active' ? 'Activo' : 
-                           subscriptionStatus === 'pending' ? 'Pendiente' : 
-                           subscriptionStatus === 'cancelled' ? 'Cancelado' : 'Desconocido'}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ProjectSubscriptionCard
+                key={project.id}
+                project={project}
+                isEditing={isEditing}
+                isSelected={isSelected}
+                subscriptionStatus={subscriptionStatus}
+                onToggle={handleProjectToggle}
+              />
             );
           })}
         </div>

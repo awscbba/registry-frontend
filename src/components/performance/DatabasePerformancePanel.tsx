@@ -59,7 +59,7 @@ const DatabasePerformancePanel: React.FC<DatabasePerformancePanelProps> = ({
   if (error && !metrics) {
     return (
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="text-center text-red-600">
+        <div className="text-center text-red-600" role="alert">
           <p>Error loading database metrics: {error}</p>
           <button 
             onClick={fetchDatabaseMetrics}
@@ -303,7 +303,7 @@ const DatabasePerformancePanel: React.FC<DatabasePerformancePanelProps> = ({
 
         {/* Error Display */}
         {error && (
-          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4" role="alert">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">

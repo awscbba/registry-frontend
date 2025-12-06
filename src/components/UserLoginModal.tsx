@@ -1,11 +1,37 @@
 import { useState } from 'react';
-import { authService, type LoginRequest } from '../services/authService';
+import { type LoginRequest } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
+/**
+ * UserLoginModal component
+ * 
+ * Modal dialog for user authentication.
+ * Provides a form for users to log in with email and password.
+ * 
+ * Features:
+ * - Form validation
+ * - Error handling and display
+ * - Loading states
+ * - Keyboard navigation (Escape to close)
+ * - Focus management (traps focus within modal)
+ * - ARIA attributes for accessibility
+ * - Toast notifications for feedback
+ * 
+ * @param {UserLoginModalProps} props - Component props
+ * @returns {JSX.Element | null} Login modal or null if not open
+ */
 interface UserLoginModalProps {
+  /** Whether the modal is currently open */
   isOpen: boolean;
+  /** Callback function to close the modal */
   onClose: () => void;
+  /** Callback function called after successful login */
   onLoginSuccess: () => void;
+  /** Optional project name to display context */
   projectName?: string;
+  /** Optional message to display at the top of the modal */
   message?: string;
 }
 
@@ -16,6 +42,10 @@ export default function UserLoginModal({
   projectName,
   message 
 }: UserLoginModalProps) {
+  const { login } = useAuth();
+  const { showToast } = useToast();
+  const { modalRef } = useFocusManagement(isOpen);
+  
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: ''
@@ -37,17 +67,22 @@ export default function UserLoginModal({
     setError(null);
 
     try {
-      const result = await authService.login(formData);
+      const result = await login(formData);
       
       if (result.success) {
+        showToast('Inicio de sesión exitoso', 'success');
         // Reset form
         setFormData({ email: '', password: '' });
         onLoginSuccess();
       } else {
-        setError(result.message || 'Login failed');
+        const errorMessage = result.message || 'Error al iniciar sesión';
+        setError(errorMessage);
+        showToast(errorMessage, 'error');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -69,20 +104,29 @@ export default function UserLoginModal({
       onClick={handleClose}
       onKeyDown={(e) => e.key === 'Escape' && handleClose()}
       role="dialog"
+      aria-labelledby="login-modal-title"
+      aria-modal="true"
       tabIndex={-1}
     >
       <div 
+        ref={modalRef}
         className="modal-content user-login-modal" 
         onClick={e => e.stopPropagation()}
         onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
         role="document"
-        tabIndex={0}
+        tabIndex={-1}
       >
         <div className="modal-header">
-          <h2>Iniciar Sesión</h2>
+          <h2 id="login-modal-title">Iniciar Sesión</h2>
           <button 
             className="modal-close-button" 
             onClick={handleClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleClose();
+              }
+            }}
             aria-label="Cerrar modal"
           >
             ×
@@ -116,7 +160,12 @@ export default function UserLoginModal({
                 disabled={isLoading}
                 placeholder="tu@email.com"
                 autoComplete="email"
+                aria-describedby={error ? "email-help login-error" : "email-help"}
+                aria-invalid={error ? "true" : "false"}
               />
+              <span id="email-help" className="field-help">
+                Ingresa el email asociado a tu cuenta
+              </span>
             </div>
 
             <div className="form-group">
@@ -131,11 +180,16 @@ export default function UserLoginModal({
                 disabled={isLoading}
                 placeholder="Tu contraseña"
                 autoComplete="current-password"
+                aria-describedby={error ? "password-help login-error" : "password-help"}
+                aria-invalid={error ? "true" : "false"}
               />
+              <span id="password-help" className="field-help">
+                Ingresa tu contraseña
+              </span>
             </div>
 
             {error && (
-              <div className="error-message">
+              <div className="error-message" id="login-error" role="alert">
                 <div className="error-icon">⚠️</div>
                 <p>{error}</p>
               </div>
@@ -145,6 +199,12 @@ export default function UserLoginModal({
               <button
                 type="button"
                 onClick={handleClose}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleClose();
+                  }
+                }}
                 className="button-secondary"
                 disabled={isLoading}
               >
@@ -154,6 +214,12 @@ export default function UserLoginModal({
                 type="submit"
                 className="button-primary"
                 disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isLoading) {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
               >
                 {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </button>
@@ -216,10 +282,17 @@ export default function UserLoginModal({
             color: #6b7280;
             padding: 4px;
             line-height: 1;
+            border-radius: 4px;
           }
 
           .modal-close-button:hover {
             color: #374151;
+          }
+
+          .modal-close-button:focus-visible {
+            outline: 3px solid #3b82f6;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
           }
 
           .modal-body {
@@ -293,10 +366,24 @@ export default function UserLoginModal({
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
           }
 
+          .form-group input:focus-visible {
+            outline: 3px solid #3b82f6;
+            outline-offset: 2px;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+          }
+
           .form-group input:disabled {
             background-color: #f9fafb;
             color: #6b7280;
             cursor: not-allowed;
+          }
+
+          .field-help {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            display: block;
           }
 
           .error-message {
@@ -344,6 +431,12 @@ export default function UserLoginModal({
             border-color: #9ca3af;
           }
 
+          .button-secondary:focus-visible {
+            outline: 3px solid #3b82f6;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+          }
+
           .button-primary {
             padding: 12px 24px;
             background: #3b82f6;
@@ -357,6 +450,12 @@ export default function UserLoginModal({
 
           .button-primary:hover:not(:disabled) {
             background: #2563eb;
+          }
+
+          .button-primary:focus-visible {
+            outline: 3px solid #1e40af;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
           }
 
           .button-primary:disabled,
