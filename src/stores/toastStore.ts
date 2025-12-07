@@ -42,7 +42,7 @@ const DEFAULT_DURATION = 5000;
 export const $toasts = atom<Toast[]>([]);
 
 // Map to track toast timeouts for cleanup
-const toastTimeouts = new Map<string, NodeJS.Timeout>();
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 /**
  * Generate unique toast ID

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ToastProvider } from '../contexts/ToastContext';
+import { ErrorBoundary } from './ErrorBoundary';
 import ToastContainer from './ToastContainer';
 
 interface AppProvidersProps {
