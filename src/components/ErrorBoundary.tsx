@@ -1,5 +1,7 @@
 import React, { Component, type ReactNode } from 'react';
-import { logger } from '../utils/logger';
+import { getLogger } from '../utils/logger';
+
+const logger = getLogger('ErrorBoundary');
 
 interface ErrorBoundaryProps {
   children: ReactNode;
