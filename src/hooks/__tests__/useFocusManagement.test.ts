@@ -24,8 +24,8 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 describe('useFocusManagement', () => {
-  let mockButton: HTMLButtonElement;
-  let mockModal: HTMLDivElement;
+  let mockButton: any;
+  let mockModal: any;
 
   beforeEach(() => {
     // Create mock elements
