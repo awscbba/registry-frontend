@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { useAuthStore } from '../hooks/useAuthStore';
 import { useLoginModal } from '../hooks/useLoginModal';
 import { usePagination } from '../hooks/usePagination';
 import type { Project } from '../types/project';
@@ -12,7 +11,6 @@ const logger = getLogger('ProjectShowcase');
 type ViewMode = 'cards' | 'list' | 'icons';
 
 export default function ProjectShowcase() {
-  const { isAuthenticated } = useAuthStore();
   const { isOpen: showLoginModal, closeModal: closeLoginModal } = useLoginModal();
   
   const [projects, setProjects] = useState<Project[]>([]);
@@ -79,10 +77,7 @@ export default function ProjectShowcase() {
         // Handle authentication errors gracefully
         if (err.status === 401) {
           // Authentication error - user session expired or invalid
-          setIsAuthenticated(false);
           setError(null); // Don't show error message for auth issues
-          // Clear any stored auth data
-          authService.logout();
         } else {
           // Other API errors
           setError(`Error al cargar proyectos: ${err.message}`);
@@ -133,8 +128,7 @@ export default function ProjectShowcase() {
     });
   };
 
-  // Show login modal only when explicitly requested
-  const shouldShowLogin = showLoginModal;
+
 
   if (isLoading) {
     return (
@@ -259,11 +253,7 @@ export default function ProjectShowcase() {
             <div className="header-text">
               <h1>Proyectos Activos</h1>
               <p>Descubre y únete a los proyectos de la comunidad AWS User Group Cochabamba</p>
-              {isAuthenticated && authService.getCurrentUser() && (
-                <p className="user-info">
-                  Bienvenido, {authService.getCurrentUser()?.firstName} {authService.getCurrentUser()?.lastName}
-                </p>
-              )}
+
             </div>
           </div>
         </div>
