@@ -1,50 +1,58 @@
 import { useState, useEffect } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { authService } from '../services/authService';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { useLoginModal } from '../hooks/useLoginModal';
+import { usePagination } from '../hooks/usePagination';
 import type { Project } from '../types/project';
+import { getLogger } from '../utils/logger';
 import UserLoginModal from './UserLoginModal';
+
+const logger = getLogger('ProjectShowcase');
 
 type ViewMode = 'cards' | 'list' | 'icons';
 
 export default function ProjectShowcase() {
+  const { isAuthenticated } = useAuthStore();
+  const { isOpen: showLoginModal, closeModal: closeLoginModal } = useLoginModal();
+  
   const [projects, setProjects] = useState<Project[]>([]);
   const [ongoingProjects, setOngoingProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [ongoingCurrentPage, setOngoingCurrentPage] = useState(1);
-  const projectsPerPage = 6;
+
+  // Pagination for available projects
+  const {
+    currentItems: currentProjects,
+    currentPage,
+    totalPages,
+    goToPage: handlePageChange
+  } = usePagination(projects, {
+    itemsPerPage: 6,
+    scrollToTop: true,
+    scrollBehavior: 'smooth'
+  });
+
+  // Pagination for ongoing projects
+  const {
+    currentItems: currentOngoingProjects,
+    currentPage: ongoingCurrentPage,
+    totalPages: totalOngoingPages,
+    goToPage: handleOngoingPageChange
+  } = usePagination(ongoingProjects, {
+    itemsPerPage: 6,
+    scrollToTop: false
+  });
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const isAuth = authService.isAuthenticated();
-    setIsAuthenticated(isAuth);
-    
-    // Check if we should auto-open login modal (from /login redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('login') === 'true' && !isAuth) {
-      setShowLoginModal(true);
-      // Clean up URL parameter
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    
     // Load projects - this should work for both authenticated and non-authenticated users
     // If there's an auth error, it will be handled gracefully in the error handler
     loadActiveProjects();
   }, []);
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    setShowLoginModal(false);
-    
-    // Dispatch auth state change event for other components (like UserMenu)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('authStateChanged'));
-    }
-    
+    logger.info('Login successful, refreshing projects');
+    closeLoginModal();
     loadActiveProjects();
   };
 
@@ -112,26 +120,7 @@ export default function ProjectShowcase() {
     window.location.href = `/subscribe/${slug}/`;
   };
 
-  // Pagination logic for available projects
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
-  const totalPages = Math.ceil(projects.length / projectsPerPage);
-
-  // Pagination logic for ongoing projects
-  const indexOfLastOngoing = ongoingCurrentPage * projectsPerPage;
-  const indexOfFirstOngoing = indexOfLastOngoing - projectsPerPage;
-  const currentOngoingProjects = ongoingProjects.slice(indexOfFirstOngoing, indexOfLastOngoing);
-  const totalOngoingPages = Math.ceil(ongoingProjects.length / projectsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleOngoingPageChange = (page: number) => {
-    setOngoingCurrentPage(page);
-  };
+  // Pagination is now handled by usePagination hooks above
 
   const formatDate = (dateString?: string) => {
     if (!dateString) {
@@ -1282,12 +1271,14 @@ export default function ProjectShowcase() {
         }
       `}</style>
 
-      <UserLoginModal
-        isOpen={shouldShowLogin}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={handleLoginSuccess}
-        message="Inicia sesión para ver los proyectos activos"
-      />
+      {showLoginModal && (
+        <UserLoginModal
+          isOpen={showLoginModal}
+          onClose={closeLoginModal}
+          onLoginSuccess={handleLoginSuccess}
+          message="Inicia sesión para ver los proyectos activos"
+        />
+      )}
     </div>
   );
 }
