@@ -1,6 +1,7 @@
 ---
 import UserMenu from '../components/UserMenu';
-import { AppProviders } from '../components/AppProviders';
+import { StoreInitializer } from '../components/StoreInitializer';
+import ToastContainer from '../components/ToastContainer';
 
 export interface Props {
 	title: string;
@@ -23,8 +24,13 @@ const { title } = Astro.props;
 		<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 	</head>
 	<body>
-		<AppProviders client:only="react">
-			<!-- Header -->
+		<!-- Initialize stores once on app load -->
+		<StoreInitializer client:only="react" />
+		
+		<!-- Toast notifications (no provider needed) -->
+		<ToastContainer client:load />
+		
+		<!-- Header -->
 			<header>
 				<div class="container">
 					<div class="logo">
@@ -89,7 +95,6 @@ const { title } = Astro.props;
 					</div>
 				</div>
 			</footer>
-		</AppProviders>
 	</body>
 </html>
 

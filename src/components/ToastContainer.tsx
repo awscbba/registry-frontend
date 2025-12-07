@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { useToast } from '../contexts/ToastContext';
+import { useToastStore } from '../hooks/useToastStore';
 
 const ToastContainer = memo(() => {
-  const { toasts, removeToast } = useToast();
+  const { toasts, removeToast } = useToastStore();
 
   if (toasts.length === 0) {
     return null;
