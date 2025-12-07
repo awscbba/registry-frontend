@@ -31,7 +31,9 @@ export function useLoginModal() {
 
   // Check URL parameters on mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const params = new URLSearchParams(window.location.search);
     const shouldOpenLogin = params.get('login') === 'true';
