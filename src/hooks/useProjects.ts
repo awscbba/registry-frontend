@@ -40,9 +40,7 @@ export function useProjects() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProjects = useCallback(async () => {
-    let isMounted = true; // Race condition prevention
-
+  const fetchProjects = useCallback(async (isMountedRef: { current: boolean }) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -53,7 +51,7 @@ export function useProjects() {
       const fetchedProjects = await projectApi.getPublicProjects();
       
       // Only update state if component is still mounted
-      if (isMounted) {
+      if (isMountedRef.current) {
         setProjects(fetchedProjects);
         logger.info('Projects fetched successfully', {
           count: fetchedProjects.length,
@@ -61,39 +59,35 @@ export function useProjects() {
       }
     } catch (err) {
       // Only update state if component is still mounted
-      if (isMounted) {
+      if (isMountedRef.current) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load projects';
         setError(errorMessage);
         logger.error('Failed to fetch projects', { error: errorMessage });
       }
     } finally {
       // Only update state if component is still mounted
-      if (isMounted) {
+      if (isMountedRef.current) {
         setIsLoading(false);
       }
     }
-
-    // Cleanup function to prevent state updates after unmount
-    return () => {
-      isMounted = false;
-    };
   }, []);
-
-  const refreshProjects = useCallback(() => {
-    logger.info('Manually refreshing projects');
-    fetchProjects();
-  }, [fetchProjects]);
 
   // Fetch projects on mount
   useEffect(() => {
-    const cleanup = fetchProjects();
+    const isMountedRef = { current: true };
     
-    // Return cleanup function to prevent memory leaks
+    fetchProjects(isMountedRef);
+    
+    // Cleanup function to prevent memory leaks
     return () => {
-      if (cleanup) {
-        cleanup();
-      }
+      isMountedRef.current = false;
     };
+  }, [fetchProjects]);
+
+  const refreshProjects = useCallback(() => {
+    logger.info('Manually refreshing projects');
+    const isMountedRef = { current: true };
+    fetchProjects(isMountedRef);
   }, [fetchProjects]);
 
   return {
