@@ -3,9 +3,9 @@ import type { Project } from '../types/project';
 import type { EnhancedProject, ProjectSubmission, FormSchema } from '../types/dynamicForm';
 import { getApiLogger } from '../utils/logger';
 import { dynamicFormApi } from '../services/dynamicFormApi';
-import { DynamicFormRenderer } from './DynamicFormRenderer';
 import { getSiteUrl } from '../config/api';
 import { authService } from '../services/authService';
+import { DynamicFormRenderer } from './DynamicFormRenderer';
 
 interface EnhancedProjectShowcaseProps {
   project: Project;
@@ -100,7 +100,7 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   };
 
   const checkSubscriptionStatus = async () => {
-    if (!project.id) return;
+    if (!project.id) {return;}
     
     setCheckingSubscription(true);
     try {
@@ -163,7 +163,7 @@ export const EnhancedProjectShowcase: React.FC<EnhancedProjectShowcaseProps> = (
   };
 
   const handleSubscribe = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    if (e) {e.preventDefault();}
     
     if (!isClient) {
       return;

@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
       logger.info('User refreshed successfully');
-    } catch (error) {
+    } catch {
       setUser(null);
       logger.debug('No authenticated user');
     }

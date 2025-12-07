@@ -41,7 +41,12 @@ export default [
         HTMLTextAreaElement: 'readonly',
         HTMLSelectElement: 'readonly',
         HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
         Event: 'readonly',
+        StorageEvent: 'readonly',
+        URLSearchParams: 'readonly',
+        Location: 'readonly',
+        ScrollBehavior: 'readonly',
         atob: 'readonly',
         btoa: 'readonly',
         React: 'readonly',
@@ -195,6 +200,8 @@ export default [
       'src/**/*.astro',  // Double-ensure Astro files are ignored
       'src/layouts/**',  // Ignore layouts directory (contains Astro files)
       'src/pages/**',    // Ignore pages directory (contains Astro files)
+      'test-*.js',       // Ignore test scripts at root
+      'test-*.cjs',      // Ignore test scripts at root
     ],
   },
 ];
