@@ -38,10 +38,18 @@ export default function UserMenu() {
     return (
       <div className="user-menu-container">
         <div className="auth-buttons">
-          <a href="/register" className="register-button">
+          <a 
+            href="/register" 
+            className="register-button"
+            aria-label="Ir a página de registro"
+          >
             Registrarse
           </a>
-          <a href="/login" className="login-button">
+          <a 
+            href="/login" 
+            className="login-button"
+            aria-label="Ir a página de inicio de sesión"
+          >
             Iniciar Sesión
           </a>
         </div>
@@ -120,10 +128,12 @@ export default function UserMenu() {
   return (
     <div className="user-menu-container" ref={menuRef}>
       <button
+        id="user-menu-button"
         className="user-menu-button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="User menu"
+        aria-label="Menú de usuario"
         aria-expanded={isOpen}
+        aria-haspopup="menu"
       >
         <div className="user-avatar">
           {getInitials()}
@@ -149,7 +159,11 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="dropdown-menu">
+        <div 
+          className="dropdown-menu"
+          role="menu"
+          aria-labelledby="user-menu-button"
+        >
           <div className="dropdown-header">
             <div className="user-info">
               <div className="user-name-full">
@@ -161,8 +175,12 @@ export default function UserMenu() {
 
           <div className="dropdown-divider"></div>
 
-          <a href="/dashboard" className="dropdown-item">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <a 
+            href="/dashboard" 
+            className="dropdown-item"
+            aria-label="Ir a mi perfil de usuario"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z"
                 stroke="currentColor"
@@ -182,8 +200,12 @@ export default function UserMenu() {
           </a>
 
           {user.isAdmin && (
-            <a href="/admin" className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <a 
+              href="/admin" 
+              className="dropdown-item"
+              aria-label="Ir al panel de administración"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
                   d="M13 2H3C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V3C14 2.44772 13.5523 2 13 2Z"
                   stroke="currentColor"
@@ -205,8 +227,12 @@ export default function UserMenu() {
 
           <div className="dropdown-divider"></div>
 
-          <button onClick={handleLogout} className="dropdown-item logout">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <button 
+            onClick={handleLogout} 
+            className="dropdown-item logout"
+            aria-label="Cerrar sesión y salir de la aplicación"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M6 14H3C2.44772 14 2 13.5523 2 13V3C2 2.44772 2.44772 2 3 2H6"
                 stroke="currentColor"

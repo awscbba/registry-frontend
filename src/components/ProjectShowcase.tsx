@@ -188,13 +188,17 @@ export default function ProjectShowcase() {
         <div className="container">
           <div className="error-state">
             <div className="error-icon">
-              <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <h3>Error al cargar proyectos</h3>
             <p>{error}</p>
-            <button onClick={loadActiveProjects} className="btn-retry">
+            <button 
+              onClick={loadActiveProjects} 
+              className="btn-retry"
+              aria-label="Reintentar cargar proyectos"
+            >
               Reintentar
             </button>
           </div>
@@ -262,7 +266,7 @@ export default function ProjectShowcase() {
         {projects.length === 0 && ongoingProjects.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
-              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
@@ -285,27 +289,30 @@ export default function ProjectShowcase() {
                     <button
                       onClick={() => setViewMode('cards')}
                       className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                      title="Vista de tarjetas"
+                      aria-label="Cambiar a vista de tarjetas"
+                      aria-pressed={viewMode === 'cards'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
                       className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                      title="Vista de lista"
+                      aria-label="Cambiar a vista de lista"
+                      aria-pressed={viewMode === 'list'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                       </svg>
                     </button>
                     <button
                       onClick={() => setViewMode('icons')}
                       className={`view-btn ${viewMode === 'icons' ? 'active' : ''}`}
-                      title="Vista de iconos"
+                      aria-label="Cambiar a vista de iconos"
+                      aria-pressed={viewMode === 'icons'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
                     </button>
@@ -356,8 +363,9 @@ export default function ProjectShowcase() {
                             <button 
                               onClick={() => handleSubscribeClick(project)}
                               className="btn-subscribe"
+                              aria-label={`Suscribirse al proyecto ${project.name}`}
                             >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                               </svg>
                               Suscribirse al Proyecto
@@ -386,6 +394,7 @@ export default function ProjectShowcase() {
                           <button 
                             onClick={() => handleSubscribeClick(project)}
                             className="btn-subscribe-list"
+                            aria-label={`Suscribirse al proyecto ${project.name}`}
                           >
                             Suscribirse
                           </button>
@@ -395,7 +404,7 @@ export default function ProjectShowcase() {
                       {viewMode === 'icons' && (
                         <div className="icon-content">
                           <div className="project-icon">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                           </div>
@@ -406,6 +415,7 @@ export default function ProjectShowcase() {
                           <button 
                             onClick={() => handleSubscribeClick(project)}
                             className="btn-subscribe-icon"
+                            aria-label={`Suscribirse al proyecto ${project.name}`}
                           >
                             Suscribirse
                           </button>
@@ -422,8 +432,9 @@ export default function ProjectShowcase() {
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className="pagination-btn"
+                      aria-label="Ir a la página anterior de proyectos disponibles"
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                       Anterior
@@ -435,6 +446,8 @@ export default function ProjectShowcase() {
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                          aria-label={`Ir a la página ${page} de proyectos disponibles`}
+                          aria-current={currentPage === page ? 'page' : undefined}
                         >
                           {page}
                         </button>
@@ -445,9 +458,10 @@ export default function ProjectShowcase() {
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className="pagination-btn"
+                      aria-label="Ir a la página siguiente de proyectos disponibles"
                     >
                       Siguiente
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -507,8 +521,9 @@ export default function ProjectShowcase() {
                             <button 
                               disabled
                               className="btn-unavailable"
+                              aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
                             >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
                               </svg>
                               No Disponible
@@ -532,7 +547,11 @@ export default function ProjectShowcase() {
                               )}
                             </div>
                           </div>
-                          <button disabled className="btn-unavailable-list">
+                          <button 
+                            disabled 
+                            className="btn-unavailable-list"
+                            aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
+                          >
                             No Disponible
                           </button>
                         </div>
@@ -541,13 +560,17 @@ export default function ProjectShowcase() {
                       {viewMode === 'icons' && (
                         <div className="icon-content">
                           <div className="project-icon ongoing">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                           </div>
                           <h4>{project.name}</h4>
                           <span className="project-status ongoing">En Curso</span>
-                          <button disabled className="btn-unavailable-icon">
+                          <button 
+                            disabled 
+                            className="btn-unavailable-icon"
+                            aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
+                          >
                             No Disponible
                           </button>
                         </div>
@@ -563,8 +586,9 @@ export default function ProjectShowcase() {
                       onClick={() => handleOngoingPageChange(ongoingCurrentPage - 1)}
                       disabled={ongoingCurrentPage === 1}
                       className="pagination-btn"
+                      aria-label="Ir a la página anterior de proyectos en curso"
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                       Anterior
@@ -576,6 +600,8 @@ export default function ProjectShowcase() {
                           key={page}
                           onClick={() => handleOngoingPageChange(page)}
                           className={`pagination-number ${ongoingCurrentPage === page ? 'active' : ''}`}
+                          aria-label={`Ir a la página ${page} de proyectos en curso`}
+                          aria-current={ongoingCurrentPage === page ? 'page' : undefined}
                         >
                           {page}
                         </button>
@@ -586,9 +612,10 @@ export default function ProjectShowcase() {
                       onClick={() => handleOngoingPageChange(ongoingCurrentPage + 1)}
                       disabled={ongoingCurrentPage === totalOngoingPages}
                       className="pagination-btn"
+                      aria-label="Ir a la página siguiente de proyectos en curso"
                     >
                       Siguiente
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>

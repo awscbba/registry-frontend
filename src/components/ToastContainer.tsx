@@ -27,7 +27,8 @@ const ToastContainer = memo(() => {
         <div
           key={toast.id}
           role="alert"
-          aria-live="polite"
+          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+          aria-atomic="true"
           style={{
             padding: '16px 20px',
             borderRadius: '8px',
@@ -49,12 +50,23 @@ const ToastContainer = memo(() => {
             color: 'white',
           }}
         >
-          <span style={{ flex: 1, fontSize: '14px', lineHeight: '1.5' }}>
+          <span 
+            style={{ flex: 1, fontSize: '14px', lineHeight: '1.5' }}
+            aria-describedby={`toast-${toast.id}-type`}
+          >
             {toast.message}
+          </span>
+          <span 
+            id={`toast-${toast.id}-type`} 
+            className="sr-only"
+          >
+            {toast.type === 'success' ? 'Éxito' : 
+             toast.type === 'error' ? 'Error' : 
+             toast.type === 'warning' ? 'Advertencia' : 'Información'}
           </span>
           <button
             onClick={() => removeToast(toast.id)}
-            aria-label="Close notification"
+            aria-label={`Cerrar notificación: ${toast.message}`}
             style={{
               background: 'transparent',
               border: 'none',
@@ -91,6 +103,18 @@ const ToastContainer = memo(() => {
             transform: translateX(0);
             opacity: 1;
           }
+        }
+        
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
         }
       `}</style>
     </div>
