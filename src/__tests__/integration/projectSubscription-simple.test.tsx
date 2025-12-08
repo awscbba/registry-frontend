@@ -12,14 +12,9 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
-
-// Components to test
 import ProjectShowcase from '../../components/ProjectShowcase';
-
-// Services and stores
 import { projectApi } from '../../services/projectApi';
 import { $user } from '../../stores/authStore';
 import { $toasts } from '../../stores/toastStore';
@@ -88,7 +83,6 @@ const mockProjects = [
 ];
 
 describe('Project Subscription Integration Tests (Simplified)', () => {
-  const user = userEvent.setup();
   const mockUser = createMockUser();
   
   beforeEach(() => {

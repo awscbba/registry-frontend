@@ -6,14 +6,10 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
-
-// Components to test
 import UserMenu from '../../components/UserMenu';
-
-// Services and stores
 import { authService } from '../../services/authService';
 import { $user, $isLoading, $error, $isAuthenticated } from '../../stores/authStore';
 import { $toasts } from '../../stores/toastStore';
@@ -43,7 +39,6 @@ vi.mock('../../utils/logger', () => ({
 }));
 
 describe('Authentication Integration Tests (Simplified)', () => {
-  const user = userEvent.setup();
   const mockUser = createMockUser();
   
   beforeEach(() => {

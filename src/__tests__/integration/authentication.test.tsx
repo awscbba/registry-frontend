@@ -13,15 +13,11 @@
  */
 
 import React, { useState } from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
-
-// Components to test
 import UserLoginModal from '../../components/UserLoginModal';
 import UserMenu from '../../components/UserMenu';
-
-// Services and stores
 import { authService } from '../../services/authService';
 import { $user, $isLoading, $error, $isAuthenticated } from '../../stores/authStore';
 import { $toasts } from '../../stores/toastStore';
