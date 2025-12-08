@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
 import { useLoginModal } from '../hooks/useLoginModal';
 import { usePagination } from '../hooks/usePagination';
@@ -42,19 +42,7 @@ export default function ProjectShowcase() {
     scrollToTop: false
   });
 
-  useEffect(() => {
-    // Load projects - this should work for both authenticated and non-authenticated users
-    // If there's an auth error, it will be handled gracefully in the error handler
-    loadActiveProjects();
-  }, []);
-
-  const handleLoginSuccess = () => {
-    logger.info('Login successful, refreshing projects');
-    closeLoginModal();
-    loadActiveProjects();
-  };
-
-  const loadActiveProjects = async () => {
+  const loadActiveProjects = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -88,7 +76,19 @@ export default function ProjectShowcase() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Load projects - this should work for both authenticated and non-authenticated users
+    // If there's an auth error, it will be handled gracefully in the error handler
+    loadActiveProjects();
+  }, [loadActiveProjects]);
+
+  const handleLoginSuccess = useCallback(() => {
+    logger.info('Login successful, refreshing projects');
+    closeLoginModal();
+    loadActiveProjects();
+  }, [closeLoginModal, loadActiveProjects]);
 
   // Helper function to convert project name to URL-friendly slug
   const nameToSlug = (name: string): string => {
@@ -107,13 +107,13 @@ export default function ProjectShowcase() {
     return nameToSlug(project.name);
   };
 
-  const handleSubscribeClick = (project: Project) => {
+  const handleSubscribeClick = useCallback((project: Project) => {
     const slug = getProjectSlug(project);
 
     // Navigate to project-specific subscription form - use Astro dynamic route
     // Add trailing slash to ensure proper static site routing
     window.location.href = `/subscribe/${slug}/`;
-  };
+  }, []);
 
   // Pagination is now handled by usePagination hooks above
 
