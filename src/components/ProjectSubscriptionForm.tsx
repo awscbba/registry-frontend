@@ -5,9 +5,9 @@ import { authService } from '../services/authService';
 import type { Project } from '../types/project';
 import { BUTTON_CLASSES } from '../types/ui';
 import { formatDateDisplay } from '../utils/dateUtils';
+import { getSiteUrl } from '../config/api';
 import UserLoginModal from './UserLoginModal';
 import UserDashboard from './UserDashboard';
-import { getSiteUrl } from '../config/api';
 
 interface ProjectSubscriptionFormProps {
   projectId: string;
@@ -99,7 +99,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   };
 
   const checkSubscriptionStatus = async () => {
-    if (!project?.id) return;
+    if (!project?.id) {return;}
     
     setCheckingSubscription(true);
     try {
@@ -314,7 +314,7 @@ export default function ProjectSubscriptionForm({ projectId, project: initialPro
   };
 
   const handleSubscribeClick = async () => {
-    if (!project?.id) return;
+    if (!project?.id) {return;}
     
     setIsSubmitting(true);
     setError(null);

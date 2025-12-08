@@ -1,22 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { authService, type User } from '../services/authService';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { useToastStore } from '../hooks/useToastStore';
 
 export default function UserMenu() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuthStore();
+  const { showSuccessToast } = useToastStore();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Load user data
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
-    // Listen for auth state changes
-    const handleAuthChange = () => {
-      const updatedUser = authService.getCurrentUser();
-      setUser(updatedUser);
-    };
-
     // Close menu when clicking outside
     const handleClickOutside = (event: Event) => {
       const target = event.target as HTMLElement;
@@ -25,32 +17,125 @@ export default function UserMenu() {
       }
     };
 
+    // Handle keyboard navigation
+    const handleKeyDown = (event: any) => {
+      if (!isOpen) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'Escape': {
+          setIsOpen(false);
+          // Return focus to menu button
+          const menuButton = document.getElementById('user-menu-button');
+          menuButton?.focus();
+          break;
+        }
+        case 'ArrowDown':
+          event.preventDefault();
+          focusNextMenuItem();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          focusPreviousMenuItem();
+          break;
+        case 'Home':
+          event.preventDefault();
+          focusFirstMenuItem();
+          break;
+        case 'End':
+          event.preventDefault();
+          focusLastMenuItem();
+          break;
+      }
+    };
+
     if (typeof window !== 'undefined') {
-      window.addEventListener('authStateChanged', handleAuthChange);
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
     }
     
     return () => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('authStateChanged', handleAuthChange);
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
       }
     };
-  }, []);
+  }, [isOpen]);
 
   const handleLogout = () => {
-    authService.logout();
+    logout();
+    showSuccessToast('Sesión cerrada exitosamente');
     window.location.href = '/';
+  };
+
+  // Keyboard navigation helper functions
+  const getMenuItems = () => {
+    if (!menuRef.current) {
+      return [];
+    }
+    return Array.from(menuRef.current.querySelectorAll('.dropdown-item')) as HTMLElement[];
+  };
+
+  const focusNextMenuItem = () => {
+    const items = getMenuItems();
+    const currentIndex = items.findIndex(item => item === document.activeElement);
+    const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+    items[nextIndex]?.focus();
+  };
+
+  const focusPreviousMenuItem = () => {
+    const items = getMenuItems();
+    const currentIndex = items.findIndex(item => item === document.activeElement);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+    items[prevIndex]?.focus();
+  };
+
+  const focusFirstMenuItem = () => {
+    const items = getMenuItems();
+    items[0]?.focus();
+  };
+
+  const focusLastMenuItem = () => {
+    const items = getMenuItems();
+    items[items.length - 1]?.focus();
+  };
+
+  const handleMenuButtonKeyDown = (event: React.KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'Enter':
+      case ' ': // Space key
+        event.preventDefault();
+        setIsOpen(true);
+        // Focus first menu item after opening
+        setTimeout(() => focusFirstMenuItem(), 0);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        setIsOpen(true);
+        // Focus last menu item after opening
+        setTimeout(() => focusLastMenuItem(), 0);
+        break;
+    }
   };
 
   if (!user) {
     return (
       <div className="user-menu-container">
         <div className="auth-buttons">
-          <a href="/register" className="register-button">
+          <a 
+            href="/register" 
+            className="register-button"
+            aria-label="Ir a página de registro"
+          >
             Registrarse
           </a>
-          <a href="/login" className="login-button">
+          <a 
+            href="/login" 
+            className="login-button"
+            aria-label="Ir a página de inicio de sesión"
+          >
             Iniciar Sesión
           </a>
         </div>
@@ -129,10 +214,13 @@ export default function UserMenu() {
   return (
     <div className="user-menu-container" ref={menuRef}>
       <button
+        id="user-menu-button"
         className="user-menu-button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="User menu"
+        onKeyDown={handleMenuButtonKeyDown}
+        aria-label="Menú de usuario"
         aria-expanded={isOpen}
+        aria-haspopup="menu"
       >
         <div className="user-avatar">
           {getInitials()}
@@ -158,7 +246,11 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="dropdown-menu">
+        <div 
+          className="dropdown-menu"
+          role="menu"
+          aria-labelledby="user-menu-button"
+        >
           <div className="dropdown-header">
             <div className="user-info">
               <div className="user-name-full">
@@ -170,8 +262,20 @@ export default function UserMenu() {
 
           <div className="dropdown-divider"></div>
 
-          <a href="/dashboard" className="dropdown-item">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <a 
+            href="/dashboard" 
+            className="dropdown-item"
+            role="menuitem"
+            tabIndex={0}
+            aria-label="Ir a mi perfil de usuario"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                window.location.href = '/dashboard';
+              }
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z"
                 stroke="currentColor"
@@ -191,8 +295,20 @@ export default function UserMenu() {
           </a>
 
           {user.isAdmin && (
-            <a href="/admin" className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <a 
+              href="/admin" 
+              className="dropdown-item"
+              role="menuitem"
+              tabIndex={0}
+              aria-label="Ir al panel de administración"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  window.location.href = '/admin';
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
                   d="M13 2H3C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V3C14 2.44772 13.5523 2 13 2Z"
                   stroke="currentColor"
@@ -214,8 +330,20 @@ export default function UserMenu() {
 
           <div className="dropdown-divider"></div>
 
-          <button onClick={handleLogout} className="dropdown-item logout">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <button 
+            onClick={handleLogout} 
+            className="dropdown-item logout"
+            role="menuitem"
+            tabIndex={0}
+            aria-label="Cerrar sesión y salir de la aplicación"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleLogout();
+              }
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M6 14H3C2.44772 14 2 13.5523 2 13V3C2 2.44772 2.44772 2 3 2H6"
                 stroke="currentColor"

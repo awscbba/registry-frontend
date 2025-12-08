@@ -6,16 +6,17 @@
 
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import EnhancedAdminDashboard from '../../src/components/enhanced/EnhancedAdminDashboard';
 import { projectApi } from '../../src/services/projectApi';
 
 // Mock the projectApi
-jest.mock('../../src/services/projectApi', () => ({
+vi.mock('../../src/services/projectApi', () => ({
   projectApi: {
-    getAdminDashboard: jest.fn(),
-    getAllPeople: jest.fn(),
-    updatePerson: jest.fn(),
-    deletePerson: jest.fn(),
+    getAdminDashboard: vi.fn(),
+    getAllPeople: vi.fn(),
+    updatePerson: vi.fn(),
+    deletePerson: vi.fn(),
   },
   ApiError: class ApiError extends Error {
     constructor(public status: number, message: string) {
@@ -25,17 +26,25 @@ jest.mock('../../src/services/projectApi', () => ({
   }
 }));
 
-// Mock the auth service
-jest.mock('../../src/services/authService', () => ({
-  isAuthenticated: jest.fn(() => true),
-  getCurrentUser: jest.fn(() => ({ id: '1', email: 'admin@test.com', isAdmin: true }))
+// Mock the auth service - set to fail authentication for these tests
+vi.mock('../../src/services/authService', () => ({
+  authService: {
+    isAuthenticated: vi.fn(() => false), // Authentication fails for these tests
+    getCurrentUser: vi.fn(() => null),
+    getToken: vi.fn(() => null),
+    getValidToken: vi.fn(async () => null),
+  },
+  addAuthHeaders: () => ({}),
+  addRequiredAuthHeaders: () => {
+    throw new Error('Authentication required');
+  },
 }));
 
-const mockProjectApi = projectApi as jest.Mocked<typeof projectApi>;
+const mockProjectApi = projectApi as any;
 
 describe('EnhancedAdminDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Setup default mocks
     mockProjectApi.getAdminDashboard.mockResolvedValue({

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authService, type UserSubscription } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
 interface UserDashboardProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function UserDashboard({
   currentProjectId,
   onSubscribeToProject 
 }: UserDashboardProps) {
+  const { modalRef } = useFocusManagement(isOpen);
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,12 +119,25 @@ export default function UserDashboard({
 
   // Render as modal or embedded based on isOpen prop
   const content = (
-    <div className={isOpen ? "user-dashboard-modal" : "user-dashboard-embedded"}>
+    <div 
+      ref={isOpen ? modalRef as React.RefObject<HTMLDivElement> : null}
+      className={isOpen ? "user-dashboard-modal" : "user-dashboard-embedded"}
+      role={isOpen ? "dialog" : undefined}
+      aria-modal={isOpen ? "true" : undefined}
+      aria-labelledby={isOpen ? "user-dashboard-title" : undefined}
+      tabIndex={isOpen ? 0 : undefined}
+      onKeyDown={isOpen ? (e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          onClose();
+        }
+      } : undefined}
+    >
       <div className="user-dashboard-content">
         {isOpen && (
           <div className="modal-header">
             <div className="header-info">
-              <h2>Mi Panel de Usuario</h2>
+              <h2 id="user-dashboard-title">Mi Panel de Usuario</h2>
               <p className="user-info">
                 Bienvenido, <strong>{user?.firstName} {user?.lastName}</strong>
               </p>

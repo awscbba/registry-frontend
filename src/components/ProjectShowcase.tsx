@@ -1,54 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { projectApi, ApiError } from '../services/projectApi';
-import { authService } from '../services/authService';
+import { useLoginModal } from '../hooks/useLoginModal';
+import { usePagination } from '../hooks/usePagination';
 import type { Project } from '../types/project';
+import { getLogger } from '../utils/logger';
 import UserLoginModal from './UserLoginModal';
+
+const logger = getLogger('ProjectShowcase');
 
 type ViewMode = 'cards' | 'list' | 'icons';
 
 export default function ProjectShowcase() {
+  const { isOpen: showLoginModal, closeModal: closeLoginModal } = useLoginModal();
+  
   const [projects, setProjects] = useState<Project[]>([]);
   const [ongoingProjects, setOngoingProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [ongoingCurrentPage, setOngoingCurrentPage] = useState(1);
-  const projectsPerPage = 6;
 
-  useEffect(() => {
-    // Check if user is already authenticated
-    const isAuth = authService.isAuthenticated();
-    setIsAuthenticated(isAuth);
-    
-    // Check if we should auto-open login modal (from /login redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('login') === 'true' && !isAuth) {
-      setShowLoginModal(true);
-      // Clean up URL parameter
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    
-    // Load projects - this should work for both authenticated and non-authenticated users
-    // If there's an auth error, it will be handled gracefully in the error handler
-    loadActiveProjects();
-  }, []);
+  // Pagination for available projects
+  const {
+    currentItems: currentProjects,
+    currentPage,
+    totalPages,
+    goToPage: handlePageChange
+  } = usePagination(projects, {
+    itemsPerPage: 6,
+    scrollToTop: true,
+    scrollBehavior: 'smooth'
+  });
 
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    setShowLoginModal(false);
-    
-    // Dispatch auth state change event for other components (like UserMenu)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('authStateChanged'));
-    }
-    
-    loadActiveProjects();
-  };
+  // Pagination for ongoing projects
+  const {
+    currentItems: currentOngoingProjects,
+    currentPage: ongoingCurrentPage,
+    totalPages: totalOngoingPages,
+    goToPage: handleOngoingPageChange
+  } = usePagination(ongoingProjects, {
+    itemsPerPage: 6,
+    scrollToTop: false
+  });
 
-  const loadActiveProjects = async () => {
+  const loadActiveProjects = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -71,10 +65,7 @@ export default function ProjectShowcase() {
         // Handle authentication errors gracefully
         if (err.status === 401) {
           // Authentication error - user session expired or invalid
-          setIsAuthenticated(false);
           setError(null); // Don't show error message for auth issues
-          // Clear any stored auth data
-          authService.logout();
         } else {
           // Other API errors
           setError(`Error al cargar proyectos: ${err.message}`);
@@ -85,7 +76,20 @@ export default function ProjectShowcase() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Load projects - this should work for both authenticated and non-authenticated users
+    // If there's an auth error, it will be handled gracefully in the error handler
+    loadActiveProjects();
+  }, [loadActiveProjects]);
+
+  const handleLoginSuccess = useCallback(() => {
+    logger.info('Login successful, refreshing projects');
+    closeLoginModal();
+    loadActiveProjects();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Helper function to convert project name to URL-friendly slug
   const nameToSlug = (name: string): string => {
@@ -104,34 +108,15 @@ export default function ProjectShowcase() {
     return nameToSlug(project.name);
   };
 
-  const handleSubscribeClick = (project: Project) => {
+  const handleSubscribeClick = useCallback((project: Project) => {
     const slug = getProjectSlug(project);
 
     // Navigate to project-specific subscription form - use Astro dynamic route
     // Add trailing slash to ensure proper static site routing
     window.location.href = `/subscribe/${slug}/`;
-  };
+  }, []);
 
-  // Pagination logic for available projects
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
-  const totalPages = Math.ceil(projects.length / projectsPerPage);
-
-  // Pagination logic for ongoing projects
-  const indexOfLastOngoing = ongoingCurrentPage * projectsPerPage;
-  const indexOfFirstOngoing = indexOfLastOngoing - projectsPerPage;
-  const currentOngoingProjects = ongoingProjects.slice(indexOfFirstOngoing, indexOfLastOngoing);
-  const totalOngoingPages = Math.ceil(ongoingProjects.length / projectsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleOngoingPageChange = (page: number) => {
-    setOngoingCurrentPage(page);
-  };
+  // Pagination is now handled by usePagination hooks above
 
   const formatDate = (dateString?: string) => {
     if (!dateString) {
@@ -144,8 +129,7 @@ export default function ProjectShowcase() {
     });
   };
 
-  // Show login modal only when explicitly requested
-  const shouldShowLogin = showLoginModal;
+
 
   if (isLoading) {
     return (
@@ -205,13 +189,17 @@ export default function ProjectShowcase() {
         <div className="container">
           <div className="error-state">
             <div className="error-icon">
-              <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <h3>Error al cargar proyectos</h3>
             <p>{error}</p>
-            <button onClick={loadActiveProjects} className="btn-retry">
+            <button 
+              onClick={loadActiveProjects} 
+              className="btn-retry"
+              aria-label="Reintentar cargar proyectos"
+            >
               Reintentar
             </button>
           </div>
@@ -270,11 +258,7 @@ export default function ProjectShowcase() {
             <div className="header-text">
               <h1>Proyectos Activos</h1>
               <p>Descubre y únete a los proyectos de la comunidad AWS User Group Cochabamba</p>
-              {isAuthenticated && authService.getCurrentUser() && (
-                <p className="user-info">
-                  Bienvenido, {authService.getCurrentUser()?.firstName} {authService.getCurrentUser()?.lastName}
-                </p>
-              )}
+
             </div>
           </div>
         </div>
@@ -283,7 +267,7 @@ export default function ProjectShowcase() {
         {projects.length === 0 && ongoingProjects.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
-              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
@@ -306,27 +290,30 @@ export default function ProjectShowcase() {
                     <button
                       onClick={() => setViewMode('cards')}
                       className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                      title="Vista de tarjetas"
+                      aria-label="Cambiar a vista de tarjetas"
+                      aria-pressed={viewMode === 'cards'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
                       className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                      title="Vista de lista"
+                      aria-label="Cambiar a vista de lista"
+                      aria-pressed={viewMode === 'list'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                       </svg>
                     </button>
                     <button
                       onClick={() => setViewMode('icons')}
                       className={`view-btn ${viewMode === 'icons' ? 'active' : ''}`}
-                      title="Vista de iconos"
+                      aria-label="Cambiar a vista de iconos"
+                      aria-pressed={viewMode === 'icons'}
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
                     </button>
@@ -377,8 +364,9 @@ export default function ProjectShowcase() {
                             <button 
                               onClick={() => handleSubscribeClick(project)}
                               className="btn-subscribe"
+                              aria-label={`Suscribirse al proyecto ${project.name}`}
                             >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                               </svg>
                               Suscribirse al Proyecto
@@ -407,6 +395,7 @@ export default function ProjectShowcase() {
                           <button 
                             onClick={() => handleSubscribeClick(project)}
                             className="btn-subscribe-list"
+                            aria-label={`Suscribirse al proyecto ${project.name}`}
                           >
                             Suscribirse
                           </button>
@@ -416,7 +405,7 @@ export default function ProjectShowcase() {
                       {viewMode === 'icons' && (
                         <div className="icon-content">
                           <div className="project-icon">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                           </div>
@@ -427,6 +416,7 @@ export default function ProjectShowcase() {
                           <button 
                             onClick={() => handleSubscribeClick(project)}
                             className="btn-subscribe-icon"
+                            aria-label={`Suscribirse al proyecto ${project.name}`}
                           >
                             Suscribirse
                           </button>
@@ -443,8 +433,9 @@ export default function ProjectShowcase() {
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className="pagination-btn"
+                      aria-label="Ir a la página anterior de proyectos disponibles"
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                       Anterior
@@ -456,6 +447,8 @@ export default function ProjectShowcase() {
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                          aria-label={`Ir a la página ${page} de proyectos disponibles`}
+                          aria-current={currentPage === page ? 'page' : undefined}
                         >
                           {page}
                         </button>
@@ -466,9 +459,10 @@ export default function ProjectShowcase() {
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className="pagination-btn"
+                      aria-label="Ir a la página siguiente de proyectos disponibles"
                     >
                       Siguiente
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -528,8 +522,9 @@ export default function ProjectShowcase() {
                             <button 
                               disabled
                               className="btn-unavailable"
+                              aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
                             >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
                               </svg>
                               No Disponible
@@ -553,7 +548,11 @@ export default function ProjectShowcase() {
                               )}
                             </div>
                           </div>
-                          <button disabled className="btn-unavailable-list">
+                          <button 
+                            disabled 
+                            className="btn-unavailable-list"
+                            aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
+                          >
                             No Disponible
                           </button>
                         </div>
@@ -562,13 +561,17 @@ export default function ProjectShowcase() {
                       {viewMode === 'icons' && (
                         <div className="icon-content">
                           <div className="project-icon ongoing">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                           </div>
                           <h4>{project.name}</h4>
                           <span className="project-status ongoing">En Curso</span>
-                          <button disabled className="btn-unavailable-icon">
+                          <button 
+                            disabled 
+                            className="btn-unavailable-icon"
+                            aria-label={`Proyecto ${project.name} no disponible para suscripción - actualmente en curso`}
+                          >
                             No Disponible
                           </button>
                         </div>
@@ -584,8 +587,9 @@ export default function ProjectShowcase() {
                       onClick={() => handleOngoingPageChange(ongoingCurrentPage - 1)}
                       disabled={ongoingCurrentPage === 1}
                       className="pagination-btn"
+                      aria-label="Ir a la página anterior de proyectos en curso"
                     >
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                       Anterior
@@ -597,6 +601,8 @@ export default function ProjectShowcase() {
                           key={page}
                           onClick={() => handleOngoingPageChange(page)}
                           className={`pagination-number ${ongoingCurrentPage === page ? 'active' : ''}`}
+                          aria-label={`Ir a la página ${page} de proyectos en curso`}
+                          aria-current={ongoingCurrentPage === page ? 'page' : undefined}
                         >
                           {page}
                         </button>
@@ -607,9 +613,10 @@ export default function ProjectShowcase() {
                       onClick={() => handleOngoingPageChange(ongoingCurrentPage + 1)}
                       disabled={ongoingCurrentPage === totalOngoingPages}
                       className="pagination-btn"
+                      aria-label="Ir a la página siguiente de proyectos en curso"
                     >
                       Siguiente
-                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -1282,12 +1289,14 @@ export default function ProjectShowcase() {
         }
       `}</style>
 
-      <UserLoginModal
-        isOpen={shouldShowLogin}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={handleLoginSuccess}
-        message="Inicia sesión para ver los proyectos activos"
-      />
+      {showLoginModal && (
+        <UserLoginModal
+          isOpen={showLoginModal}
+          onClose={closeLoginModal}
+          onLoginSuccess={handleLoginSuccess}
+          message="Inicia sesión para ver los proyectos activos"
+        />
+      )}
     </div>
   );
 }

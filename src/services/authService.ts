@@ -128,7 +128,7 @@ class AuthService {
         localStorage.removeItem(USER_DATA_KEY);
       }
     } catch (error) {
-      logger.error('Error saving to localStorage', { error });
+      authLogger.error('Error saving to localStorage', { error });
     }
   }
 

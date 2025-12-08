@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
 interface PasswordChangeProps {
   onClose: () => void;
@@ -7,6 +8,7 @@ interface PasswordChangeProps {
 }
 
 export default function PasswordChange({ onClose, onSuccess }: PasswordChangeProps) {
+  const { modalRef } = useFocusManagement(true); // Always open when component is rendered
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -124,9 +126,23 @@ export default function PasswordChange({ onClose, onSuccess }: PasswordChangePro
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
+        className="modal-content" 
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.stopPropagation();
+            onClose();
+          }
+        }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="password-change-title"
+        tabIndex={0}
+      >
         <div className="modal-header">
-          <h2>Cambiar Contraseña</h2>
+          <h2 id="password-change-title">Cambiar Contraseña</h2>
           <button className="close-button" onClick={onClose} aria-label="Cerrar">
             ×
           </button>

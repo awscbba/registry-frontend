@@ -5,6 +5,8 @@
  * edge cases gracefully without breaking the application.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { vi } from 'vitest';
 import {
   transformSubscription,
   transformSubscriptions,
@@ -13,16 +15,16 @@ import {
   transformFields
 } from '../fieldMapping';
 
+
 // Mock logger to avoid console output during tests
- 
 const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn()
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn()
 };
 
-jest.mock('../logger', () => ({
+vi.mock('../logger', () => ({
   getApiLogger: () => mockLogger
 }));
 

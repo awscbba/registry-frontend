@@ -1,6 +1,16 @@
-import { useState } from 'react';
-import { authService, type LoginRequest } from '../services/authService';
+import { useState, useEffect, useRef } from 'react';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { useToastStore } from '../hooks/useToastStore';
+import { useFocusManagement } from '../hooks/useFocusManagement';
+import { getLogger } from '../utils/logger';
 import ForgotPasswordModal from './ForgotPasswordModal';
+
+const logger = getLogger('UserLoginModal');
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 interface UserLoginModalProps {
   isOpen: boolean;
@@ -17,13 +27,19 @@ export default function UserLoginModal({
   projectName,
   message 
 }: UserLoginModalProps) {
-  const [formData, setFormData] = useState<LoginRequest>({
+  const { login } = useAuthStore();
+  const { showSuccessToast, showErrorToast } = useToastStore();
+  const { modalRef } = useFocusManagement(isOpen);
+  
+  const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const firstFocusableRef = useRef<HTMLInputElement>(null);
+  const lastFocusableRef = useRef<any>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,23 +55,30 @@ export default function UserLoginModal({
     setError(null);
 
     try {
-      const result = await authService.login(formData);
+      logger.info('Login attempt', { email: formData.email });
       
-      if (result.success) {
-        // Reset form
-        setFormData({ email: '', password: '' });
-        
-        // Dispatch auth state change event for other components
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('authStateChanged'));
-        }
-        
-        onLoginSuccess();
-      } else {
-        setError(result.message || 'Login failed');
-      }
+      await login(formData.email, formData.password);
+      
+      logger.info('Login successful', { email: formData.email });
+      
+      // Reset form
+      setFormData({ email: '', password: '' });
+      
+      // Show success toast
+      showSuccessToast('Inicio de sesión exitoso');
+      
+      // Call success callback
+      onLoginSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      
+      logger.error('Login failed', { 
+        email: formData.email,
+        error: errorMessage 
+      });
+      
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +90,49 @@ export default function UserLoginModal({
     onClose();
   };
 
+  // Tab trapping for modal
+  const handleModalKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      
+      if (!focusableElements || focusableElements.length === 0) {
+        return;
+      }
+      
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+      
+      if (e.shiftKey) {
+        // Shift + Tab (backward)
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        // Tab (forward)
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleClose();
+    }
+  };
+
+  // Focus first input when modal opens
+  useEffect(() => {
+    if (isOpen && firstFocusableRef.current) {
+      // Small delay to ensure modal is rendered
+      setTimeout(() => {
+        firstFocusableRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
@@ -75,22 +141,33 @@ export default function UserLoginModal({
     <div 
       className="modal-overlay" 
       onClick={handleClose}
-      onKeyDown={(e) => e.key === 'Escape' && handleClose()}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          handleClose();
+        }
+      }}
       role="dialog"
-      tabIndex={-1}
+      aria-modal="true"
+      aria-labelledby="login-modal-title"
     >
       <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
         className="modal-content user-login-modal" 
         onClick={e => e.stopPropagation()}
-        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        onKeyDown={handleModalKeyDown}
         role="document"
-        tabIndex={0}
       >
         <div className="modal-header">
-          <h2>Iniciar Sesión</h2>
+          <h2 id="login-modal-title">Iniciar Sesión</h2>
           <button 
             className="modal-close-button" 
             onClick={handleClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleClose();
+              }
+            }}
             aria-label="Cerrar modal"
           >
             ×
@@ -115,6 +192,7 @@ export default function UserLoginModal({
             <div className="form-group">
               <label htmlFor="email">Email *</label>
               <input
+                ref={firstFocusableRef}
                 type="email"
                 id="email"
                 name="email"
@@ -145,6 +223,12 @@ export default function UserLoginModal({
                   type="button"
                   className="link-button"
                   onClick={() => setShowForgotPassword(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowForgotPassword(true);
+                    }
+                  }}
                   disabled={isLoading}
                 >
                   ¿Olvidaste tu contraseña?
@@ -163,15 +247,32 @@ export default function UserLoginModal({
               <button
                 type="button"
                 onClick={handleClose}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleClose();
+                  }
+                }}
                 className="button-secondary"
                 disabled={isLoading}
               >
                 Cancelar
               </button>
               <button
+                ref={lastFocusableRef}
                 type="submit"
                 className="button-primary"
                 disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // Let the form handle Enter key naturally
+                    return;
+                  }
+                  if (e.key === ' ') {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
               >
                 {isLoading ? (
                   <>
