@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import { useFocusManagement } from '../hooks/useFocusManagement';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface ForgotPasswordModalProps {
 }
 
 export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
+  const { modalRef } = useFocusManagement(isOpen);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -58,9 +60,15 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
       tabIndex={-1}
     >
       <div 
+        ref={modalRef as React.RefObject<HTMLDivElement>}
         className="modal-content" 
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.stopPropagation();
+            handleClose();
+          }
+        }}
         role="dialog"
         tabIndex={0}
       >
