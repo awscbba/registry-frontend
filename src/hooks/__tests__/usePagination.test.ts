@@ -12,15 +12,16 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { usePagination } from '../usePagination';
 
 // Mock the logger
-jest.mock('../../utils/logger', () => ({
+vi.mock('../../utils/logger', () => ({
   getLogger: () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }),
 }));
 
@@ -32,11 +33,11 @@ describe('usePagination', () => {
 
   beforeEach(() => {
     // Mock window.scrollTo
-    window.scrollTo = jest.fn();
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Initial State', () => {

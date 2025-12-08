@@ -6,16 +6,17 @@
 
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import EnhancedAdminDashboard from '../../src/components/enhanced/EnhancedAdminDashboard';
 import { projectApi } from '../../src/services/projectApi';
 
 // Mock the projectApi
-jest.mock('../../src/services/projectApi', () => ({
+vi.mock('../../src/services/projectApi', () => ({
   projectApi: {
-    getAdminDashboard: jest.fn(),
-    getAllPeople: jest.fn(),
-    updatePerson: jest.fn(),
-    deletePerson: jest.fn(),
+    getAdminDashboard: vi.fn(),
+    getAllPeople: vi.fn(),
+    updatePerson: vi.fn(),
+    deletePerson: vi.fn(),
   },
   ApiError: class ApiError extends Error {
     constructor(public status: number, message: string) {
@@ -26,16 +27,16 @@ jest.mock('../../src/services/projectApi', () => ({
 }));
 
 // Mock the auth service
-jest.mock('../../src/services/authService', () => ({
-  isAuthenticated: jest.fn(() => true),
-  getCurrentUser: jest.fn(() => ({ id: '1', email: 'admin@test.com', isAdmin: true }))
+vi.mock('../../src/services/authService', () => ({
+  isAuthenticated: vi.fn(() => true),
+  getCurrentUser: vi.fn(() => ({ id: '1', email: 'admin@test.com', isAdmin: true }))
 }));
 
-const mockProjectApi = projectApi as jest.Mocked<typeof projectApi>;
+const mockProjectApi = projectApi as any;
 
 describe('EnhancedAdminDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Setup default mocks
     mockProjectApi.getAdminDashboard.mockResolvedValue({

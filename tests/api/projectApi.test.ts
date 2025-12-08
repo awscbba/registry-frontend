@@ -7,15 +7,16 @@
  * 3. Non-existent endpoints
  */
 
+import { vi } from 'vitest';
 import { projectApi } from '../../src/services/projectApi';
 import { API_CONFIG } from '../../src/config/api';
 
 // Mock fetch globally
-const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+const mockFetch = global.fetch as any;
 
 describe('ProjectAPI Critical Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('API Endpoint Existence', () => {

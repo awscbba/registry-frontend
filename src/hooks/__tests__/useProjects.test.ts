@@ -13,24 +13,25 @@
  */
 
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useProjects } from '../useProjects';
 import { projectApi } from '../../services/projectApi';
 import type { Project } from '../../types/project';
 
 // Mock the projectApi
-jest.mock('../../services/projectApi', () => ({
+vi.mock('../../services/projectApi', () => ({
   projectApi: {
-    getPublicProjects: jest.fn(),
+    getPublicProjects: vi.fn(),
   },
 }));
 
 // Mock the logger
-jest.mock('../../utils/logger', () => ({
+vi.mock('../../utils/logger', () => ({
   getLogger: () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }),
 }));
 
@@ -79,16 +80,16 @@ describe('useProjects', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Initial State', () => {
     it('should initialize with loading state', () => {
-      (projectApi.getPublicProjects as jest.Mock).mockImplementation(() => 
+      (projectApi.getPublicProjects as any).mockImplementation(() => 
         new Promise(() => {}) // Never resolves
       );
 
@@ -102,7 +103,7 @@ describe('useProjects', () => {
     });
 
     it('should provide all required properties', () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue([]);
+      (projectApi.getPublicProjects as any).mockResolvedValue([]);
 
       const { result } = renderHook(() => useProjects());
 
@@ -115,7 +116,7 @@ describe('useProjects', () => {
     });
 
     it('should have refreshProjects as a function', () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue([]);
+      (projectApi.getPublicProjects as any).mockResolvedValue([]);
 
       const { result } = renderHook(() => useProjects());
 
@@ -125,7 +126,7 @@ describe('useProjects', () => {
 
   describe('Data Fetching', () => {
     it('should fetch projects on mount', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -137,7 +138,7 @@ describe('useProjects', () => {
     });
 
     it('should set projects after successful fetch', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -150,7 +151,7 @@ describe('useProjects', () => {
     });
 
     it('should set lastFetchedAt after successful fetch', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const beforeFetch = new Date();
       const { result } = renderHook(() => useProjects());
@@ -164,7 +165,7 @@ describe('useProjects', () => {
     });
 
     it('should update lastFetchedAt on refresh', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -192,7 +193,7 @@ describe('useProjects', () => {
 
   describe('Project Filtering', () => {
     it('should filter pending and active projects into projects array', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -207,7 +208,7 @@ describe('useProjects', () => {
     });
 
     it('should filter ongoing and completed projects into ongoingProjects array', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -222,7 +223,7 @@ describe('useProjects', () => {
     });
 
     it('should handle empty project list', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue([]);
+      (projectApi.getPublicProjects as any).mockResolvedValue([]);
 
       const { result } = renderHook(() => useProjects());
 
@@ -248,7 +249,7 @@ describe('useProjects', () => {
         },
       ];
 
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(pendingOnly);
+      (projectApi.getPublicProjects as any).mockResolvedValue(pendingOnly);
 
       const { result } = renderHook(() => useProjects());
 
@@ -274,7 +275,7 @@ describe('useProjects', () => {
         },
       ];
 
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(ongoingOnly);
+      (projectApi.getPublicProjects as any).mockResolvedValue(ongoingOnly);
 
       const { result } = renderHook(() => useProjects());
 
@@ -290,7 +291,7 @@ describe('useProjects', () => {
   describe('Error Handling', () => {
     it('should handle fetch errors gracefully', async () => {
       const errorMessage = 'Network error';
-      (projectApi.getPublicProjects as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (projectApi.getPublicProjects as any).mockRejectedValue(new Error(errorMessage));
 
       const { result } = renderHook(() => useProjects());
 
@@ -304,7 +305,7 @@ describe('useProjects', () => {
     });
 
     it('should handle non-Error exceptions', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockRejectedValue('String error');
+      (projectApi.getPublicProjects as any).mockRejectedValue('String error');
 
       const { result } = renderHook(() => useProjects());
 
@@ -316,7 +317,7 @@ describe('useProjects', () => {
     });
 
     it('should clear previous error on successful refetch', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (projectApi.getPublicProjects as any).mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useProjects());
 
@@ -325,7 +326,7 @@ describe('useProjects', () => {
       });
 
       // Mock successful response for refetch
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       await act(async () => {
         await result.current.refreshProjects();
@@ -342,7 +343,7 @@ describe('useProjects', () => {
 
   describe('Refresh Functionality', () => {
     it('should refetch projects when refreshProjects is called', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -364,7 +365,7 @@ describe('useProjects', () => {
     });
 
     it('should set loading state during refresh', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result } = renderHook(() => useProjects());
 
@@ -383,7 +384,7 @@ describe('useProjects', () => {
     });
 
     it('should have stable refreshProjects function reference', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result, rerender } = renderHook(() => useProjects());
 
@@ -412,7 +413,7 @@ describe('useProjects', () => {
         resolveSecond = resolve;
       });
 
-      (projectApi.getPublicProjects as jest.Mock)
+      (projectApi.getPublicProjects as any)
         .mockReturnValueOnce(firstPromise)
         .mockReturnValueOnce(secondPromise);
 
@@ -449,7 +450,7 @@ describe('useProjects', () => {
         resolvePromise = resolve;
       });
 
-      (projectApi.getPublicProjects as jest.Mock).mockReturnValue(promise);
+      (projectApi.getPublicProjects as any).mockReturnValue(promise);
 
       const { result, unmount } = renderHook(() => useProjects());
 
@@ -470,7 +471,7 @@ describe('useProjects', () => {
 
   describe('Performance Optimization', () => {
     it('should memoize filtered projects', async () => {
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(mockProjects);
+      (projectApi.getPublicProjects as any).mockResolvedValue(mockProjects);
 
       const { result, rerender } = renderHook(() => useProjects());
 
@@ -504,7 +505,7 @@ describe('useProjects', () => {
         },
       ];
 
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(projectsWithUndefinedStatus);
+      (projectApi.getPublicProjects as any).mockResolvedValue(projectsWithUndefinedStatus);
 
       const { result } = renderHook(() => useProjects());
 
@@ -529,7 +530,7 @@ describe('useProjects', () => {
         updatedAt: '2024-01-01',
       }));
 
-      (projectApi.getPublicProjects as jest.Mock).mockResolvedValue(largeProjectList);
+      (projectApi.getPublicProjects as any).mockResolvedValue(largeProjectList);
 
       const { result } = renderHook(() => useProjects());
 

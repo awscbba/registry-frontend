@@ -11,15 +11,16 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useFocusManagement } from '../useFocusManagement';
 
 // Mock the logger
-jest.mock('../../utils/logger', () => ({
+vi.mock('../../utils/logger', () => ({
   getLogger: () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }),
 }));
 
@@ -48,7 +49,7 @@ describe('useFocusManagement', () => {
     if (document.body.contains(mockModal)) {
       document.body.removeChild(mockModal);
     }
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Initial State', () => {
