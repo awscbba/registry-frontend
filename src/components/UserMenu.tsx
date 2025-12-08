@@ -17,21 +17,107 @@ export default function UserMenu() {
       }
     };
 
+    // Handle keyboard navigation
+    const handleKeyDown = (event: any) => {
+      if (!isOpen) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'Escape': {
+          setIsOpen(false);
+          // Return focus to menu button
+          const menuButton = document.getElementById('user-menu-button');
+          menuButton?.focus();
+          break;
+        }
+        case 'ArrowDown':
+          event.preventDefault();
+          focusNextMenuItem();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          focusPreviousMenuItem();
+          break;
+        case 'Home':
+          event.preventDefault();
+          focusFirstMenuItem();
+          break;
+        case 'End':
+          event.preventDefault();
+          focusLastMenuItem();
+          break;
+      }
+    };
+
     if (typeof window !== 'undefined') {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
     }
     
     return () => {
       if (typeof window !== 'undefined') {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
       }
     };
-  }, []);
+  }, [isOpen]);
 
   const handleLogout = () => {
     logout();
     showSuccessToast('Sesión cerrada exitosamente');
     window.location.href = '/';
+  };
+
+  // Keyboard navigation helper functions
+  const getMenuItems = () => {
+    if (!menuRef.current) {
+      return [];
+    }
+    return Array.from(menuRef.current.querySelectorAll('.dropdown-item')) as HTMLElement[];
+  };
+
+  const focusNextMenuItem = () => {
+    const items = getMenuItems();
+    const currentIndex = items.findIndex(item => item === document.activeElement);
+    const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+    items[nextIndex]?.focus();
+  };
+
+  const focusPreviousMenuItem = () => {
+    const items = getMenuItems();
+    const currentIndex = items.findIndex(item => item === document.activeElement);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+    items[prevIndex]?.focus();
+  };
+
+  const focusFirstMenuItem = () => {
+    const items = getMenuItems();
+    items[0]?.focus();
+  };
+
+  const focusLastMenuItem = () => {
+    const items = getMenuItems();
+    items[items.length - 1]?.focus();
+  };
+
+  const handleMenuButtonKeyDown = (event: React.KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'Enter':
+      case ' ': // Space key
+        event.preventDefault();
+        setIsOpen(true);
+        // Focus first menu item after opening
+        setTimeout(() => focusFirstMenuItem(), 0);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        setIsOpen(true);
+        // Focus last menu item after opening
+        setTimeout(() => focusLastMenuItem(), 0);
+        break;
+    }
   };
 
   if (!user) {
@@ -131,6 +217,7 @@ export default function UserMenu() {
         id="user-menu-button"
         className="user-menu-button"
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={handleMenuButtonKeyDown}
         aria-label="Menú de usuario"
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -178,7 +265,15 @@ export default function UserMenu() {
           <a 
             href="/dashboard" 
             className="dropdown-item"
+            role="menuitem"
+            tabIndex={0}
             aria-label="Ir a mi perfil de usuario"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                window.location.href = '/dashboard';
+              }
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
@@ -203,7 +298,15 @@ export default function UserMenu() {
             <a 
               href="/admin" 
               className="dropdown-item"
+              role="menuitem"
+              tabIndex={0}
               aria-label="Ir al panel de administración"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  window.location.href = '/admin';
+                }
+              }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
@@ -230,7 +333,15 @@ export default function UserMenu() {
           <button 
             onClick={handleLogout} 
             className="dropdown-item logout"
+            role="menuitem"
+            tabIndex={0}
             aria-label="Cerrar sesión y salir de la aplicación"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleLogout();
+              }
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
