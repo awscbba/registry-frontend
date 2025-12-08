@@ -149,9 +149,9 @@ describe('Project Subscription Integration Tests', () => {
       
       render(<ProjectShowcase />);
       
-      // Wait for projects to load
+      // Wait for projects to load (component uses getPublicProjects for all users)
       await waitFor(() => {
-        expect(projectApi.getAllProjects).toHaveBeenCalled();
+        expect(projectApi.getPublicProjects).toHaveBeenCalled();
       });
       
       // Verify projects are displayed
@@ -214,53 +214,39 @@ describe('Project Subscription Integration Tests', () => {
     });
 
     it('should filter projects by available status', async () => {
-      // Look for filter buttons (Spanish text)
-      const availableFilter = screen.getByRole('button', { name: /disponibles/i });
-      await user.click(availableFilter);
-      
-      // Verify only available projects are shown
+      // Component displays projects in two sections without filter buttons
+      // Available projects section
       await waitFor(() => {
-        expect(screen.getByText('Test Project 1')).toBeInTheDocument(); // available
-        expect(screen.getByText('Test Project 3')).toBeInTheDocument(); // available
-        expect(screen.getByText('Test Project 5')).toBeInTheDocument(); // available
+        expect(screen.getByText('Proyectos Disponibles para Suscripción (3)')).toBeInTheDocument();
       });
       
-      // Ongoing projects should not be visible
-      expect(screen.queryByText('Test Project 2')).not.toBeInTheDocument(); // ongoing
-      expect(screen.queryByText('Test Project 4')).not.toBeInTheDocument(); // ongoing
+      // Verify available projects are shown in the available section
+      expect(screen.getByText('Test Project 1')).toBeInTheDocument(); // available
+      expect(screen.getByText('Test Project 3')).toBeInTheDocument(); // available
+      expect(screen.getByText('Test Project 5')).toBeInTheDocument(); // available
     });
 
     it('should filter projects by ongoing status', async () => {
-      // Look for ongoing filter button (Spanish text)
-      const ongoingFilter = screen.getByRole('button', { name: /en curso/i });
-      await user.click(ongoingFilter);
-      
-      // Verify only ongoing projects are shown
+      // Component displays ongoing projects in a separate section
       await waitFor(() => {
-        expect(screen.getByText('Test Project 2')).toBeInTheDocument(); // ongoing
-        expect(screen.getByText('Test Project 4')).toBeInTheDocument(); // ongoing
+        expect(screen.getByText('Proyectos en Curso (2)')).toBeInTheDocument();
       });
       
-      // Available projects should not be visible
-      expect(screen.queryByText('Test Project 1')).not.toBeInTheDocument(); // available
-      expect(screen.queryByText('Test Project 3')).not.toBeInTheDocument(); // available
-      expect(screen.queryByText('Test Project 5')).not.toBeInTheDocument(); // available
+      // Verify ongoing projects are shown in the ongoing section
+      expect(screen.getByText('Test Project 2')).toBeInTheDocument(); // ongoing
+      expect(screen.getByText('Test Project 4')).toBeInTheDocument(); // ongoing
     });
 
     it('should show all projects when "all" filter is selected', async () => {
-      // First filter to available
-      const availableFilter = screen.getByRole('button', { name: /disponibles/i });
-      await user.click(availableFilter);
-      
-      // Then click "all" filter (Spanish text)
-      const allFilter = screen.getByRole('button', { name: /todos/i });
-      await user.click(allFilter);
-      
-      // Verify all projects are shown again
+      // Component shows all projects by default in two sections
       await waitFor(() => {
-        mockProjects.forEach(project => {
-          expect(screen.getByText(project.name)).toBeInTheDocument();
-        });
+        expect(screen.getByText('Proyectos Disponibles para Suscripción (3)')).toBeInTheDocument();
+        expect(screen.getByText('Proyectos en Curso (2)')).toBeInTheDocument();
+      });
+      
+      // Verify all projects are shown
+      mockProjects.forEach(project => {
+        expect(screen.getByText(project.name)).toBeInTheDocument();
       });
     });
   });
@@ -291,10 +277,10 @@ describe('Project Subscription Integration Tests', () => {
 
     it('should pass project information in subscription URL', async () => {
       // Find subscribe button for a specific project
-      const projectCard = screen.getByText('Test Project 1').closest('.project-card');
-      expect(projectCard).toBeInTheDocument();
+      const projectItem = screen.getByText('Test Project 1').closest('.project-item');
+      expect(projectItem).toBeInTheDocument();
       
-      const subscribeButton = projectCard?.querySelector('button, a');
+      const subscribeButton = projectItem?.querySelector('button');
       expect(subscribeButton).toBeInTheDocument();
       
       if (subscribeButton) {
@@ -349,9 +335,9 @@ describe('Project Subscription Integration Tests', () => {
 
   describe('Pagination and View Modes', () => {
     beforeEach(async () => {
-      // Create more projects to test pagination
+      // Create more projects to test pagination (use valid statuses: pending, active, ongoing)
       const manyProjects = Array.from({ length: 15 }, (_, i) => 
-        createMockProject(i + 1, i % 2 === 0 ? 'available' : 'ongoing')
+        createMockProject(i + 1, i % 2 === 0 ? 'pending' : 'ongoing')
       );
       
       (projectApi.getPublicProjects as any).mockResolvedValue(manyProjects);
@@ -365,18 +351,21 @@ describe('Project Subscription Integration Tests', () => {
     });
 
     it('should paginate projects when there are many', async () => {
-      // Look for pagination controls
-      const nextButton = screen.queryByRole('button', { name: /siguiente/i });
+      // Look for pagination controls (Spanish text)
+      const nextButtons = screen.queryAllByRole('button', { name: /siguiente/i });
       
-      if (nextButton) {
-        // Verify pagination works
-        await user.click(nextButton);
+      if (nextButtons.length > 0) {
+        // Verify pagination works - click the first next button
+        await user.click(nextButtons[0]);
         
         // Should show different projects on next page
         await waitFor(() => {
-          // Exact projects depend on pagination implementation
-          expect(document.body).toBeInTheDocument(); // Basic test
+          // Component should still be rendered
+          expect(document.body).toBeInTheDocument();
         });
+      } else {
+        // If no pagination, all projects should be visible
+        expect(screen.getByText('Test Project 1')).toBeInTheDocument();
       }
     });
 
@@ -459,21 +448,17 @@ describe('Project Subscription Integration Tests', () => {
         expect(screen.getByText('Test Project 1')).toBeInTheDocument();
       });
       
-      // Rapidly change filters
-      const availableFilter = screen.getByRole('button', { name: /disponibles/i });
-      const ongoingFilter = screen.getByRole('button', { name: /en curso/i });
-      const allFilter = screen.getByRole('button', { name: /todos/i });
-      
-      // Rapid clicks
-      await user.click(availableFilter);
-      await user.click(ongoingFilter);
-      await user.click(allFilter);
-      await user.click(availableFilter);
-      
-      // Should handle rapid changes gracefully
+      // Component doesn't have filter buttons, but displays projects in sections
+      // Test that the component renders both sections correctly
       await waitFor(() => {
-        expect(document.body).toBeInTheDocument();
+        expect(screen.getByText('Proyectos Disponibles para Suscripción (3)')).toBeInTheDocument();
+        expect(screen.getByText('Proyectos en Curso (2)')).toBeInTheDocument();
       });
+      
+      // Should display all projects gracefully
+      expect(document.body).toBeInTheDocument();
+      expect(screen.getByText('Test Project 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Project 2')).toBeInTheDocument();
     });
 
     it('should handle subscription button clicks during loading', async () => {
@@ -538,8 +523,8 @@ describe('Project Subscription Integration Tests', () => {
         firstButton.focus();
         expect(document.activeElement).toBe(firstButton);
         
-        // Test Enter key activation
-        fireEvent.keyDown(firstButton, { key: 'Enter' });
+        // Test keyboard activation using userEvent which properly simulates Enter key
+        await user.keyboard('{Enter}');
         
         // Should trigger navigation
         await waitFor(() => {

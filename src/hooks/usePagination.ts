@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { getLogger } from '../utils/logger';
 
 const logger = getLogger('hooks.usePagination');
@@ -135,51 +135,75 @@ export function usePagination<T>(
   /**
    * Navigate to a specific page
    */
-  const goToPage = (page: number) => {
-    // Ensure page is within valid range
-    const validPage = Math.max(1, Math.min(page, totalPages));
-    
-    if (validPage !== currentPage) {
-      logger.info('Navigating to page', {
-        fromPage: currentPage,
-        toPage: validPage,
-        requestedPage: page
-      });
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage((prevPage) => {
+      // Ensure page is within valid range
+      const validPage = Math.max(1, Math.min(page, totalPages));
       
-      setCurrentPage(validPage);
-
-      // SSR guard - only scroll in browser
-      if (scrollToTop && typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: scrollBehavior });
+      if (validPage !== prevPage) {
+        logger.info('Navigating to page', {
+          fromPage: prevPage,
+          toPage: validPage,
+          requestedPage: page
+        });
+        
+        // SSR guard - only scroll in browser
+        if (scrollToTop && typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: scrollBehavior });
+        }
+        
+        return validPage;
       }
-    }
-  };
+      
+      return prevPage;
+    });
+  }, [totalPages, scrollToTop, scrollBehavior]);
 
   /**
    * Navigate to the next page
    */
-  const nextPage = () => {
-    if (hasNextPage) {
-      logger.info('Navigating to next page', {
-        currentPage,
-        nextPage: currentPage + 1
-      });
-      goToPage(currentPage + 1);
-    }
-  };
+  const nextPage = useCallback(() => {
+    setCurrentPage((prevPage) => {
+      const nextPageNum = prevPage + 1;
+      if (prevPage < totalPages) {
+        logger.info('Navigating to next page', {
+          currentPage: prevPage,
+          nextPage: nextPageNum
+        });
+        
+        // SSR guard - only scroll in browser
+        if (scrollToTop && typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: scrollBehavior });
+        }
+        
+        return nextPageNum;
+      }
+      return prevPage;
+    });
+  }, [totalPages, scrollToTop, scrollBehavior]);
 
   /**
    * Navigate to the previous page
    */
-  const previousPage = () => {
-    if (hasPreviousPage) {
-      logger.info('Navigating to previous page', {
-        currentPage,
-        previousPage: currentPage - 1
-      });
-      goToPage(currentPage - 1);
-    }
-  };
+  const previousPage = useCallback(() => {
+    setCurrentPage((prevPage) => {
+      const prevPageNum = prevPage - 1;
+      if (prevPage > 1) {
+        logger.info('Navigating to previous page', {
+          currentPage: prevPage,
+          previousPage: prevPageNum
+        });
+        
+        // SSR guard - only scroll in browser
+        if (scrollToTop && typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: scrollBehavior });
+        }
+        
+        return prevPageNum;
+      }
+      return prevPage;
+    });
+  }, [scrollToTop, scrollBehavior]);
 
   return {
     currentPage,

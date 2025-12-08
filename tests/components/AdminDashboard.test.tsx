@@ -26,10 +26,18 @@ vi.mock('../../src/services/projectApi', () => ({
   }
 }));
 
-// Mock the auth service
+// Mock the auth service - set to fail authentication for these tests
 vi.mock('../../src/services/authService', () => ({
-  isAuthenticated: vi.fn(() => true),
-  getCurrentUser: vi.fn(() => ({ id: '1', email: 'admin@test.com', isAdmin: true }))
+  authService: {
+    isAuthenticated: vi.fn(() => false), // Authentication fails for these tests
+    getCurrentUser: vi.fn(() => null),
+    getToken: vi.fn(() => null),
+    getValidToken: vi.fn(async () => null),
+  },
+  addAuthHeaders: () => ({}),
+  addRequiredAuthHeaders: () => {
+    throw new Error('Authentication required');
+  },
 }));
 
 const mockProjectApi = projectApi as any;

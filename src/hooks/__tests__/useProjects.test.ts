@@ -374,14 +374,20 @@ describe('useProjects', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      let loadingDuringRefresh = false;
-
+      // Start the refresh
       act(() => {
         result.current.refreshProjects();
-        loadingDuringRefresh = result.current.isLoading;
       });
 
-      expect(loadingDuringRefresh).toBe(true);
+      // Check that loading state is set to true during refresh
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(true);
+      });
+
+      // Wait for refresh to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
     });
 
     it('should have stable refreshProjects function reference', async () => {

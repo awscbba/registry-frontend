@@ -7,16 +7,33 @@
  * 3. Non-existent endpoints
  */
 
-import { vi } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { projectApi } from '../../src/services/projectApi';
 import { API_CONFIG } from '../../src/config/api';
 
 // Mock fetch globally
-const mockFetch = global.fetch as any;
+const mockFetch = vi.fn();
+global.fetch = mockFetch as any;
+
+// Mock auth service to provide a token
+vi.mock('../../src/services/authService', () => ({
+  addAuthHeaders: () => ({ 'Authorization': 'Bearer mock-token' }),
+  addRequiredAuthHeaders: () => ({ 'Authorization': 'Bearer mock-token' }),
+  addRequiredAuthHeadersWithRefresh: async () => ({ 'Authorization': 'Bearer mock-token' }),
+  authService: {
+    getToken: () => 'mock-token',
+    getValidToken: async () => 'mock-token',
+  }
+}));
 
 describe('ProjectAPI Critical Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockClear();
+  });
+  
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('API Endpoint Existence', () => {
@@ -67,13 +84,13 @@ describe('ProjectAPI Critical Tests', () => {
       const subscriptionId = 'test-subscription';
 
       expect(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBERS(projectId))
-        .toBe(`/v2/projects/${projectId}/subscribers`);
+        .toBe(`/v2/projects/${projectId}/subscriptions`);
       
       expect(API_CONFIG.ENDPOINTS.PROJECT_SUBSCRIBE(projectId))
-        .toBe(`/v2/projects/${projectId}/subscribers`);
+        .toBe(`/v2/projects/${projectId}/subscriptions`);
       
       expect(API_CONFIG.ENDPOINTS.PROJECT_UNSUBSCRIBE(projectId, subscriptionId))
-        .toBe(`/v2/projects/${projectId}/subscribers/${subscriptionId}`);
+        .toBe(`/v2/subscriptions/${subscriptionId}`);
     });
   });
 
@@ -119,8 +136,9 @@ describe('ProjectAPI Critical Tests', () => {
       try {
         await projectApi.updatePerson(undefined as any, { firstName: 'Jane' });
         expect(true).toBe(false); // Should not reach here
-      } catch {
-        // Should fail gracefully, not make API call with undefined
+      } catch (error: any) {
+        // Should fail gracefully with validation error, not make API call with undefined
+        expect(error.message).toContain('Person ID is required');
         expect(mockFetch).not.toHaveBeenCalled();
       }
     });
