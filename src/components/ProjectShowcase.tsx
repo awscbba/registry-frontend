@@ -88,7 +88,8 @@ export default function ProjectShowcase() {
     logger.info('Login successful, refreshing projects');
     closeLoginModal();
     loadActiveProjects();
-  }, [closeLoginModal, loadActiveProjects]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Helper function to convert project name to URL-friendly slug
   const nameToSlug = (name: string): string => {
