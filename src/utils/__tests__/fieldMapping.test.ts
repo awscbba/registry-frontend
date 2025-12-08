@@ -5,6 +5,8 @@
  * edge cases gracefully without breaking the application.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { vi } from 'vitest';
 import {
   transformSubscription,
   transformSubscriptions,
@@ -13,7 +15,6 @@ import {
   transformFields
 } from '../fieldMapping';
 
-import { vi } from 'vitest';
 
 // Mock logger to avoid console output during tests
 const mockLogger = {

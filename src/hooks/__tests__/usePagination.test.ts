@@ -11,6 +11,7 @@
  * - Edge cases
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { usePagination } from '../usePagination';

@@ -10,6 +10,7 @@
  * - Memory leak prevention
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useFocusManagement } from '../useFocusManagement';

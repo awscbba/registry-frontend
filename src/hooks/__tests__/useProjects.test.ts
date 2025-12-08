@@ -12,6 +12,7 @@
  * - Performance optimization (useMemo)
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useProjects } from '../useProjects';

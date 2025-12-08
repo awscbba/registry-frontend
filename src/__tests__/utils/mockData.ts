@@ -5,6 +5,7 @@
  * Includes user objects, API responses, and other test fixtures.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from 'vitest';
 import type { User } from '../../types/user';
 

@@ -5,6 +5,7 @@
  * Focuses on store state changes and basic functionality rather than detailed UI.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';

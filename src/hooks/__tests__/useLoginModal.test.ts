@@ -10,6 +10,7 @@
  * - SSR compatibility
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useLoginModal } from '../useLoginModal';
