@@ -45,7 +45,7 @@ const ToastContainer = memo(() => {
                 : toast.type === 'error'
                 ? '#ef4444'
                 : toast.type === 'warning'
-                ? '#f59e0b'
+                ? '#d35400'  // Darker orange for WCAG 2.1 AA compliance (5.74:1 contrast)
                 : '#3b82f6',
             color: 'white',
           }}

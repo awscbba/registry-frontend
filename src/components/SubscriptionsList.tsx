@@ -34,7 +34,7 @@ export default function SubscriptionsList() {
   const getStatusBadge = (status: string) => {
     const badges = {
       active: { label: 'Activo', color: '#10b981', bg: '#d1fae5' },
-      pending: { label: 'Pendiente', color: '#f59e0b', bg: '#fef3c7' },
+      pending: { label: 'Pendiente', color: '#d35400', bg: '#fef3c7' },
       cancelled: { label: 'Cancelado', color: '#ef4444', bg: '#fee2e2' },
     };
     const badge = badges[status as keyof typeof badges] || badges.pending;
