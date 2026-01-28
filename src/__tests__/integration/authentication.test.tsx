@@ -122,10 +122,10 @@ describe('Authentication Integration Tests', () => {
       
       // Verify login service was called with correct credentials
       await waitFor(() => {
-        expect(authService.login).toHaveBeenCalledWith(
-          mockUser.email,
-          'password123'
-        );
+        expect(authService.login).toHaveBeenCalledWith({
+          email: mockUser.email,
+          password: 'password123'
+        });
       });
       
       // Simulate successful login by updating stores
@@ -219,7 +219,10 @@ describe('Authentication Integration Tests', () => {
       
       // Wait for the async operation to complete
       await waitFor(() => {
-        expect(authService.login).toHaveBeenCalledWith('invalid@example.com', 'wrongpassword');
+        expect(authService.login).toHaveBeenCalledWith({
+          email: 'invalid@example.com',
+          password: 'wrongpassword'
+        });
       });
       
       // Simulate error state update
@@ -546,11 +549,11 @@ describe('Authentication Integration Tests', () => {
       (authService.login as any).mockResolvedValue(v2Response);
       
       // Call the service directly to test response handling
-      const result = await authService.login(mockUser.email, 'password123');
+      const result = await authService.login({ email: mockUser.email, password: 'password123' });
       
       // Verify v2 response is handled correctly
       expect(result).toEqual(v2Response);
-      expect(authService.login).toHaveBeenCalledWith(mockUser.email, 'password123');
+      expect(authService.login).toHaveBeenCalledWith({ email: mockUser.email, password: 'password123' });
     });
 
     it('should handle legacy API response format', async () => {
@@ -558,7 +561,7 @@ describe('Authentication Integration Tests', () => {
       (authService.login as any).mockResolvedValue(mockUser);
       
       // Call the service directly
-      const result = await authService.login(mockUser.email, 'password123');
+      const result = await authService.login({ email: mockUser.email, password: 'password123' });
       
       // Verify legacy response is handled correctly
       expect(result).toEqual(mockUser);
@@ -572,7 +575,7 @@ describe('Authentication Integration Tests', () => {
       
       // Test timeout error handling
       try {
-        await authService.login('user@example.com', 'password123');
+        await authService.login({ email: 'user@example.com', password: 'password123' });
         expect(true).toBe(false); // Should not reach here
       } catch (error: any) {
         expect(error.message).toBe('Request timeout');
@@ -621,10 +624,10 @@ describe('Authentication Integration Tests', () => {
       (authService.login as any).mockReturnValue(loginPromise);
       
       // Start first login attempt
-      const loginCall1 = authService.login(mockUser.email, 'password123');
+      const loginCall1 = authService.login({ email: mockUser.email, password: 'password123' });
       
       // Start second login attempt (should be handled gracefully)
-      const loginCall2 = authService.login(mockUser.email, 'password123');
+      const loginCall2 = authService.login({ email: mockUser.email, password: 'password123' });
       
       // Verify both calls were made
       expect(authService.login).toHaveBeenCalledTimes(2);

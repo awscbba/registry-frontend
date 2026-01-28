@@ -40,9 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const response = await authService.login(email, password);
-      setUser(response.user);
-      logger.info('User logged in successfully');
+      const response = await authService.login({ email, password });
+      if (response.success && response.user) {
+        setUser(response.user);
+        logger.info('User logged in successfully');
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
     } catch (error) {
       logger.error('Login failed', { error });
       throw error;
