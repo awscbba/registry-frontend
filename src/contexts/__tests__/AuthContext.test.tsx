@@ -139,7 +139,7 @@ describe('AuthContext', () => {
       });
 
       // Verify login was called and user is set
-      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password');
+      expect(authService.login).toHaveBeenCalledWith({ email: 'test@example.com', password: 'password' });
       await waitFor(() => {
         expect(screen.getByTestId('user-info')).toHaveTextContent('User: test@example.com');
         expect(screen.getByTestId('auth-status')).toHaveTextContent('Authenticated');
