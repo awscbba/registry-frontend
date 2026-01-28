@@ -89,7 +89,7 @@ export async function login(email: string, password: string): Promise<void> {
   $error.set(null);
 
   try {
-    const response = await authService.login(email, password);
+    const response = await authService.login({ email, password });
     
     if (response.success && response.user) {
       logger.info('Login successful', {
